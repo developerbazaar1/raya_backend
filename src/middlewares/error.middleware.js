@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 const AppError = require('../utils/appError');
+const logger = require('../utils/logger');
 
 const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again later.';
 
@@ -8,20 +9,20 @@ const sendErrorDev = (err, res) =>
     status: err.status,
     message: err.isOperational ? err.message : GENERIC_ERROR_MESSAGE,
     stack: err.stack,
-    details: err.details || null,
+    details: err.details || null
   });
 
 const sendErrorProd = (err, res) => {
   if (err.isOperational) {
     return res.status(err.statusCode).json({
       status: err.status,
-      message: err.message,
+      message: err.message
     });
   }
 
   return res.status(500).json({
     status: 'error',
-    message: GENERIC_ERROR_MESSAGE,
+    message: GENERIC_ERROR_MESSAGE
   });
 };
 
@@ -70,13 +71,15 @@ const errorHandler = (err, req, res, next) => {
   normalizedError.statusCode = statusCode;
   normalizedError.status = status;
 
-  console.error('Error:', {
+  logger.error('Request error', {
     message: err.message,
     name: err.name,
     code: err.code,
     statusCode,
     isOperational: normalizedError.isOperational || false,
-    stack: err.stack,
+    method: req.method,
+    path: req.originalUrl,
+    stack: err.stack
   });
 
   if (process.env.NODE_ENV === 'development') {
