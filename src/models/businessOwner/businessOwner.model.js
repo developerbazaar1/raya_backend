@@ -34,7 +34,11 @@ const businessOwnerSchema = new mongoose.Schema(
     whatBringsYouThereOther: { type: String, trim: true },
     howDidYouHearAboutUs: { type: String, trim: true },
     howDidYouHearAboutUsOther: { type: String, trim: true },
-    phone: { type: String, trim: true },
+    phoneNumber: {
+      countryCode: { type: String, trim: true },
+      number: { type: String, trim: true },
+    },
+    totalTimeOff: { type: Number, default: 15 },
   },
   { timestamps: true },
 );

@@ -90,6 +90,7 @@ CREATE TABLE employees (
     FOREIGN KEY (employee_role_id) REFERENCES employee_roles(id) ON DELETE SET NULL
 );
 
+-- Not clear some requirements are pending
 CREATE TABLE plans (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT UNIQUE, 
@@ -102,7 +103,7 @@ CREATE TABLE plans (
 
 
 
-
+-- Not clear some requirements are pending
 CREATE TABLE vendors (
     id INT PRIMARY KEY AUTO_INCREMENT,
     business_owner_id INT NOT NULL,
