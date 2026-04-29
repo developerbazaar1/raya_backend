@@ -1,4 +1,4 @@
-const { FileReferenceSchema } = require('../schema/file.schema');
+const { FileReferenceSchema } = require('./file.schema');
 const { ROLES } = require('../../config/constant');
 mongoose = require('mongoose');
 
