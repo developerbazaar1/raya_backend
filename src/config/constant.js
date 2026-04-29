@@ -1,5 +1,5 @@
 module.exports = {
-  ROLES: ['customer', 'driver', 'company'],
+  ROLES: ['business_owner', 'employee'],
   OTP_EXPIRY: 10 * 60 * 1000, // 10 minutes
   JWT_EXPIRY: '7d', // 7 days
   GUEST_USERS: ['dbrahul03@.gmail.com', 'guest@example.com'],
