@@ -104,27 +104,9 @@ CREATE TABLE plans (
 
 
 -- Not clear some requirements are pending
-CREATE TABLE vendors (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    business_owner_id INT NOT NULL,
-
-    company_name VARCHAR(150) NOT NULL,
-    contractor_name VARCHAR(150),
-    email VARCHAR(100),
-    country_code VARCHAR(10),
-    contact_number VARCHAR(20),
-    role VARCHAR(100),
-    notes TEXT,
-    status ENUM('not started', 'in-progress' ,'completed') DEFAULT 'active',
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE
-);
 
 
-
+-- DONE
 CREATE TABLE time_off_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
 
@@ -151,6 +133,87 @@ CREATE TABLE time_off_requests (
     FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
+
+
+-- DONE
+CREATE TABLE team_meetings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    title VARCHAR(150) NOT NULL,
+    meeting_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+
+    invited_members VARCHAR(150)
+
+    status ENUM('scheduled', 'completed', 'cancelled') DEFAULT 'scheduled',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+
+-- DONE
+CREATE TABLE calendar_events (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    event_name VARCHAR(150) NOT NULL,
+    event_date DATE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+
+    favorite VARCHAR(150),
+
+    is_all_day BOOLEAN DEFAULT FALSE,
+
+    status ENUM('active', 'cancelled') DEFAULT 'active',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE todos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+    assigned_to_employee_id INT NOT NULL,
+
+    title VARCHAR(150) NOT NULL,
+    description TEXT,
+
+    due_date DATE,
+
+    repetition ENUM('none', 'daily', 'weekly', 'monthly') DEFAULT 'none',
+
+    status ENUM('pending', 'in_progress', 'completed') DEFAULT 'pending',
+
+    progress INT DEFAULT 0, -- 0 to 100
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_to_employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
+
 
 
 
@@ -214,4 +277,69 @@ CREATE TABLE employee_assessment_attempts (
     FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
 
     UNIQUE (employee_id, assessment_id)
+);
+
+
+
+
+CREATE TABLE projects (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    project_name VARCHAR(150) NOT NULL,
+    description TEXT,
+    due_date DATE,
+
+    add_member VARCHAR(150),
+    status ENUM('active', 'completed', 'pending', 'cancelled') DEFAULT 'active',
+    progress INT DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+
+
+CREATE TABLE project_tasks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    project_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    task_name VARCHAR(150) NOT NULL,
+    description TEXT,
+
+    priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+    due_date DATE,
+
+    status ENUM('pending', 'in_progress', 'completed') DEFAULT 'pending',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE project_task_assignees (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    project_task_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    project_upload TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (project_task_id) REFERENCES project_tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+
+    UNIQUE (project_task_id, employee_id)
 );

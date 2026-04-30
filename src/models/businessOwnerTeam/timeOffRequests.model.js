@@ -1,26 +1,50 @@
-// CREATE TABLE time_off_requests (
-//     id INT PRIMARY KEY AUTO_INCREMENT,
+const mongoose = require('mongoose');
+const { TIME_OFF_STATUS } = require('../../config/constant');
 
-//     business_owner_id INT NOT NULL,
-//     employee_id INT NOT NULL,
+const timeOffRequestSchema = new mongoose.Schema({
+    businessOwnerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'BusinessOwner',
+        required: true
+    },
+    employeeId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Employee',
+        required: true
+    },
+    reason: {
+        type: String,
+        maxlength: 255
+    },
+    startDate: {
+        type: Date,
+        required: true
+    },
+    endDate: {
+        type: Date,
+        required: true
+    },
+    totalDays: {
+        type: Number
+    },
+    fullDay:{
+        type: Boolean,
+    },
+    halfDay:{
+        firstHalfDay: { type: Boolean },
+        secondHalfDay: { type: Boolean }
+    },
+    status: {
+        type: String,
+        enum: TIME_OFF_STATUS,
+        default: 'pending'
+    },
+    ownerComment: {
+        type: String,
+        maxlength: 255
+    }
+}, {
+    timestamps: true
+});
 
-//     reason TEXT,
-//     start_date DATE NOT NULL,
-//     end_date DATE NOT NULL,
-//     total_days INT,
-
-//     status ENUM(
-//         'pending',
-//         'approved',
-//         'rejected',
-//         'change_requested'
-//     ) DEFAULT 'pending',
-
-//     owner_comment TEXT,
-
-//     requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-//     FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
-//     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
-// );
+module.exports = mongoose.model('TimeOffRequest', timeOffRequestSchema);

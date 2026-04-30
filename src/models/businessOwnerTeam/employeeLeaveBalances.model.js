@@ -1,17 +1,31 @@
-// CREATE TABLE employee_leave_balances (
-//    id INT PRIMARY KEY AUTO_INCREMENT,
+const mongoose = require("mongoose")
+const employeeLeaveBalanceSchema = new mongoose.Schema(
+  {
+    employeeId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Employee',
+      required: true
+    },
+    totalAllocated: {
+      type: Number,
+      default: 0
+    },
+    carriedForward: {
+      type: Number,
+      default: 0
+    },
+    usedDays: {
+      type: Number,
+      default: 0
+    },
+    remainingDays: {
+      type: Number
+    }
+  },
+  {
+    timestamps: true
+  }
+);
 
-//    employee_id INT NOT NULL,
-//    leave_type_id INT NOT NULL,
 
-//    year INT NOT NULL,
-
-//    total_allocated DECIMAL(5,2),
-//    carried_forward DECIMAL(5,2) DEFAULT 0,
-
-//    used_days DECIMAL(5,2) DEFAULT 0,
-//    remaining_days DECIMAL(5,2),
-
-//    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//       ON UPDATE CURRENT_TIMESTAMP
-// );
+module.exports = mongoose.model('EmployeeLeaveBalance', employeeLeaveBalanceSchema);
