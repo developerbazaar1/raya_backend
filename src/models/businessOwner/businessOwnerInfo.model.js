@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { FileReferenceSchema } = require('../schema/file.schema');
 
-const businessOwnerSchema = new mongoose.Schema(
+const businessOwnerInfoSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -34,9 +34,13 @@ const businessOwnerSchema = new mongoose.Schema(
     whatBringsYouThereOther: { type: String, trim: true },
     howDidYouHearAboutUs: { type: String, trim: true },
     howDidYouHearAboutUsOther: { type: String, trim: true },
-    phone: { type: String, trim: true },
+    phoneNumber: {
+      countryCode: { type: String, trim: true },
+      number: { type: String, trim: true },
+    },
+    totalTimeOff: { type: Number, default: 15 },
   },
   { timestamps: true },
 );
 
-module.exports = mongoose.model('BusinessOwner', businessOwnerSchema);
+module.exports = mongoose.model('BusinessOwnerInfo', businessOwnerInfoSchema);

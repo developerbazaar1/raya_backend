@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema({
         },
     },
     dateOfJoining: { type: Date },
+    // # Reference to the business owner (User)
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 }, { timestamps: true });
 

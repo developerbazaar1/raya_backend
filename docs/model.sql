@@ -90,6 +90,7 @@ CREATE TABLE employees (
     FOREIGN KEY (employee_role_id) REFERENCES employee_roles(id) ON DELETE SET NULL
 );
 
+-- Not clear some requirements are pending
 CREATE TABLE plans (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT UNIQUE, 
@@ -102,28 +103,10 @@ CREATE TABLE plans (
 
 
 
-
-CREATE TABLE vendors (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    business_owner_id INT NOT NULL,
-
-    company_name VARCHAR(150) NOT NULL,
-    contractor_name VARCHAR(150),
-    email VARCHAR(100),
-    country_code VARCHAR(10),
-    contact_number VARCHAR(20),
-    role VARCHAR(100),
-    notes TEXT,
-    status ENUM('not started', 'in-progress' ,'completed') DEFAULT 'active',
-
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE
-);
+-- Not clear some requirements are pending
 
 
-
+-- DONE
 CREATE TABLE time_off_requests (
     id INT PRIMARY KEY AUTO_INCREMENT,
 
@@ -150,6 +133,87 @@ CREATE TABLE time_off_requests (
     FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
     FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 );
+
+
+-- DONE
+CREATE TABLE team_meetings (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    title VARCHAR(150) NOT NULL,
+    meeting_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+
+    invited_members VARCHAR(150)
+
+    status ENUM('scheduled', 'completed', 'cancelled') DEFAULT 'scheduled',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+
+-- DONE
+CREATE TABLE calendar_events (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    event_name VARCHAR(150) NOT NULL,
+    event_date DATE NOT NULL,
+    start_time TIME,
+    end_time TIME,
+
+    favorite VARCHAR(150),
+
+    is_all_day BOOLEAN DEFAULT FALSE,
+
+    status ENUM('active', 'cancelled') DEFAULT 'active',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE todos (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+    assigned_to_employee_id INT NOT NULL,
+
+    title VARCHAR(150) NOT NULL,
+    description TEXT,
+
+    due_date DATE,
+
+    repetition ENUM('none', 'daily', 'weekly', 'monthly') DEFAULT 'none',
+
+    status ENUM('pending', 'in_progress', 'completed') DEFAULT 'pending',
+
+    progress INT DEFAULT 0, -- 0 to 100
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (assigned_to_employee_id) REFERENCES employees(id) ON DELETE CASCADE
+);
+
 
 
 
@@ -213,4 +277,220 @@ CREATE TABLE employee_assessment_attempts (
     FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
 
     UNIQUE (employee_id, assessment_id)
+);
+
+
+
+
+CREATE TABLE projects (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    project_name VARCHAR(150) NOT NULL,
+    description TEXT,
+    due_date DATE,
+
+    add_member VARCHAR(150),
+    status ENUM('active', 'completed', 'pending', 'cancelled') DEFAULT 'active',
+    progress INT DEFAULT 0,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+
+
+CREATE TABLE project_tasks (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    project_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    task_name VARCHAR(150) NOT NULL,
+    description TEXT,
+
+    priority ENUM('low', 'medium', 'high') DEFAULT 'medium',
+    due_date DATE,
+
+    status ENUM('pending', 'in_progress', 'completed') DEFAULT 'pending',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE project_task_assignees (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    project_task_id INT NOT NULL,
+    employee_id INT NOT NULL,
+    project_upload TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (project_task_id) REFERENCES project_tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+
+    UNIQUE (project_task_id, employee_id)
+);
+
+
+
+
+
+
+
+
+KPIS and Chat
+
+
+
+
+
+ CREATE TABLE kpi_categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    category_name VARCHAR(150) NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE
+);
+
+CREATE TABLE kpis (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    category_id INT NOT NULL,
+
+    kpi_name VARCHAR(150) NOT NULL,
+
+    measurement_type ENUM('number', 'percentage', 'currency', 'rating') NOT NULL,
+    unit VARCHAR(20), -- $, %, #, etc.
+
+    is_active BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES kpi_categories(id) ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE kpi_assignments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+
+    category_id INT NOT NULL,
+    kpi_id INT NOT NULL,
+
+    role_id String, -- NULL means All Roles
+
+    goal_value DECIMAL(12,2) NOT NULL,
+
+    reset_frequency ENUM('daily', 'weekly', 'monthly', 'quarterly', 'yearly') DEFAULT 'weekly',
+
+    is_repeat BOOLEAN DEFAULT FALSE,
+
+    status ENUM('on_track', 'need_attention', 'at_risk') DEFAULT 'on_track',
+
+    progress DECIMAL(5,2) DEFAULT 0,
+
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES kpi_categories(id) ON DELETE CASCADE,
+    FOREIGN KEY (kpi_id) REFERENCES kpis(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES employee_roles(id) ON DELETE SET NULL
+);
+
+CREATE TABLE business_foundations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT UNIQUE NOT NULL,
+
+    mission TEXT,
+    vision TEXT,
+    values TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE
+);
+
+CREATE TABLE chat_rooms (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    room_name VARCHAR(150) NOT NULL,
+    room_photo_url TEXT,
+
+    room_type ENUM('team', 'room') DEFAULT 'room',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE chat_room_members (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    room_id INT NOT NULL,
+    user_id INT NOT NULL,
+
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+    UNIQUE (room_id, user_id)
+);
+CREATE TABLE chat_messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    room_id INT NOT NULL,
+    sender_user_id INT NOT NULL,
+
+    message TEXT,
+    message_type ENUM('text', 'image', 'file') DEFAULT 'text',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE chat_message_attachments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    message_id INT NOT NULL,
+
+    file_name VARCHAR(255),
+    file_url TEXT NOT NULL,
+    file_type VARCHAR(100),
+    file_size BIGINT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE
 );

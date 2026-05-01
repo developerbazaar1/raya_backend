@@ -1,5 +1,10 @@
 module.exports = {
   ROLES: ['business_owner', 'employee'],
+  TIME_OFF_STATUS: ['pending', 'approved', 'rejected', 'change_requested', 'cancelled'],
+  SCHEDULE_STATUS: ['not_started', 'in_progress', 'completed'],
+  TASK_PRIORITY: ['low', 'medium', 'high'],
+  KPI_RESET_FREQUENCY: ['daily', 'weekly', 'monthly'],
+  KPI_STATUS: ['on_track', 'need_attention', 'at_risk'],
   OTP_EXPIRY: 10 * 60 * 1000, // 10 minutes
   JWT_EXPIRY: '7d', // 7 days
   GUEST_USERS: ['dbrahul03@.gmail.com', 'guest@example.com'],
