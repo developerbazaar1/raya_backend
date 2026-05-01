@@ -4,7 +4,7 @@ const { SCHEDULE_STATUS } = require('../../config/constant');
 const scheduleSchema = new mongoose.Schema({
     businessOwnerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'BusinessOwner',
+        ref: 'User',
         required: true
     },
     vendorId: {

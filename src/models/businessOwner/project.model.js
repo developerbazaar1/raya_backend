@@ -1,9 +1,11 @@
 const mongoose = require('mongoose');
 
+// # This is project schema to track projects created by business owner and their details
 const projectSchema = new mongoose.Schema({
+  // Reference to the business owner user
   businessOwnerId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
+    ref: 'User',
     required: true,
     index: true
   },
@@ -25,7 +27,7 @@ const projectSchema = new mongoose.Schema({
   assignedUsers: [
     {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'user'
+      ref: 'User'
     }
   ],
 
@@ -40,4 +42,4 @@ projectSchema.index({ businessOwnerId: 1 });
 projectSchema.index({ assignedUsers: 1 });
 projectSchema.index({ createdAt: -1 });
 
-module.exports = mongoose.model('project', projectSchema);
+module.exports = mongoose.model('Project', projectSchema);

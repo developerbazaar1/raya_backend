@@ -1,9 +1,10 @@
-const { SCHEDULE_STATUS } = require("../../config/constant");
+const { SCHEDULE_STATUS, TASK_PRIORITY } = require("../../config/constant");
 
+// This is project task schema 
 const taskSchema = new mongoose.Schema({
     projectId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'project',
+        ref: 'Project',
         required: true,
         index: true
     },
@@ -18,7 +19,7 @@ const taskSchema = new mongoose.Schema({
 
     priority: {
         type: String,
-        enum: ['low', 'medium', 'high'],
+        enum: TASK_PRIORITY,
         default: 'medium',
         index: true
     },
@@ -45,4 +46,4 @@ taskSchema.index({ projectId: 1, status: 1 });
 taskSchema.index({ projectId: 1, createdAt: -1 });
 taskSchema.index({ dueDate: 1 });
 
-module.exports = mongoose.model('task', taskSchema);
+module.exports = mongoose.model('Task', taskSchema);

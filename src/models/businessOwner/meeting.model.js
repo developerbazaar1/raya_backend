@@ -4,7 +4,7 @@ const meetingSchema = new mongoose.Schema(
     {
         businessOwnerId: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'BusinessOwner',
+            ref: 'User',
             required: true,
         },
         createdByUserId: {

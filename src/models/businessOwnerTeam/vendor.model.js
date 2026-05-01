@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const vendorSchema = new mongoose.Schema({
     businessOwnerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'BusinessOwner',
+        ref: 'User',
         required: true
     },
     companyName: { type: String, trim: true },

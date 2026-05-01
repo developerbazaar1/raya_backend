@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 const { TIME_OFF_STATUS } = require('../../config/constant');
 
 const timeOffRequestSchema = new mongoose.Schema({
+    
+    // # Reference to the business owner (User)
     businessOwnerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'BusinessOwner',
+        ref: 'User',
         required: true
     },
     employeeId: {

@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const employeeSchema = new mongoose.Schema(
+const employeeInfoSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -8,9 +8,10 @@ const employeeSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    // # Reference to the business owner (User)
     businessOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'BusinessOwner',
+      ref: 'User',
       required: true,
     },
     employeeRoleId: {
@@ -57,4 +58,4 @@ const employeeSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-module.exports = mongoose.model('Employee', employeeSchema);
+module.exports = mongoose.model('EmployeeInfo', employeeInfoSchema);

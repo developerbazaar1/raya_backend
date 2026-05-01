@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const contractorSchema = new mongoose.Schema({
-
+    // # Reference to the business owner (User)
     businessOwnerId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'BusinessOwner',
+        ref: 'User',
         required: true
     },
     companyName: { type: String, trim: true },

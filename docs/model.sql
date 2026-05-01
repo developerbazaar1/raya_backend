@@ -343,3 +343,154 @@ CREATE TABLE project_task_assignees (
 
     UNIQUE (project_task_id, employee_id)
 );
+
+
+
+
+
+
+
+
+KPIS and Chat
+
+
+
+
+
+ CREATE TABLE kpi_categories (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    category_name VARCHAR(150) NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE
+);
+
+CREATE TABLE kpis (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    category_id INT NOT NULL,
+
+    kpi_name VARCHAR(150) NOT NULL,
+
+    measurement_type ENUM('number', 'percentage', 'currency', 'rating') NOT NULL,
+    unit VARCHAR(20), -- $, %, #, etc.
+
+    is_active BOOLEAN DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES kpi_categories(id) ON DELETE CASCADE
+);
+
+
+
+CREATE TABLE kpi_assignments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+
+    category_id INT NOT NULL,
+    kpi_id INT NOT NULL,
+
+    role_id String, -- NULL means All Roles
+
+    goal_value DECIMAL(12,2) NOT NULL,
+
+    reset_frequency ENUM('daily', 'weekly', 'monthly', 'quarterly', 'yearly') DEFAULT 'weekly',
+
+    is_repeat BOOLEAN DEFAULT FALSE,
+
+    status ENUM('on_track', 'need_attention', 'at_risk') DEFAULT 'on_track',
+
+    progress DECIMAL(5,2) DEFAULT 0,
+
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES kpi_categories(id) ON DELETE CASCADE,
+    FOREIGN KEY (kpi_id) REFERENCES kpis(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES employee_roles(id) ON DELETE SET NULL
+);
+
+CREATE TABLE business_foundations (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT UNIQUE NOT NULL,
+
+    mission TEXT,
+    vision TEXT,
+    values TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE
+);
+
+CREATE TABLE chat_rooms (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    business_owner_id INT NOT NULL,
+    created_by_user_id INT NOT NULL,
+
+    room_name VARCHAR(150) NOT NULL,
+    room_photo_url TEXT,
+
+    room_type ENUM('team', 'room') DEFAULT 'room',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (business_owner_id) REFERENCES business_owners(id) ON DELETE CASCADE,
+    FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+CREATE TABLE chat_room_members (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    room_id INT NOT NULL,
+    user_id INT NOT NULL,
+
+    joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+    UNIQUE (room_id, user_id)
+);
+CREATE TABLE chat_messages (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    room_id INT NOT NULL,
+    sender_user_id INT NOT NULL,
+
+    message TEXT,
+    message_type ENUM('text', 'image', 'file') DEFAULT 'text',
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (room_id) REFERENCES chat_rooms(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+CREATE TABLE chat_message_attachments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+
+    message_id INT NOT NULL,
+
+    file_name VARCHAR(255),
+    file_url TEXT NOT NULL,
+    file_type VARCHAR(100),
+    file_size BIGINT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE
+);

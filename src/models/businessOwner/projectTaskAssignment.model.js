@@ -1,25 +1,28 @@
+const { SCHEDULE_STATUS } = require("../../config/constant");
+
+// # This is project task assignment schema to track which user is assigned to which task and their status
 const taskAssignmentSchema = new mongoose.Schema({
   taskId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'task',
+    ref: 'Task',
     required: true
   },
 
   projectId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'project',
+    ref: 'Project',
     required: true
   },
 
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
+    ref: 'User',
     required: true
   },
 
   status: {
     type: String,
-    enum: ['not_started', 'in_progress', 'completed'],
+    enum: SCHEDULE_STATUS,
     default: 'not_started'
   },
 
