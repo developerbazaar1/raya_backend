@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 const AppError = require('../utils/appError');
+const { loggingService } = require('../modules/logging');
 const logger = require('../utils/logger');
 
 const GENERIC_ERROR_MESSAGE = 'Something went wrong. Please try again later.';
@@ -80,6 +81,26 @@ const errorHandler = (err, req, res, next) => {
     method: req.method,
     path: req.originalUrl,
     stack: err.stack
+  });
+
+  loggingService.logApplicationEventSafely({
+    level: 'error',
+    module: 'http',
+    eventType: 'request_error',
+    message: err.message || 'Unhandled request error',
+    correlationId: req.headers['x-correlation-id'] || '',
+    requestId: req.headers['x-request-id'] || '',
+    actorType: 'request',
+    metadata: {
+      name: err.name,
+      code: err.code || '',
+      isOperational: normalizedError.isOperational || false,
+    },
+    httpMethod: req.method,
+    routePath: req.originalUrl,
+    statusCode,
+    stack: err.stack || '',
+    tags: ['http', 'error'],
   });
 
   if (process.env.NODE_ENV === 'development') {
