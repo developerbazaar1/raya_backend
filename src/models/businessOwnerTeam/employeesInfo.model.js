@@ -54,6 +54,8 @@ const employeeInfoSchema = new mongoose.Schema(
     favouriteLocalBusiness: { type: String, trim: true },
     favouriteRestaurants: { type: String, trim: true },
     notification: { type: Boolean, default: false },
+    subscribedToMarketingEmails: { type: Boolean, default: false },
+    agreedToTermsAndPrivacyPolicy: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

@@ -1,0 +1,404 @@
+const User = require('../models/shared/users.model');
+const UserAuthOtp = require('../models/shared/userAuthOtp.model');
+const BusinessOwnerInfo = require('../models/businessOwner/businessOwnerInfo.model');
+const AppError = require('../utils/appError');
+const {
+  hashValue,
+  hashPassword,
+  comparePassword,
+  createOtp,
+  createAuthToken
+} = require('../helper/auth.helper');
+const { uploadFileToSpaces } = require('../helper/fileUpload.helper');
+
+const REGISTRATION_ROLE = 'business_owner';
+const OTP_PURPOSE = 'email_verification';
+
+const normalizeCompletedSteps = (steps = []) =>
+  [...new Set(steps)].sort((a, b) => a - b);
+
+const createDefaultRegistrationState = () => ({
+  currentStep: 1,
+  completedSteps: [],
+  status: 'in_progress',
+  agreedToTerms: false,
+  subscribedToMarketing: false,
+  emailVerified: false,
+  planId: null,
+  paymentCompleted: false,
+  passwordCreated: false,
+  profileCompleted: false,
+  lastCompletedAt: null
+});
+
+const ensureBusinessOwnerUser = async (email) => {
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user) {
+    throw new AppError('User not found.', 404);
+  }
+
+  if (user.role !== REGISTRATION_ROLE) {
+    throw new AppError('Registration is only available for business owners.', 403);
+  }
+
+  return user;
+};
+
+const getOrCreateBusinessOwnerInfo = async (userId) => {
+  let businessOwnerInfo = await BusinessOwnerInfo.findOne({ userId });
+  if (!businessOwnerInfo) {
+    businessOwnerInfo = await BusinessOwnerInfo.create({
+      userId,
+      registrationState: createDefaultRegistrationState()
+    });
+  }
+
+  if (!businessOwnerInfo.registrationState) {
+    businessOwnerInfo.registrationState = createDefaultRegistrationState();
+  }
+
+  return businessOwnerInfo;
+};
+
+const markStepCompleted = (businessOwnerInfo, stepNumber, nextStep) => {
+  const completedSteps = normalizeCompletedSteps([
+    ...(businessOwnerInfo.registrationState?.completedSteps || []),
+    stepNumber
+  ]);
+
+  businessOwnerInfo.registrationState = {
+    ...businessOwnerInfo.registrationState.toObject?.(),
+    ...businessOwnerInfo.registrationState,
+    completedSteps,
+    currentStep: nextStep,
+    lastCompletedAt: new Date()
+  };
+};
+
+const buildRegistrationResponse = (user, businessOwnerInfo) => ({
+  userId: user._id,
+  email: user.email,
+  name: user.name,
+  role: user.role,
+  registration: {
+    status: businessOwnerInfo.registrationState.status,
+    currentStep: businessOwnerInfo.registrationState.currentStep,
+    completedSteps: businessOwnerInfo.registrationState.completedSteps,
+    emailVerified: businessOwnerInfo.registrationState.emailVerified,
+    paymentCompleted: businessOwnerInfo.registrationState.paymentCompleted,
+    passwordCreated: businessOwnerInfo.registrationState.passwordCreated,
+    profileCompleted: businessOwnerInfo.registrationState.profileCompleted
+  },
+  approval: {
+    approvalStatus: businessOwnerInfo.approvalStatus,
+    accountStatus: businessOwnerInfo.accountStatus
+  }
+});
+
+const ensureStepAccess = (businessOwnerInfo, expectedStep) => {
+  if (businessOwnerInfo.registrationState.status === 'completed') {
+    throw new AppError('Registration has already been completed.', 400);
+  }
+
+  if (businessOwnerInfo.registrationState.currentStep !== expectedStep) {
+    throw new AppError(
+      `Please complete step ${businessOwnerInfo.registrationState.currentStep} first.`,
+      400
+    );
+  }
+};
+
+const createOrRefreshOtp = async (user) => {
+  const otp = createOtp();
+
+  await UserAuthOtp.updateMany(
+    {
+      userId: user._id,
+      purpose: OTP_PURPOSE,
+      consumedAt: null
+    },
+    { $set: { consumedAt: new Date() } }
+  );
+
+  await UserAuthOtp.create({
+    userId: user._id,
+    email: user.email,
+    otpHash: hashValue(otp),
+    purpose: OTP_PURPOSE
+  });
+
+  return otp;
+};
+
+const startRegistration = async ({ name, email, agreeToTerms, subscribeToMarketing = false }) => {
+  const normalizedEmail = email.toLowerCase();
+  let user = await User.findOne({ email: normalizedEmail });
+
+  if (user && user.role !== REGISTRATION_ROLE) {
+    throw new AppError('This email is already used by another account type.', 400);
+  }
+
+  if (!user) {
+    user = await User.create({
+      name,
+      email: normalizedEmail,
+      role: REGISTRATION_ROLE
+    });
+  } else {
+    user.name = name;
+    await user.save();
+  }
+
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+
+  if (businessOwnerInfo.registrationState.status === 'completed') {
+    throw new AppError('User already registered. Please wait for admin approval or login.', 400);
+  }
+
+  businessOwnerInfo.registrationState.agreedToTerms = agreeToTerms;
+  businessOwnerInfo.registrationState.subscribedToMarketing = subscribeToMarketing;
+  businessOwnerInfo.registrationState.currentStep = Math.max(
+    businessOwnerInfo.registrationState.currentStep || 1,
+    2
+  );
+  businessOwnerInfo.registrationState.completedSteps = normalizeCompletedSteps([
+    ...(businessOwnerInfo.registrationState.completedSteps || []),
+    1
+  ]);
+  businessOwnerInfo.registrationState.lastCompletedAt = new Date();
+  await businessOwnerInfo.save();
+
+  const otp = await createOrRefreshOtp(user);
+
+  return {
+    ...buildRegistrationResponse(user, businessOwnerInfo),
+    otp
+  };
+};
+
+const resendRegistrationOtp = async ({ email }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+
+  if (businessOwnerInfo.registrationState.emailVerified) {
+    throw new AppError('Email is already verified.', 400);
+  }
+
+  const otp = await createOrRefreshOtp(user);
+  return { email: user.email, otp };
+};
+
+const verifyRegistrationOtp = async ({ email, otp }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  ensureStepAccess(businessOwnerInfo, 2);
+
+  const otpRecord = await UserAuthOtp.findOne({
+    userId: user._id,
+    purpose: OTP_PURPOSE,
+    consumedAt: null,
+    expiresAt: { $gt: new Date() }
+  }).sort({ createdAt: -1 });
+
+  if (!otpRecord || otpRecord.otpHash !== hashValue(otp)) {
+    throw new AppError('Invalid or expired OTP.', 400);
+  }
+
+  otpRecord.consumedAt = new Date();
+  await otpRecord.save();
+
+  businessOwnerInfo.registrationState.emailVerified = true;
+  markStepCompleted(businessOwnerInfo, 2, 3);
+  await businessOwnerInfo.save();
+
+  return buildRegistrationResponse(user, businessOwnerInfo);
+};
+
+const saveRegistrationStep3 = async ({ email, whatBringsYouHere }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  ensureStepAccess(businessOwnerInfo, 3);
+
+  businessOwnerInfo.whatBringsYouThere = whatBringsYouHere;
+  markStepCompleted(businessOwnerInfo, 3, 4);
+  await businessOwnerInfo.save();
+
+  return buildRegistrationResponse(user, businessOwnerInfo);
+};
+
+const saveRegistrationStep4 = async ({ email, planId }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  ensureStepAccess(businessOwnerInfo, 4);
+
+  businessOwnerInfo.registrationState.planId = planId;
+  markStepCompleted(businessOwnerInfo, 4, 5);
+  await businessOwnerInfo.save();
+
+  return buildRegistrationResponse(user, businessOwnerInfo);
+};
+
+const saveRegistrationStep5 = async ({ email }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  ensureStepAccess(businessOwnerInfo, 5);
+
+  businessOwnerInfo.registrationState.paymentCompleted = true;
+  markStepCompleted(businessOwnerInfo, 5, 6);
+  await businessOwnerInfo.save();
+
+  return buildRegistrationResponse(user, businessOwnerInfo);
+};
+
+const saveRegistrationStep6 = async ({ email, howDidYouHearAboutUs }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  ensureStepAccess(businessOwnerInfo, 6);
+
+  businessOwnerInfo.howDidYouHearAboutUs = howDidYouHearAboutUs;
+  markStepCompleted(businessOwnerInfo, 6, 7);
+  await businessOwnerInfo.save();
+
+  return buildRegistrationResponse(user, businessOwnerInfo);
+};
+
+const saveRegistrationStep7 = async ({ email, password }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  ensureStepAccess(businessOwnerInfo, 7);
+
+  user.password = await hashPassword(password);
+  await user.save();
+
+  businessOwnerInfo.registrationState.passwordCreated = true;
+  markStepCompleted(businessOwnerInfo, 7, 8);
+  await businessOwnerInfo.save();
+
+  return buildRegistrationResponse(user, businessOwnerInfo);
+};
+
+const saveRegistrationStep8 = async ({
+  email,
+  businessName,
+  businessType,
+  phoneNumberCountryCode,
+  phoneNumber,
+  timeZone,
+  address,
+  state,
+  city,
+  zipCode,
+  files = {}
+}) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  ensureStepAccess(businessOwnerInfo, 8);
+
+  const logoFile = files.logo?.[0];
+  const profilePictureFile = files.profilePicture?.[0];
+  const logoMetadata = await uploadFileToSpaces(logoFile, `business-owners/${user._id}/logo`);
+  const profilePictureMetadata = await uploadFileToSpaces(
+    profilePictureFile,
+    `business-owners/${user._id}/profile-picture`
+  );
+
+  businessOwnerInfo.businessName = businessName;
+  businessOwnerInfo.businessType = businessType;
+  businessOwnerInfo.address = address;
+  businessOwnerInfo.state = state;
+  businessOwnerInfo.city = city;
+  businessOwnerInfo.zipCode = zipCode;
+  businessOwnerInfo.timeZone = timeZone;
+  businessOwnerInfo.phoneNumber = {
+    countryCode: phoneNumberCountryCode,
+    number: phoneNumber
+  };
+
+  if (logoMetadata) {
+    businessOwnerInfo.companyLogo = logoMetadata;
+  }
+
+  if (profilePictureMetadata) {
+    user.userProfile = profilePictureMetadata;
+  }
+
+  businessOwnerInfo.registrationState.profileCompleted = true;
+  businessOwnerInfo.registrationState.status = 'completed';
+  businessOwnerInfo.approvalStatus = 'pending_approval';
+  businessOwnerInfo.accountStatus = 'inactive';
+  markStepCompleted(businessOwnerInfo, 8, 8);
+  await user.save();
+  await businessOwnerInfo.save();
+
+  return buildRegistrationResponse(user, businessOwnerInfo);
+};
+
+const loginUser = async ({ email, password }) => {
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user || user.role !== REGISTRATION_ROLE) {
+    throw new AppError('Invalid email or password.', 401);
+  }
+
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  const isRegistrationComplete = businessOwnerInfo.registrationState.status === 'completed';
+  const canAuthenticateWithPassword =
+    businessOwnerInfo.registrationState.emailVerified &&
+    businessOwnerInfo.registrationState.passwordCreated;
+
+  if (!canAuthenticateWithPassword) {
+    return {
+      message: `Registration incomplete. Continue from step ${businessOwnerInfo.registrationState.currentStep}.`,
+      data: {
+        ...buildRegistrationResponse(user, businessOwnerInfo),
+        token: '',
+        resumeRegistration: true
+      }
+    };
+  }
+
+  const isPasswordValid = await comparePassword(password, user.password);
+  if (!isPasswordValid) {
+    throw new AppError('Invalid email or password.', 401);
+  }
+
+  if (!isRegistrationComplete) {
+    return {
+      message: `Registration incomplete. Continue from step ${businessOwnerInfo.registrationState.currentStep}.`,
+      data: {
+        ...buildRegistrationResponse(user, businessOwnerInfo),
+        token: '',
+        resumeRegistration: true
+      }
+    };
+  }
+
+  if (businessOwnerInfo.approvalStatus !== 'approved') {
+    throw new AppError('Your account is pending admin approval.', 403);
+  }
+
+  if (businessOwnerInfo.accountStatus !== 'active') {
+    throw new AppError('Your account is deactivated. Please contact admin.', 403);
+  }
+
+  return {
+    message: 'Login successful.',
+    data: {
+      ...buildRegistrationResponse(user, businessOwnerInfo),
+      token: createAuthToken(user),
+      resumeRegistration: false
+    }
+  };
+};
+
+module.exports = {
+  startRegistration,
+  resendRegistrationOtp,
+  verifyRegistrationOtp,
+  saveRegistrationStep3,
+  saveRegistrationStep4,
+  saveRegistrationStep5,
+  saveRegistrationStep6,
+  saveRegistrationStep7,
+  saveRegistrationStep8,
+  loginUser
+};
