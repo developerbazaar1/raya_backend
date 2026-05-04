@@ -18,7 +18,7 @@ const notificationDeliverySchema = new mongoose.Schema(
     },
     businessOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'BusinessOwner',
+      ref: 'User',
       default: null,
       index: true,
     },
