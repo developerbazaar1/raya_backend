@@ -1,62 +1,22 @@
-const mongoose = require("mongoose");
-
-const quizQuestionSchema = new mongoose.Schema(
-  {
-    question: {
-      type: String,
-      required: true,
-    },
-
-    options: [
-      {
-        text: {
-          type: String,
-          required: true,
-        },
-      },
-    ],
-
-    correctAnswer: {
-      type: Number,
-      required: true,
-    },
+/**
+ * QUIZ (PER CHAPTER)
+ */
+const mongoose = require('mongoose');
+const quizSchema = new mongoose.Schema({
+  trainingVersionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TrainingVersion',
+    index: true
   },
-  { _id: false }
-);
 
-const quizSchema = new mongoose.Schema(
-  {
-    trainingId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Training",
-      required: true,
-    },
-
-    businessOwnerId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "BusinessOwner",
-      required: true,
-    },
-
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-
-    title: {
-      type: String,
-      required: true,
-    },
-
-    questions: [quizQuestionSchema],
-
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+  chapterId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Chapter',
+    index: true
   },
-  { timestamps: true }
-);
 
-module.exports = mongoose.model("Quiz", quizSchema);
+  title: String
+
+}, { timestamps: true }); 
+
+module.exports = mongoose.model('Quiz', quizSchema);
