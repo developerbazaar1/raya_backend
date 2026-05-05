@@ -130,10 +130,49 @@ const loginValidation = [
   body('password').notEmpty().withMessage('Password is required')
 ];
 
+const forgotPasswordValidation = [EMAIL_RULES];
+
+const forgotPasswordOtpValidation = [
+  EMAIL_RULES,
+  body('otp')
+    .trim()
+    .isLength({ min: 4, max: 6 })
+    .withMessage('OTP must be between 4 and 6 digits')
+    .isNumeric()
+    .withMessage('OTP must be numeric')
+];
+
+const resetPasswordValidation = [
+  EMAIL_RULES,
+  body('otp')
+    .trim()
+    .isLength({ min: 4, max: 6 })
+    .withMessage('OTP must be between 4 and 6 digits')
+    .isNumeric()
+    .withMessage('OTP must be numeric'),
+  body('newPassword')
+    .isLength({ min: 8 })
+    .withMessage('New password must be at least 8 characters long')
+    .matches(/[a-z]/)
+    .withMessage('New password must contain at least one lowercase letter')
+    .matches(/[A-Z]/)
+    .withMessage('New password must contain at least one uppercase letter')
+    .matches(/\d/)
+    .withMessage('New password must contain at least one number')
+    .matches(/[@$!%*?&]/)
+    .withMessage('New password must contain at least one special character'),
+  body('confirmPassword')
+    .custom((value, { req }) => value === req.body.newPassword)
+    .withMessage('Passwords do not match')
+];
+
 module.exports = {
   registerStartValidation,
   verifyOtpValidation,
   emailOnlyValidation,
   businessOwnerStepValidation,
-  loginValidation
+  loginValidation,
+  forgotPasswordValidation,
+  forgotPasswordOtpValidation,
+  resetPasswordValidation
 };

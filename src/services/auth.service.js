@@ -12,7 +12,8 @@ const {
 const { uploadFileToSpaces } = require('../helper/fileUpload.helper');
 
 const REGISTRATION_ROLE = 'business_owner';
-const OTP_PURPOSE = 'email_verification';
+const EMAIL_VERIFICATION_OTP_PURPOSE = 'email_verification';
+const RESET_PASSWORD_OTP_PURPOSE = 'reset_password';
 
 const normalizeCompletedSteps = (steps = []) =>
   [...new Set(steps)].sort((a, b) => a - b);
@@ -108,13 +109,13 @@ const ensureStepAccess = (businessOwnerInfo, expectedStep) => {
   }
 };
 
-const createOrRefreshOtp = async (user) => {
+const createOrRefreshOtp = async (user, purpose) => {
   const otp = createOtp();
 
   await UserAuthOtp.updateMany(
     {
       userId: user._id,
-      purpose: OTP_PURPOSE,
+      purpose,
       consumedAt: null
     },
     { $set: { consumedAt: new Date() } }
@@ -124,11 +125,19 @@ const createOrRefreshOtp = async (user) => {
     userId: user._id,
     email: user.email,
     otpHash: hashValue(otp),
-    purpose: OTP_PURPOSE
+    purpose
   });
 
   return otp;
 };
+
+const getActiveOtpRecord = async (userId, purpose) =>
+  UserAuthOtp.findOne({
+    userId,
+    purpose,
+    consumedAt: null,
+    expiresAt: { $gt: new Date() }
+  }).sort({ createdAt: -1 });
 
 const startRegistration = async ({ name, email, agreeToTerms, subscribeToMarketing = false }) => {
   const normalizedEmail = email.toLowerCase();
@@ -168,7 +177,7 @@ const startRegistration = async ({ name, email, agreeToTerms, subscribeToMarketi
   businessOwnerInfo.registrationState.lastCompletedAt = new Date();
   await businessOwnerInfo.save();
 
-  const otp = await createOrRefreshOtp(user);
+  const otp = await createOrRefreshOtp(user, EMAIL_VERIFICATION_OTP_PURPOSE);
 
   return {
     ...buildRegistrationResponse(user, businessOwnerInfo),
@@ -184,7 +193,7 @@ const resendRegistrationOtp = async ({ email }) => {
     throw new AppError('Email is already verified.', 400);
   }
 
-  const otp = await createOrRefreshOtp(user);
+  const otp = await createOrRefreshOtp(user, EMAIL_VERIFICATION_OTP_PURPOSE);
   return { email: user.email, otp };
 };
 
@@ -193,12 +202,7 @@ const verifyRegistrationOtp = async ({ email, otp }) => {
   const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
   ensureStepAccess(businessOwnerInfo, 2);
 
-  const otpRecord = await UserAuthOtp.findOne({
-    userId: user._id,
-    purpose: OTP_PURPOSE,
-    consumedAt: null,
-    expiresAt: { $gt: new Date() }
-  }).sort({ createdAt: -1 });
+  const otpRecord = await getActiveOtpRecord(user._id, EMAIL_VERIFICATION_OTP_PURPOSE);
 
   if (!otpRecord || otpRecord.otpHash !== hashValue(otp)) {
     throw new AppError('Invalid or expired OTP.', 400);
@@ -212,6 +216,66 @@ const verifyRegistrationOtp = async ({ email, otp }) => {
   await businessOwnerInfo.save();
 
   return buildRegistrationResponse(user, businessOwnerInfo);
+};
+
+const forgotPassword = async ({ email }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+
+  if (!user.password || !businessOwnerInfo.registrationState.passwordCreated) {
+    throw new AppError('Password is not set for this account yet.', 400);
+  }
+
+  const otp = await createOrRefreshOtp(user, RESET_PASSWORD_OTP_PURPOSE);
+
+  return {
+    email: user.email,
+    otp
+  };
+};
+
+const verifyForgotPasswordOtp = async ({ email, otp }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const otpRecord = await getActiveOtpRecord(user._id, RESET_PASSWORD_OTP_PURPOSE);
+
+  if (!otpRecord || otpRecord.otpHash !== hashValue(otp)) {
+    throw new AppError('Invalid or expired OTP.', 400);
+  }
+
+  return {
+    email: user.email,
+    verified: true
+  };
+};
+
+const resendForgotPasswordOtp = async ({ email }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const otp = await createOrRefreshOtp(user, RESET_PASSWORD_OTP_PURPOSE);
+
+  return {
+    email: user.email,
+    otp
+  };
+};
+
+const resetPassword = async ({ email, otp, newPassword }) => {
+  const user = await ensureBusinessOwnerUser(email);
+  const otpRecord = await getActiveOtpRecord(user._id, RESET_PASSWORD_OTP_PURPOSE);
+
+  if (!otpRecord || otpRecord.otpHash !== hashValue(otp)) {
+    throw new AppError('Invalid or expired OTP.', 400);
+  }
+
+  user.password = await hashPassword(newPassword);
+  await user.save();
+
+  otpRecord.consumedAt = new Date();
+  await otpRecord.save();
+
+  return {
+    email: user.email,
+    reset: true
+  };
 };
 
 const saveRegistrationStep3 = async ({ email, whatBringsYouHere }) => {
@@ -400,5 +464,9 @@ module.exports = {
   saveRegistrationStep6,
   saveRegistrationStep7,
   saveRegistrationStep8,
-  loginUser
+  loginUser,
+  forgotPassword,
+  verifyForgotPasswordOtp,
+  resendForgotPasswordOtp,
+  resetPassword
 };

@@ -6,7 +6,10 @@ const {
   verifyOtpValidation,
   emailOnlyValidation,
   businessOwnerStepValidation,
-  loginValidation
+  loginValidation,
+  forgotPasswordValidation,
+  forgotPasswordOtpValidation,
+  resetPasswordValidation
 } = require('../../validations/auth.validator');
 
 const {
@@ -21,7 +24,13 @@ const {
   step8
 } = require('../../controllers/businessOwner/register.controller');
 
-const { login } = require('../../controllers/auth/login.controller');
+const {
+  login,
+  forgotPasswordController,
+  verifyForgotPasswordOtpController,
+  resendForgotPasswordOtpController,
+  resetPasswordController
+} = require('../../controllers/auth/login.controller');
 
 router.post('/register/start', validate(registerStartValidation), asyncHandler(registerStart));
 router.post('/register/resend-otp', validate(emailOnlyValidation), asyncHandler(resendOtp));
@@ -39,6 +48,26 @@ router.post(
 );
 
 router.post('/login', validate(loginValidation), asyncHandler(login));
+router.post(
+  '/forgot-password',
+  validate(forgotPasswordValidation),
+  asyncHandler(forgotPasswordController)
+);
+router.post(
+  '/forgot-password/verify-otp',
+  validate(forgotPasswordOtpValidation),
+  asyncHandler(verifyForgotPasswordOtpController)
+);
+router.post(
+  '/forgot-password/resend-otp',
+  validate(forgotPasswordValidation),
+  asyncHandler(resendForgotPasswordOtpController)
+);
+router.post(
+  '/forgot-password/reset-password',
+  validate(resetPasswordValidation),
+  asyncHandler(resetPasswordController)
+);
 
 
 module.exports = router;
