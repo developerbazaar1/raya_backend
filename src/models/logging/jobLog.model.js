@@ -1,3 +1,10 @@
+/**
+ * JobLog Model
+ * This model captures logs related to background job executions, such as scheduled tasks or asynchronous processing. It includes details about the job name, run ID, queue name, status, attempt count, timestamps for start and finish, and duration. Logs are automatically expired after a defined retention period to manage storage efficiently.
+ */
+
+
+
 const mongoose = require('mongoose');
 const { baseLogSchemaOptions, commonLogFields } = require('./baseLogFields');
 

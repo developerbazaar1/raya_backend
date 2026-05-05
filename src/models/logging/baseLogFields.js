@@ -1,3 +1,8 @@
+/**
+ * Base Log Fields
+ * This module defines the common fields used across different log models (ApplicationLog, IntegrationLog, SecurityLog). It provides a consistent structure for logging various types of events in the application, ensuring that essential information is captured for analysis and troubleshooting.
+ */
+
 const commonLogFields = {
   level: {
     type: String,

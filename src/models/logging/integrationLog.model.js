@@ -1,3 +1,9 @@
+/**
+ * IntegrationLog Model
+ * This model captures logs related to external system integrations, such as API calls to third-party services. It includes details about the provider, operation, direction (inbound/outbound), status, and performance metrics. Logs are automatically expired after a defined retention period to manage storage efficiently.
+ */
+
+
 const mongoose = require('mongoose');
 const { baseLogSchemaOptions, commonLogFields } = require('./baseLogFields');
 
