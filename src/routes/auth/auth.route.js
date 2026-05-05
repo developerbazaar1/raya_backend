@@ -1,15 +1,22 @@
 const router = require('express').Router();
 const asyncHandler = require('../../utils/asyncHandler');
-const { uploadBusinessOwnerStep8Files, validate } = require('../../middlewares');
+const {
+  authenticate,
+  uploadBusinessOwnerStep8Files,
+  uploadEmployeeProfileStep1Files,
+  validate
+} = require('../../middlewares');
 const {
   registerStartValidation,
   verifyOtpValidation,
   emailOnlyValidation,
   businessOwnerStepValidation,
   loginValidation,
+  logoutValidation,
   forgotPasswordValidation,
   forgotPasswordOtpValidation,
-  resetPasswordValidation
+  resetPasswordValidation,
+  employeeProfileStepValidation
 } = require('../../validations/auth.validator');
 
 const {
@@ -23,9 +30,14 @@ const {
   step7,
   step8
 } = require('../../controllers/businessOwner/register.controller');
+const {
+  employeeProfileStep1,
+  employeeProfileStep2
+} = require('../../controllers/businessOwnerTeam/employeeProfile.controller');
 
 const {
   login,
+  logout,
   forgotPasswordController,
   verifyForgotPasswordOtpController,
   resendForgotPasswordOtpController,
@@ -48,6 +60,20 @@ router.post(
 );
 
 router.post('/login', validate(loginValidation), asyncHandler(login));
+router.post('/logout', authenticate, validate(logoutValidation), asyncHandler(logout));
+
+router.post(
+  '/employee/profile/step-1',
+  uploadEmployeeProfileStep1Files,
+  validate(employeeProfileStepValidation.step1),
+  asyncHandler(employeeProfileStep1)
+);
+router.post(
+  '/employee/profile/step-2',
+  validate(employeeProfileStepValidation.step2),
+  asyncHandler(employeeProfileStep2)
+);
+
 router.post(
   '/forgot-password',
   validate(forgotPasswordValidation),

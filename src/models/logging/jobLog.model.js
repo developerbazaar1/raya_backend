@@ -53,14 +53,12 @@ const jobLogSchema = new mongoose.Schema(
       type: Date,
       default: () =>
         new Date(Date.now() + JOB_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000),
-      index: true,
     },
   },
   baseLogSchemaOptions,
 );
 
 jobLogSchema.index({ jobName: 1, status: 1, timestamp: -1 });
-jobLogSchema.index({ runId: 1 });
 jobLogSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 module.exports = mongoose.model('JobLog', jobLogSchema);

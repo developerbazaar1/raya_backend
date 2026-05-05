@@ -43,11 +43,14 @@ const createAuthToken = (user) =>
     { expiresIn: '7d' }
   );
 
+const verifyAuthToken = (token) => jwt.verify(token, JWT_SECRET);
+
 module.exports = {
   STATIC_OTP,
   hashValue,
   hashPassword,
   comparePassword,
   createOtp,
-  createAuthToken
+  createAuthToken,
+  verifyAuthToken
 };

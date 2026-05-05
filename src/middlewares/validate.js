@@ -6,9 +6,15 @@ const handleValidationResult = (req, res, next) => {
   if (!errors.isEmpty()) {
     const message = errors.array();
     return next(
-      new AppError(message[0].msg || 'validation_error', 400),
+      new AppError(message[0].msg || 'validation_error', 400)
     );
   }
   next();
 };
-module.exports = handleValidationResult;
+
+const validate = (validations = []) => [
+  ...validations,
+  handleValidationResult
+];
+
+module.exports = validate;

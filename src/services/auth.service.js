@@ -1,6 +1,7 @@
 const User = require('../models/shared/users.model');
 const UserAuthOtp = require('../models/shared/userAuthOtp.model');
 const BusinessOwnerInfo = require('../models/businessOwner/businessOwnerInfo.model');
+const EmployeeInfo = require('../models/businessOwnerTeam/employeesInfo.model');
 const AppError = require('../utils/appError');
 const {
   hashValue,
@@ -32,6 +33,13 @@ const createDefaultRegistrationState = () => ({
   lastCompletedAt: null
 });
 
+const createDefaultEmployeeProfileCompletion = () => ({
+  currentStep: 1,
+  completedSteps: [],
+  status: 'in_progress',
+  lastCompletedAt: null
+});
+
 const ensureBusinessOwnerUser = async (email) => {
   const user = await User.findOne({ email: email.toLowerCase() });
   if (!user) {
@@ -40,6 +48,15 @@ const ensureBusinessOwnerUser = async (email) => {
 
   if (user.role !== REGISTRATION_ROLE) {
     throw new AppError('Registration is only available for business owners.', 403);
+  }
+
+  return user;
+};
+
+const findUserByEmail = async (email) => {
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user) {
+    throw new AppError('User not found.', 404);
   }
 
   return user;
@@ -61,6 +78,23 @@ const getOrCreateBusinessOwnerInfo = async (userId) => {
   return businessOwnerInfo;
 };
 
+const getOrCreateEmployeeInfo = async (user) => {
+  let employeeInfo = await EmployeeInfo.findOne({ userId: user._id });
+  if (!employeeInfo) {
+    employeeInfo = await EmployeeInfo.create({
+      userId: user._id,
+      businessOwnerId: user.owner,
+      profileCompletion: createDefaultEmployeeProfileCompletion()
+    });
+  }
+
+  if (!employeeInfo.profileCompletion) {
+    employeeInfo.profileCompletion = createDefaultEmployeeProfileCompletion();
+  }
+
+  return employeeInfo;
+};
+
 const markStepCompleted = (businessOwnerInfo, stepNumber, nextStep) => {
   const completedSteps = normalizeCompletedSteps([
     ...(businessOwnerInfo.registrationState?.completedSteps || []),
@@ -70,6 +104,21 @@ const markStepCompleted = (businessOwnerInfo, stepNumber, nextStep) => {
   businessOwnerInfo.registrationState = {
     ...businessOwnerInfo.registrationState.toObject?.(),
     ...businessOwnerInfo.registrationState,
+    completedSteps,
+    currentStep: nextStep,
+    lastCompletedAt: new Date()
+  };
+};
+
+const markEmployeeStepCompleted = (employeeInfo, stepNumber, nextStep) => {
+  const completedSteps = normalizeCompletedSteps([
+    ...(employeeInfo.profileCompletion?.completedSteps || []),
+    stepNumber
+  ]);
+
+  employeeInfo.profileCompletion = {
+    ...employeeInfo.profileCompletion.toObject?.(),
+    ...employeeInfo.profileCompletion,
     completedSteps,
     currentStep: nextStep,
     lastCompletedAt: new Date()
@@ -96,6 +145,18 @@ const buildRegistrationResponse = (user, businessOwnerInfo) => ({
   }
 });
 
+const buildEmployeeProfileResponse = (user, employeeInfo) => ({
+  userId: user._id,
+  email: user.email,
+  name: user.name,
+  role: user.role,
+  employeeProfile: {
+    status: employeeInfo.profileCompletion.status,
+    currentStep: employeeInfo.profileCompletion.currentStep,
+    completedSteps: employeeInfo.profileCompletion.completedSteps
+  }
+});
+
 const ensureStepAccess = (businessOwnerInfo, expectedStep) => {
   if (businessOwnerInfo.registrationState.status === 'completed') {
     throw new AppError('Registration has already been completed.', 400);
@@ -104,6 +165,19 @@ const ensureStepAccess = (businessOwnerInfo, expectedStep) => {
   if (businessOwnerInfo.registrationState.currentStep !== expectedStep) {
     throw new AppError(
       `Please complete step ${businessOwnerInfo.registrationState.currentStep} first.`,
+      400
+    );
+  }
+};
+
+const ensureEmployeeStepAccess = (employeeInfo, expectedStep) => {
+  if (employeeInfo.profileCompletion.status === 'completed') {
+    throw new AppError('Employee profile has already been completed.', 400);
+  }
+
+  if (employeeInfo.profileCompletion.currentStep !== expectedStep) {
+    throw new AppError(
+      `Please complete step ${employeeInfo.profileCompletion.currentStep} first.`,
       400
     );
   }
@@ -219,10 +293,9 @@ const verifyRegistrationOtp = async ({ email, otp }) => {
 };
 
 const forgotPassword = async ({ email }) => {
-  const user = await ensureBusinessOwnerUser(email);
-  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+  const user = await findUserByEmail(email);
 
-  if (!user.password || !businessOwnerInfo.registrationState.passwordCreated) {
+  if (!user.password) {
     throw new AppError('Password is not set for this account yet.', 400);
   }
 
@@ -235,7 +308,7 @@ const forgotPassword = async ({ email }) => {
 };
 
 const verifyForgotPasswordOtp = async ({ email, otp }) => {
-  const user = await ensureBusinessOwnerUser(email);
+  const user = await findUserByEmail(email);
   const otpRecord = await getActiveOtpRecord(user._id, RESET_PASSWORD_OTP_PURPOSE);
 
   if (!otpRecord || otpRecord.otpHash !== hashValue(otp)) {
@@ -249,7 +322,7 @@ const verifyForgotPasswordOtp = async ({ email, otp }) => {
 };
 
 const resendForgotPasswordOtp = async ({ email }) => {
-  const user = await ensureBusinessOwnerUser(email);
+  const user = await findUserByEmail(email);
   const otp = await createOrRefreshOtp(user, RESET_PASSWORD_OTP_PURPOSE);
 
   return {
@@ -259,7 +332,7 @@ const resendForgotPasswordOtp = async ({ email }) => {
 };
 
 const resetPassword = async ({ email, otp, newPassword }) => {
-  const user = await ensureBusinessOwnerUser(email);
+  const user = await findUserByEmail(email);
   const otpRecord = await getActiveOtpRecord(user._id, RESET_PASSWORD_OTP_PURPOSE);
 
   if (!otpRecord || otpRecord.otpHash !== hashValue(otp)) {
@@ -275,6 +348,22 @@ const resetPassword = async ({ email, otp, newPassword }) => {
   return {
     email: user.email,
     reset: true
+  };
+};
+
+const logoutUser = async ({ userId, deviceToken }) => {
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError('User not found.', 404);
+  }
+
+  await user.removeDeviceToken(deviceToken);
+
+  return {
+    email: user.email,
+    deviceToken,
+    loggedOut: true
   };
 };
 
@@ -397,61 +486,205 @@ const saveRegistrationStep8 = async ({
   return buildRegistrationResponse(user, businessOwnerInfo);
 };
 
-const loginUser = async ({ email, password }) => {
+const loginUser = async ({ email, password, deviceToken= '' }) => {
   const user = await User.findOne({ email: email.toLowerCase() });
-  if (!user || user.role !== REGISTRATION_ROLE) {
+  if (!user) {
     throw new AppError('Invalid email or password.', 401);
   }
 
-  const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
-  const isRegistrationComplete = businessOwnerInfo.registrationState.status === 'completed';
-  const canAuthenticateWithPassword =
-    businessOwnerInfo.registrationState.emailVerified &&
-    businessOwnerInfo.registrationState.passwordCreated;
+  if (user.role === REGISTRATION_ROLE) {
+    const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
+    const isRegistrationComplete = businessOwnerInfo.registrationState.status === 'completed';
+    const canAuthenticateWithPassword =
+      businessOwnerInfo.registrationState.emailVerified &&
+      businessOwnerInfo.registrationState.passwordCreated;
 
-  if (!canAuthenticateWithPassword) {
-    return {
-      message: `Registration incomplete. Continue from step ${businessOwnerInfo.registrationState.currentStep}.`,
-      data: {
-        ...buildRegistrationResponse(user, businessOwnerInfo),
-        token: '',
-        resumeRegistration: true
-      }
-    };
-  }
-
-  const isPasswordValid = await comparePassword(password, user.password);
-  if (!isPasswordValid) {
-    throw new AppError('Invalid email or password.', 401);
-  }
-
-  if (!isRegistrationComplete) {
-    return {
-      message: `Registration incomplete. Continue from step ${businessOwnerInfo.registrationState.currentStep}.`,
-      data: {
-        ...buildRegistrationResponse(user, businessOwnerInfo),
-        token: '',
-        resumeRegistration: true
-      }
-    };
-  }
-
-  if (businessOwnerInfo.approvalStatus !== 'approved') {
-    throw new AppError('Your account is pending admin approval.', 403);
-  }
-
-  if (businessOwnerInfo.accountStatus !== 'active') {
-    throw new AppError('Your account is deactivated. Please contact admin.', 403);
-  }
-
-  return {
-    message: 'Login successful.',
-    data: {
-      ...buildRegistrationResponse(user, businessOwnerInfo),
-      token: createAuthToken(user),
-      resumeRegistration: false
+    if (!canAuthenticateWithPassword) {
+      return {
+        message: `Registration incomplete. Continue from step ${businessOwnerInfo.registrationState.currentStep}.`,
+        data: {
+          ...buildRegistrationResponse(user, businessOwnerInfo),
+          token: '',
+          resumeRegistration: true
+        }
+      };
     }
+
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (!isPasswordValid) {
+      throw new AppError('Invalid email or password.', 401);
+    }
+
+    if (!isRegistrationComplete) {
+      return {
+        message: `Registration incomplete. Continue from step ${businessOwnerInfo.registrationState.currentStep}.`,
+        data: {
+          ...buildRegistrationResponse(user, businessOwnerInfo),
+          token: '',
+          resumeRegistration: true
+        }
+      };
+    }
+
+    if (businessOwnerInfo.approvalStatus !== 'approved') {
+      throw new AppError('Your account is pending admin approval.', 403);
+    }
+
+    if (businessOwnerInfo.accountStatus !== 'active') {
+      throw new AppError('Your account is deactivated. Please contact admin.', 403);
+    }
+
+    // If login is successful and device token is provided, save it to the user's record
+    if (deviceToken) {
+      await user.addDeviceToken(deviceToken);
+    }
+    return {
+      message: 'Login successful.',
+      data: {
+        ...buildRegistrationResponse(user, businessOwnerInfo),
+        token: createAuthToken(user),
+        resumeRegistration: false
+      }
+    };
+  }
+
+  if (user.role === 'employee') {
+    const isPasswordValid = await comparePassword(password, user.password);
+    if (!isPasswordValid) {
+      throw new AppError('Invalid email or password.', 401);
+    }
+
+    const employeeInfo = await getOrCreateEmployeeInfo(user);
+    const isProfileComplete = employeeInfo.profileCompletion.status === 'completed';
+
+    if (!isProfileComplete) {
+      return {
+        message: `Profile incomplete. Continue from step ${employeeInfo.profileCompletion.currentStep}.`,
+        data: {
+          ...buildEmployeeProfileResponse(user, employeeInfo),
+          token: createAuthToken(user),
+          resumeProfileCompletion: true
+        }
+      };
+    }
+
+    // If login is successful and device token is provided, save it to the user's record
+    if (deviceToken) {
+      await user.addDeviceToken(deviceToken);
+    }
+    return {
+      message: 'Login successful.',
+      data: {
+        ...buildEmployeeProfileResponse(user, employeeInfo),
+        token: createAuthToken(user),
+        resumeProfileCompletion: false
+      }
+    };
+  }
+
+  throw new AppError('Invalid user role.', 403);
+};
+
+const saveEmployeeProfileStep1 = async ({
+  email,
+  name,
+  gender,
+  dob,
+  phoneCountryCode,
+  phoneNumber,
+  timeZone,
+  address,
+  country,
+  state,
+  city,
+  zipCode,
+  files = {}
+}) => {
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user || user.role !== 'employee') {
+    throw new AppError('Employee not found.', 404);
+  }
+
+  const employeeInfo = await getOrCreateEmployeeInfo(user);
+  ensureEmployeeStepAccess(employeeInfo, 1);
+
+  const profilePhotoFile = files.profilePhoto?.[0];
+  const profilePhotoMetadata = await uploadFileToSpaces(
+    profilePhotoFile,
+    `employees/${user._id}/profile-photo`
+  );
+
+  user.name = name;
+  if (profilePhotoMetadata) {
+    user.userProfile = profilePhotoMetadata;
+  }
+  await user.save();
+
+  employeeInfo.gender = gender;
+  employeeInfo.dateOfBirth = dob;
+  employeeInfo.phoneNumber = {
+    countryCode: phoneCountryCode,
+    number: phoneNumber
   };
+  employeeInfo.timeZone = timeZone;
+  employeeInfo.address = address;
+  employeeInfo.country = country;
+  employeeInfo.state = state;
+  employeeInfo.city = city;
+  employeeInfo.zipCode = zipCode;
+  markEmployeeStepCompleted(employeeInfo, 1, 2);
+  await employeeInfo.save();
+
+  return buildEmployeeProfileResponse(user, employeeInfo);
+};
+
+const saveEmployeeProfileStep2 = async ({
+  email,
+  isMarried,
+  spouse,
+  haveKids,
+  kids,
+  havePets,
+  pets,
+  favoriteFlower,
+  favoriteCackeFlavor,
+  favoriteOnlineStore,
+  favoriteLocalBusiness,
+  favoriteRestaurant
+}) => {
+  const user = await User.findOne({ email: email.toLowerCase() });
+  if (!user || user.role !== 'employee') {
+    throw new AppError('Employee not found.', 404);
+  }
+
+  const employeeInfo = await getOrCreateEmployeeInfo(user);
+  ensureEmployeeStepAccess(employeeInfo, 2);
+
+  employeeInfo.isMarried = isMarried;
+  employeeInfo.spouseName = isMarried ? spouse?.name || '' : '';
+  employeeInfo.spouseGender = isMarried ? spouse?.gender || '' : '';
+  employeeInfo.spouseAnniversary = isMarried ? spouse?.anniversary || null : null;
+  employeeInfo.haveKids = haveKids;
+  employeeInfo.kids = haveKids ? (kids || []).map((kid) => ({
+    name: kid.name,
+    gender: kid.gender,
+    birthday: kid.birthday
+  })) : [];
+  employeeInfo.havePets = havePets;
+  employeeInfo.pets = havePets ? (pets || []).map((pet) => ({
+    name: pet.name,
+    age: pet.age
+  })) : [];
+  employeeInfo.favouriteFlower = favoriteFlower || '';
+  employeeInfo.favouriteCakeFlavour = favoriteCackeFlavor || '';
+  employeeInfo.favouriteOnlineStore = favoriteOnlineStore || '';
+  employeeInfo.favouriteLocalBusiness = favoriteLocalBusiness || '';
+  employeeInfo.favouriteRestaurants = favoriteRestaurant || '';
+  employeeInfo.profileCompletion.status = 'completed';
+  markEmployeeStepCompleted(employeeInfo, 2, 2);
+  await employeeInfo.save();
+
+  return buildEmployeeProfileResponse(user, employeeInfo);
 };
 
 module.exports = {
@@ -464,7 +697,10 @@ module.exports = {
   saveRegistrationStep6,
   saveRegistrationStep7,
   saveRegistrationStep8,
+  saveEmployeeProfileStep1,
+  saveEmployeeProfileStep2,
   loginUser,
+  logoutUser,
   forgotPassword,
   verifyForgotPasswordOtp,
   resendForgotPasswordOtp,

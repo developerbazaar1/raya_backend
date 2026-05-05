@@ -29,7 +29,6 @@ const adminAuthOtpSchema = new mongoose.Schema(
       type: Date,
       required: true,
       default: () => new Date(Date.now() + OTP_EXPIRY),
-      index: true,
     },
     consumedAt: {
       type: Date,

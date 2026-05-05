@@ -127,8 +127,74 @@ const businessOwnerStepValidation = {
 
 const loginValidation = [
   EMAIL_RULES,
-  body('password').notEmpty().withMessage('Password is required')
+  body('password').notEmpty().withMessage('Password is required'),
+  body('deviceToken')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('deviceToken cannot be empty'),
+  body('trustThisDevice')
+    .optional()
+    .isBoolean()
+    .withMessage('trustThisDevice must be true or false')
 ];
+
+const employeeProfileStepValidation = {
+  step1: [
+    EMAIL_RULES,
+    body('name').trim().notEmpty().withMessage('name is required'),
+    body('gender').trim().notEmpty().withMessage('gender is required'),
+    body('dob').trim().notEmpty().withMessage('dob is required').isISO8601()
+      .withMessage('dob must be a valid date'),
+    body('phoneCountryCode')
+      .trim()
+      .notEmpty()
+      .withMessage('phoneCountryCode is required'),
+    body('phoneNumber')
+      .trim()
+      .notEmpty()
+      .withMessage('phoneNumber is required'),
+    body('timeZone').trim().notEmpty().withMessage('timeZone is required'),
+    body('address').trim().notEmpty().withMessage('address is required'),
+    body('country').trim().notEmpty().withMessage('country is required'),
+    body('state').trim().notEmpty().withMessage('state is required'),
+    body('city').trim().notEmpty().withMessage('city is required'),
+    body('zipCode').trim().notEmpty().withMessage('zipCode is required')
+  ],
+  step2: [
+    EMAIL_RULES,
+    body('isMarried').isBoolean().withMessage('isMarried must be true or false'),
+    body('spouse')
+      .optional({ values: 'falsy' })
+      .isObject()
+      .withMessage('spouse must be an object'),
+    body('haveKids').isBoolean().withMessage('haveKids must be true or false'),
+    body('kids')
+      .optional({ values: 'falsy' })
+      .isArray()
+      .withMessage('kids must be an array'),
+    body('havePets').isBoolean().withMessage('havePets must be true or false'),
+    body('pets')
+      .optional({ values: 'falsy' })
+      .isArray()
+      .withMessage('pets must be an array'),
+    body('favoriteFlower')
+      .optional()
+      .trim(),
+    body('favoriteCackeFlavor')
+      .optional()
+      .trim(),
+    body('favoriteOnlineStore')
+      .optional()
+      .trim(),
+    body('favoriteLocalBusiness')
+      .optional()
+      .trim(),
+    body('favoriteRestaurant')
+      .optional()
+      .trim()
+  ]
+};
 
 const forgotPasswordValidation = [EMAIL_RULES];
 
@@ -166,13 +232,22 @@ const resetPasswordValidation = [
     .withMessage('Passwords do not match')
 ];
 
+const logoutValidation = [
+  body('deviceToken')
+    .trim()
+    .notEmpty()
+    .withMessage('deviceToken is required')
+];
+
 module.exports = {
   registerStartValidation,
   verifyOtpValidation,
   emailOnlyValidation,
   businessOwnerStepValidation,
+  employeeProfileStepValidation,
   loginValidation,
   forgotPasswordValidation,
   forgotPasswordOtpValidation,
-  resetPasswordValidation
+  resetPasswordValidation,
+  logoutValidation
 };
