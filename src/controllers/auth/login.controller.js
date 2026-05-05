@@ -1,5 +1,6 @@
 const {
   loginUser,
+  logoutUser,
   forgotPassword,
   verifyForgotPasswordOtp,
   resendForgotPasswordOtp,
@@ -20,6 +21,19 @@ const forgotPasswordController = async (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'OTP sent successfully for password reset.',
+    data
+  });
+};
+
+const logout = async (req, res) => {
+  const data = await logoutUser({
+    userId: req.user.userId,
+    deviceToken: req.body.deviceToken
+  });
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Logout successful.',
     data
   });
 };
@@ -53,6 +67,7 @@ const resetPasswordController = async (req, res) => {
 
 module.exports = {
   login,
+  logout,
   forgotPasswordController,
   verifyForgotPasswordOtpController,
   resendForgotPasswordOtpController,

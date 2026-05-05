@@ -18,10 +18,34 @@ const userSchema = new mongoose.Schema({
     }
   },
   dateOfJoining: { type: Date },
-  // # Reference to the business owner (User)
-  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  deviceTokens: [{ type: String }]
 }, { timestamps: true });
 
+/**
+ * Add device token
+ */
+userSchema.methods.addDeviceToken = async function (token) {
+  if (!token) return this;
+
+  if (!this.deviceTokens.includes(token)) {
+    this.deviceTokens.push(token);
+    await this.save();
+  }
+
+  return this;
+};
+
+/**
+ * Remove device token
+ */
+userSchema.methods.removeDeviceToken = async function (token) {
+  if (!token) return this;
+
+  this.deviceTokens = this.deviceTokens.filter(t => t !== token);
+  await this.save();
+
+  return this;
+};
+
 module.exports = mongoose.model('User', userSchema);
-
-

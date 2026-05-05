@@ -41,7 +41,6 @@ const applicationLogSchema = new mongoose.Schema(
       type: Date,
       default: () =>
         new Date(Date.now() + APPLICATION_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000),
-      index: true,
     },
   },
   baseLogSchemaOptions,
