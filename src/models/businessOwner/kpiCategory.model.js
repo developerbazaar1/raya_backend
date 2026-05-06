@@ -1,4 +1,3 @@
-
 /**
  * KPI CATEGORY COLLECTION
  * ----------------
@@ -7,13 +6,15 @@
  */
 const mongoose = require('mongoose');
 
-const kpiCategorySchema = new mongoose.Schema({
+const kpiCategorySchema = new mongoose.Schema(
+  {
     businessOwnerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
     },
-    categoryName: { type: String, required: true, trim: true, maxlength: 150 },
-}, { timestamps: true });
-
+    categoryName: { type: String, required: true, trim: true, maxlength: 150 }
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model('KpiCategory', kpiCategorySchema);

@@ -7,11 +7,12 @@
 const mongoose = require('mongoose');
 
 const { TRAINING_STATUS } = require('../../config/constant');
-const trainingSchema = new mongoose.Schema({
+const trainingSchema = new mongoose.Schema(
+  {
     businessOwnerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
     },
 
     title: String,
@@ -21,24 +22,23 @@ const trainingSchema = new mongoose.Schema({
 
     // 👇 currently selected version
     activeVersionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'TrainingVersion'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TrainingVersion'
     },
 
     totalVersions: {
-        type: Number,
-        default: 0,
-        max: 3
+      type: Number,
+      default: 0,
+      max: 3
     },
 
     status: {
-        type: String,
-        enum: TRAINING_STATUS,
-        default: 'draft'
+      type: String,
+      enum: TRAINING_STATUS,
+      default: 'draft'
     }
-
-}, { timestamps: true });
-
-
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model('Training', trainingSchema);

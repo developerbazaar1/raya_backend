@@ -11,5 +11,3 @@ const logger = require('../utils/logger');
     process.exit(1);
   }
 })();
-
-

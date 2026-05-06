@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { OTP_EXPIRY , OTP_PURPOSES } = require('../../config/constant');
+const { OTP_EXPIRY, OTP_PURPOSES } = require('../../config/constant');
 
 const userAuthOtpSchema = new mongoose.Schema(
   {
@@ -28,7 +28,7 @@ const userAuthOtpSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      default: () => new Date(Date.now() + OTP_EXPIRY),
+      default: () => new Date(Date.now() + OTP_EXPIRY)
     },
     consumedAt: {
       type: Date,

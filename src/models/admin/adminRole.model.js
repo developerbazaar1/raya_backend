@@ -7,34 +7,34 @@ const adminRoleSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
-      lowercase: true,
+      lowercase: true
     },
     displayName: {
       type: String,
       required: true,
-      trim: true,
+      trim: true
     },
     description: {
       type: String,
       trim: true,
-      default: '',
+      default: ''
     },
     permissionIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'AdminPermission',
-      },
+        ref: 'AdminPermission'
+      }
     ],
     isSystemRole: {
       type: Boolean,
-      default: false,
+      default: false
     },
     isActive: {
       type: Boolean,
-      default: true,
-    },
+      default: true
+    }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 adminRoleSchema.index({ isActive: 1 });

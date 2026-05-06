@@ -8,7 +8,7 @@ module.exports = {
   TRAINING_VERSION_STATUS: ['draft', 'selected', 'archived'],
   CHAPTER_PROGRESS_STATUS: ['not_started', 'in_progress', 'completed'],
   TRAINING_ASSIGNMENT_STATUS: ['not_started', 'in_progress', 'completed', 'failed'],
-  OTP_PURPOSES: ['login','email_verification','phone_verification','reset_password'],
+  OTP_PURPOSES: ['login', 'email_verification', 'phone_verification', 'reset_password'],
   KPI_STATUS: ['on_track', 'need_attention', 'at_risk'],
   OTP_EXPIRY: 10 * 60 * 1000, // 10 minutes
   JWT_EXPIRY: '7d', // 7 days
@@ -16,5 +16,5 @@ module.exports = {
   FILE_TYPES: ['jpeg', 'jpg', 'png', 'jfif', 'avif'],
   FILE_SIZE: 10 * 1024 * 1024, // 10MB
   DO_SPACES_REGION: 'sgp1',
-  DO_SPACES_BUCKET: 'seer-app',
+  DO_SPACES_BUCKET: 'seer-app'
 };

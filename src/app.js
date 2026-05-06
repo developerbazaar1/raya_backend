@@ -10,10 +10,11 @@ app.use(rateLimiter);
 app.use(hppProtection);
 app.use(requestLogger);
 
-app.use(express.json({
-  limit: '5mb'
-}));
-
+app.use(
+  express.json({
+    limit: '5mb'
+  })
+);
 
 app.use(require('./routes'));
 

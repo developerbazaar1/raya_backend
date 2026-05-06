@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { OTP_EXPIRY ,OTP_PURPOSES  } = require('../../config/constant');
+const { OTP_EXPIRY, OTP_PURPOSES } = require('../../config/constant');
 
 const adminAuthOtpSchema = new mongoose.Schema(
   {
@@ -7,40 +7,40 @@ const adminAuthOtpSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
       required: true,
-      index: true,
+      index: true
     },
     email: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
-      index: true,
+      index: true
     },
     otpHash: {
       type: String,
-      required: true,
+      required: true
     },
     purpose: {
       type: String,
       enum: OTP_PURPOSES,
-      required: true,
+      required: true
     },
     expiresAt: {
       type: Date,
       required: true,
-      default: () => new Date(Date.now() + OTP_EXPIRY),
+      default: () => new Date(Date.now() + OTP_EXPIRY)
     },
     consumedAt: {
       type: Date,
-      default: null,
-    },
+      default: null
+    }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 adminAuthOtpSchema.index(
   { adminUserId: 1, purpose: 1, consumedAt: 1, expiresAt: 1 },
-  { name: 'active_otp_lookup_idx' },
+  { name: 'active_otp_lookup_idx' }
 );
 
 module.exports = mongoose.model('AdminAuthOtp', adminAuthOtpSchema);

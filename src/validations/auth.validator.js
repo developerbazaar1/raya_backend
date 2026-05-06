@@ -7,7 +7,10 @@ const EMAIL_RULES = body('email')
   .normalizeEmail();
 
 const registerStartValidation = [
-  body('name').trim().notEmpty().withMessage('Name is required')
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Name is required')
     .isLength({ max: 100 })
     .withMessage('Name cannot exceed 100 characters')
     .matches(/^[a-zA-Z\s]+$/)
@@ -39,33 +42,17 @@ const emailOnlyValidation = [EMAIL_RULES];
 const businessOwnerStepValidation = {
   step3: [
     EMAIL_RULES,
-    body('whatBringsYouHere')
-      .trim()
-      .notEmpty()
-      .withMessage('whatBringsYouHere is required')
+    body('whatBringsYouHere').trim().notEmpty().withMessage('whatBringsYouHere is required')
   ],
-  step4: [
-    EMAIL_RULES,
-    body('planId').trim().notEmpty().withMessage('planId is required')
-  ],
+  step4: [EMAIL_RULES, body('planId').trim().notEmpty().withMessage('planId is required')],
   step5: [
     EMAIL_RULES,
-    body('paymentStatus')
-      .trim()
-      .equals('completed')
-      .withMessage('paymentStatus must be completed'),
-    body('transactionId')
-      .optional()
-      .trim()
-      .notEmpty()
-      .withMessage('transactionId cannot be empty')
+    body('paymentStatus').trim().equals('completed').withMessage('paymentStatus must be completed'),
+    body('transactionId').optional().trim().notEmpty().withMessage('transactionId cannot be empty')
   ],
   step6: [
     EMAIL_RULES,
-    body('howDidYouHearAboutUs')
-      .trim()
-      .notEmpty()
-      .withMessage('howDidYouHearAboutUs is required')
+    body('howDidYouHearAboutUs').trim().notEmpty().withMessage('howDidYouHearAboutUs is required')
   ],
   step7: [
     EMAIL_RULES,
@@ -86,14 +73,8 @@ const businessOwnerStepValidation = {
   ],
   step8: [
     EMAIL_RULES,
-    body('businessName')
-      .trim()
-      .notEmpty()
-      .withMessage('businessName is required'),
-    body('businessType')
-      .trim()
-      .notEmpty()
-      .withMessage('businessType is required'),
+    body('businessName').trim().notEmpty().withMessage('businessName is required'),
+    body('businessType').trim().notEmpty().withMessage('businessType is required'),
     body('phoneNumberCountryCode')
       .trim()
       .notEmpty()
@@ -132,11 +113,7 @@ const businessOwnerStepValidation = {
 const loginValidation = [
   EMAIL_RULES,
   body('password').notEmpty().withMessage('Password is required'),
-  body('deviceToken')
-    .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('deviceToken cannot be empty'),
+  body('deviceToken').optional().trim().notEmpty().withMessage('deviceToken cannot be empty'),
   body('trustThisDevice')
     .optional()
     .isBoolean()
@@ -148,16 +125,14 @@ const employeeProfileStepValidation = {
     EMAIL_RULES,
     body('name').trim().notEmpty().withMessage('name is required'),
     body('gender').trim().notEmpty().withMessage('gender is required'),
-    body('dob').trim().notEmpty().withMessage('dob is required').isISO8601()
+    body('dob')
+      .trim()
+      .notEmpty()
+      .withMessage('dob is required')
+      .isISO8601()
       .withMessage('dob must be a valid date'),
-    body('phoneCountryCode')
-      .trim()
-      .notEmpty()
-      .withMessage('phoneCountryCode is required'),
-    body('phoneNumber')
-      .trim()
-      .notEmpty()
-      .withMessage('phoneNumber is required'),
+    body('phoneCountryCode').trim().notEmpty().withMessage('phoneCountryCode is required'),
+    body('phoneNumber').trim().notEmpty().withMessage('phoneNumber is required'),
     body('timeZone').trim().notEmpty().withMessage('timeZone is required'),
     body('address').trim().notEmpty().withMessage('address is required'),
     body('country').trim().notEmpty().withMessage('country is required'),
@@ -168,35 +143,16 @@ const employeeProfileStepValidation = {
   step2: [
     EMAIL_RULES,
     body('isMarried').isBoolean().withMessage('isMarried must be true or false'),
-    body('spouse')
-      .optional({ values: 'falsy' })
-      .isObject()
-      .withMessage('spouse must be an object'),
+    body('spouse').optional({ values: 'falsy' }).isObject().withMessage('spouse must be an object'),
     body('haveKids').isBoolean().withMessage('haveKids must be true or false'),
-    body('kids')
-      .optional({ values: 'falsy' })
-      .isArray()
-      .withMessage('kids must be an array'),
+    body('kids').optional({ values: 'falsy' }).isArray().withMessage('kids must be an array'),
     body('havePets').isBoolean().withMessage('havePets must be true or false'),
-    body('pets')
-      .optional({ values: 'falsy' })
-      .isArray()
-      .withMessage('pets must be an array'),
-    body('favoriteFlower')
-      .optional()
-      .trim(),
-    body('favoriteCackeFlavor')
-      .optional()
-      .trim(),
-    body('favoriteOnlineStore')
-      .optional()
-      .trim(),
-    body('favoriteLocalBusiness')
-      .optional()
-      .trim(),
-    body('favoriteRestaurant')
-      .optional()
-      .trim()
+    body('pets').optional({ values: 'falsy' }).isArray().withMessage('pets must be an array'),
+    body('favoriteFlower').optional().trim(),
+    body('favoriteCackeFlavor').optional().trim(),
+    body('favoriteOnlineStore').optional().trim(),
+    body('favoriteLocalBusiness').optional().trim(),
+    body('favoriteRestaurant').optional().trim()
   ]
 };
 
@@ -237,10 +193,7 @@ const resetPasswordValidation = [
 ];
 
 const logoutValidation = [
-  body('deviceToken')
-    .trim()
-    .notEmpty()
-    .withMessage('deviceToken is required')
+  body('deviceToken').trim().notEmpty().withMessage('deviceToken is required')
 ];
 
 module.exports = {

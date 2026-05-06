@@ -6,7 +6,8 @@
  */
 const mongoose = require('mongoose');
 
-const businessFoundationSchema = new mongoose.Schema({
+const businessFoundationSchema = new mongoose.Schema(
+  {
     businessOwnerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

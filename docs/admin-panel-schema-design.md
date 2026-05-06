@@ -82,6 +82,7 @@ These are useful foundations, but the admin panel requirements still need additi
 ### 5.1 Identity Service
 
 #### `users`
+
 - `_id`
 - `name`
 - `email`
@@ -101,6 +102,7 @@ Indexes:
 - index: `{ ownerUserId }`
 
 #### `admin_users`
+
 - `_id`
 - `name`
 - `email`
@@ -114,6 +116,7 @@ Indexes:
 - `updatedAt`
 
 #### `admin_roles`
+
 - `_id`
 - `name`
 - `displayName`
@@ -125,6 +128,7 @@ Indexes:
 - `updatedAt`
 
 #### `admin_permissions`
+
 - `_id`
 - `key`
 - `module`
@@ -134,6 +138,7 @@ Indexes:
 - `updatedAt`
 
 #### `admin_auth_otps`
+
 - `_id`
 - `adminUserId`
 - `email`
@@ -151,6 +156,7 @@ Add:
 - TTL index on `expiresAt`
 
 #### `admin_sessions` or `refresh_tokens`
+
 - `_id`
 - `adminUserId`
 - `tokenHash`
@@ -165,6 +171,7 @@ This is important for production-ready auth and device/session invalidation.
 ## 5.2 Organization Service
 
 #### `businesses`
+
 This should replace the loose `businessOwner.businessType` string approach.
 
 - `_id`
@@ -197,6 +204,7 @@ Indexes:
 - text/search index: `businessName`, `email`
 
 #### `business_types`
+
 - `_id`
 - `name`
 - `slug`
@@ -209,6 +217,7 @@ Indexes:
 - `deletedAt`
 
 #### `industries`
+
 - `_id`
 - `name`
 - `slug`
@@ -217,6 +226,7 @@ Indexes:
 - `updatedAt`
 
 #### `employees`
+
 - `_id`
 - `userId`
 - `businessId`
@@ -238,6 +248,7 @@ Note:
 - admin panel queries should stay lean
 
 #### `employee_roles`
+
 - `_id`
 - `businessId`
 - `name`
@@ -248,6 +259,7 @@ Note:
 ## 5.3 Billing Service
 
 #### `plans`
+
 Current model is good, but split features into a dedicated structure if plan management grows.
 
 - `_id`
@@ -263,6 +275,7 @@ Current model is good, but split features into a dedicated structure if plan man
 - `updatedAt`
 
 #### `plan_features`
+
 - `_id`
 - `planId`
 - `featureKey`
@@ -280,6 +293,7 @@ Examples:
 - priority_support
 
 #### `subscriptions`
+
 - `_id`
 - `businessId`
 - `planId`
@@ -303,6 +317,7 @@ Indexes:
 - `{ status, renewalAt }`
 
 #### `invoices`
+
 - `_id`
 - `businessId`
 - `subscriptionId`
@@ -325,6 +340,7 @@ Indexes:
 - `updatedAt`
 
 #### `payment_transactions`
+
 Do not keep all attempts only inside the invoice document if volume grows.
 
 - `_id`
@@ -347,6 +363,7 @@ This table is important for failed payments and transaction history.
 ## 5.4 Assessments Service
 
 #### `assessment_providers`
+
 - `_id`
 - `name`
 - `slug`
@@ -357,6 +374,7 @@ This table is important for failed payments and transaction history.
 - `updatedAt`
 
 #### `assessments`
+
 - `_id`
 - `providerId`
 - `externalAssessmentId`
@@ -369,6 +387,7 @@ This table is important for failed payments and transaction history.
 - `updatedAt`
 
 #### `business_assessment_assignments`
+
 - `_id`
 - `businessId`
 - `assessmentId`
@@ -381,6 +400,7 @@ This table is important for failed payments and transaction history.
 - `updatedAt`
 
 #### `employee_assessment_attempts`
+
 - `_id`
 - `employeeId`
 - `userId`
@@ -397,6 +417,7 @@ This table is important for failed payments and transaction history.
 - `updatedAt`
 
 #### `disc_result_summaries`
+
 Use this for fast admin analytics.
 
 - `_id`
@@ -429,6 +450,7 @@ This is the right place to support:
 ## 5.5 Training Service
 
 #### `training_contents`
+
 - `_id`
 - `title`
 - `slug`
@@ -443,6 +465,7 @@ This is the right place to support:
 - `updatedAt`
 
 #### `training_assignments`
+
 - `_id`
 - `trainingContentId`
 - `businessId`
@@ -454,6 +477,7 @@ This is the right place to support:
 - `updatedAt`
 
 #### `training_progress`
+
 - `_id`
 - `trainingAssignmentId`
 - `userId`
@@ -473,6 +497,7 @@ Current campaign and delivery models are a good start.
 Add or strengthen:
 
 #### `notification_campaigns`
+
 - `type`
 - `title`
 - `message`
@@ -495,6 +520,7 @@ Add or strengthen:
 - user status
 
 #### `notification_deliveries`
+
 - `campaignId`
 - `recipientUserId`
 - `businessId`
@@ -509,6 +535,7 @@ Add or strengthen:
 - `updatedAt`
 
 #### `email_templates`
+
 - `key`
 - `name`
 - `subject`
@@ -525,6 +552,7 @@ For preview/versioning, `version` is useful so changes are auditable.
 ## 5.7 CMS Service
 
 #### `cms_pages`
+
 - `_id`
 - `key`
 - `title`
@@ -539,6 +567,7 @@ For preview/versioning, `version` is useful so changes are auditable.
 - `updatedAt`
 
 #### `cms_page_revisions`
+
 - `_id`
 - `pageId`
 - `version`
@@ -552,6 +581,7 @@ This is better than overwriting page content directly.
 ## 5.8 Audit and Compliance
 
 #### `audit_logs`
+
 Current model is valid. Add:
 
 - `correlationId`
@@ -574,6 +604,7 @@ Sensitive admin actions that should always be logged:
 ## 5.9 Support Integration
 
 #### `support_ticket_snapshots`
+
 Current model is fine for admin visibility.
 
 Add:
@@ -584,6 +615,7 @@ Add:
 - `lastProviderUpdateAt`
 
 #### `integration_sync_logs`
+
 - `_id`
 - `provider`
 - `entityType`
@@ -611,6 +643,7 @@ do not calculate everything from transactional collections at request time.
 Use pre-aggregated collections:
 
 #### `metric_daily_rollups`
+
 - `_id`
 - `metricDate`
 - `metricKey`
@@ -631,6 +664,7 @@ Examples:
 - `roi`
 
 #### `feature_usage_rollups`
+
 - `_id`
 - `metricDate`
 - `businessId`

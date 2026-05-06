@@ -6,42 +6,42 @@ const auditLogSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
       required: true,
-      index: true,
+      index: true
     },
     actionType: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
-      index: true,
+      index: true
     },
     targetType: {
       type: String,
       required: true,
       trim: true,
-      lowercase: true,
+      lowercase: true
     },
     targetId: {
       type: String,
       required: true,
-      trim: true,
+      trim: true
     },
     metadata: {
       type: mongoose.Schema.Types.Mixed,
-      default: {},
+      default: {}
     },
     ip: {
       type: String,
       trim: true,
-      default: '',
+      default: ''
     },
     userAgent: {
       type: String,
       trim: true,
-      default: '',
-    },
+      default: ''
+    }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 auditLogSchema.index({ createdAt: -1 });

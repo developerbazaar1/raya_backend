@@ -4,33 +4,33 @@ const subscriptionSchema = new mongoose.Schema(
   {
     businessOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      ref: 'User',
+      required: true
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      ref: 'User',
+      required: true
     },
     planId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Plan",
-      required: true,
+      ref: 'Plan',
+      required: true
     },
     status: {
       type: String,
-      enum: ["pending", "active", "cancelled", "expired"],
-      default: "pending",
+      enum: ['pending', 'active', 'cancelled', 'expired'],
+      default: 'pending'
     },
     startDate: Date,
     endDate: Date,
     paymentStatus: {
       type: String,
-      enum: ["pending", "paid", "failed", "refunded"],
-      default: "pending",
-    },
+      enum: ['pending', 'paid', 'failed', 'refunded'],
+      default: 'pending'
+    }
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Subscription", subscriptionSchema);
+module.exports = mongoose.model('Subscription', subscriptionSchema);

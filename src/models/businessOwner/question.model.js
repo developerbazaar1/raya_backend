@@ -2,23 +2,25 @@
  * QUIZ QUESTIONS
  */
 const mongoose = require('mongoose');
-const questionSchema = new mongoose.Schema({
-  quizId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Quiz',
-    index: true
+const questionSchema = new mongoose.Schema(
+  {
+    quizId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Quiz',
+      index: true
+    },
+
+    question: String,
+
+    options: [
+      {
+        text: String,
+        isCorrect: Boolean
+      }
+    ]
   },
-
-  question: String,
-
-  options: [
-    {
-      text: String,
-      isCorrect: Boolean
-    }
-  ]
-
-}, { timestamps: true });
+  { timestamps: true }
+);
 
 questionSchema.index({ quizId: 1 });
 

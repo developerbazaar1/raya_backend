@@ -3,8 +3,6 @@
  * This model captures logs related to security events, such as authentication attempts, authorization checks, and access control decisions. It includes details about the principal (user or system) involved, the outcome of the event, and any relevant context. Logs are automatically expired after a defined retention period to manage storage efficiently.
  */
 
-
-
 const mongoose = require('mongoose');
 const { baseLogSchemaOptions, commonLogFields } = require('./baseLogFields');
 
@@ -18,51 +16,49 @@ const securityLogSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       default: '',
-      index: true,
+      index: true
     },
     principalId: {
       type: String,
       trim: true,
       default: '',
-      index: true,
+      index: true
     },
     identifier: {
       type: String,
       trim: true,
       lowercase: true,
       default: '',
-      index: true,
+      index: true
     },
     ipAddress: {
       type: String,
       trim: true,
       default: '',
-      index: true,
+      index: true
     },
     userAgent: {
       type: String,
       trim: true,
-      default: '',
+      default: ''
     },
     outcome: {
       type: String,
       enum: ['success', 'failure', 'blocked'],
       required: true,
-      index: true,
+      index: true
     },
     reason: {
       type: String,
       trim: true,
-      default: '',
+      default: ''
     },
     expiresAt: {
       type: Date,
-      default: () =>
-        new Date(Date.now() + SECURITY_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000),
-     
-    },
+      default: () => new Date(Date.now() + SECURITY_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
+    }
   },
-  baseLogSchemaOptions,
+  baseLogSchemaOptions
 );
 
 securityLogSchema.index({ principalType: 1, identifier: 1, timestamp: -1 });

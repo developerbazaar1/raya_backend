@@ -8,54 +8,51 @@ const notificationDeliverySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'NotificationCampaign',
       required: true,
-      index: true,
+      index: true
     },
     recipientUserId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
+      index: true
     },
     businessOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       default: null,
-      index: true,
+      index: true
     },
     channel: {
       type: String,
       enum: ['email', 'push'],
-      required: true,
+      required: true
     },
     status: {
       type: String,
       enum: DELIVERY_STATUSES,
       required: true,
       default: 'queued',
-      index: true,
+      index: true
     },
     providerMessageId: {
       type: String,
       trim: true,
-      default: '',
+      default: ''
     },
     providerError: {
       type: String,
       trim: true,
-      default: '',
+      default: ''
     },
     sentAt: {
       type: Date,
-      default: null,
-    },
+      default: null
+    }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 notificationDeliverySchema.index({ campaignId: 1, status: 1 });
 notificationDeliverySchema.index({ recipientUserId: 1, createdAt: -1 });
 
-module.exports = mongoose.model(
-  'NotificationDelivery',
-  notificationDeliverySchema,
-);
+module.exports = mongoose.model('NotificationDelivery', notificationDeliverySchema);

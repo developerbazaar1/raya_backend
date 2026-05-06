@@ -30,9 +30,7 @@ const sendErrorProd = (err, res) => {
 const handleDuplicateFieldsError = (err) => {
   const field = Object.keys(err.keyValue || {})[0] || 'field';
   const value = err.keyValue?.[field];
-  const message = value
-    ? `${field} "${value}" already exists.`
-    : 'Duplicate value provided.';
+  const message = value ? `${field} "${value}" already exists.` : 'Duplicate value provided.';
 
   return new AppError(message, 400);
 };

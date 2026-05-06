@@ -7,5 +7,5 @@ module.exports = {
   NotificationCampaign: require('./notificationCampaign.model'),
   NotificationDelivery: require('./notificationDelivery.model'),
   EmailTemplate: require('./emailTemplate.model'),
-  SupportTicketSnapshot: require('./supportTicketSnapshot.model'),
+  SupportTicketSnapshot: require('./supportTicketSnapshot.model')
 };

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require('mongoose');
 const employeeLeaveBalanceSchema = new mongoose.Schema(
   {
     employeeId: {
@@ -26,6 +26,5 @@ const employeeLeaveBalanceSchema = new mongoose.Schema(
     timestamps: true
   }
 );
-
 
 module.exports = mongoose.model('EmployeeLeaveBalance', employeeLeaveBalanceSchema);

@@ -4,31 +4,33 @@
  * Defines available onboarding steps
  */
 const mongoose = require('mongoose');
-const onboardingStepSchema = new mongoose.Schema({
+const onboardingStepSchema = new mongoose.Schema(
+  {
     key: {
-        type: String,
-        required: true,
-        unique: true
+      type: String,
+      required: true,
+      unique: true
     },
 
     title: {
-        type: String,
-        required: true
+      type: String,
+      required: true
     },
 
     description: String,
 
     order: {
-        type: Number,
-        required: true
+      type: Number,
+      required: true
     },
 
     isActive: {
-        type: Boolean,
-        default: true
+      type: Boolean,
+      default: true
     }
-
-}, { timestamps: true });
+  },
+  { timestamps: true }
+);
 
 onboardingStepSchema.index({ order: 1 });
 

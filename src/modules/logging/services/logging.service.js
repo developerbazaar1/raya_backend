@@ -13,7 +13,7 @@ class LoggingService {
       service: DEFAULT_SERVICE_NAME,
       environment: process.env.NODE_ENV || 'development',
       metadata: {},
-      ...payload,
+      ...payload
     };
   }
 
@@ -42,33 +42,21 @@ class LoggingService {
       logger.error(fallbackMessage, {
         error: error.message,
         stack: error.stack,
-        payload,
+        payload
       });
     });
   }
 
   logApplicationEventSafely(payload) {
-    this.fireAndForget(
-      'logApplicationEvent',
-      payload,
-      'Failed to persist application log',
-    );
+    this.fireAndForget('logApplicationEvent', payload, 'Failed to persist application log');
   }
 
   logSecurityEventSafely(payload) {
-    this.fireAndForget(
-      'logSecurityEvent',
-      payload,
-      'Failed to persist security log',
-    );
+    this.fireAndForget('logSecurityEvent', payload, 'Failed to persist security log');
   }
 
   logIntegrationEventSafely(payload) {
-    this.fireAndForget(
-      'logIntegrationEvent',
-      payload,
-      'Failed to persist integration log',
-    );
+    this.fireAndForget('logIntegrationEvent', payload, 'Failed to persist integration log');
   }
 
   logJobEventSafely(payload) {

@@ -1,10 +1,6 @@
 const crypto = require('crypto');
 const path = require('path');
-const {
-  s3Client,
-  spacesBucket,
-  PutObjectCommand
-} = require('../config/s3Config');
+const { s3Client, spacesBucket, PutObjectCommand } = require('../config/s3Config');
 const { FILE_SIZE, FILE_TYPES, DO_SPACES_BUCKET, DO_SPACES_REGION } = require('../config/constant');
 const AppError = require('../utils/appError');
 
@@ -50,18 +46,21 @@ const uploadFileToSpaces = async (file, folder) => {
 
   const extension = normalizeExtension(file.originalname, file.mimetype);
   const uniqueSuffix = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}`;
-  const safeBaseName = path.basename(file.originalname, path.extname(file.originalname))
+  const safeBaseName = path
+    .basename(file.originalname, path.extname(file.originalname))
     .toLowerCase()
     .replace(/[^a-z0-9-_]/g, '-');
   const key = `${folder}/${safeBaseName || 'file'}-${uniqueSuffix}.${extension}`;
 
-  await s3Client.send(new PutObjectCommand({
-    Bucket: spacesBucket,
-    Key: key,
-    Body: file.buffer,
-    ContentType: file.mimetype,
-    ACL: 'public-read'
-  }));
+  await s3Client.send(
+    new PutObjectCommand({
+      Bucket: spacesBucket,
+      Key: key,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+      ACL: 'public-read'
+    })
+  );
 
   return buildFileMetadata(file, key);
 };

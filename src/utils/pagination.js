@@ -4,7 +4,7 @@ const paginate = async (
   page = 1,
   limit = 10,
   populate = [],
-  select = '-__v ',
+  select = '-__v '
 ) => {
   const skip = (page - 1) * limit;
 
@@ -23,8 +23,8 @@ const paginate = async (
       currentPage: page,
       totalPages,
       totalCount,
-      limit,
-    },
+      limit
+    }
   };
 };
 

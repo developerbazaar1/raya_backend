@@ -16,8 +16,7 @@ const REGISTRATION_ROLE = 'business_owner';
 const EMAIL_VERIFICATION_OTP_PURPOSE = 'email_verification';
 const RESET_PASSWORD_OTP_PURPOSE = 'reset_password';
 
-const normalizeCompletedSteps = (steps = []) =>
-  [...new Set(steps)].sort((a, b) => a - b);
+const normalizeCompletedSteps = (steps = []) => [...new Set(steps)].sort((a, b) => a - b);
 
 const createDefaultRegistrationState = () => ({
   currentStep: 1,
@@ -488,7 +487,7 @@ const saveRegistrationStep8 = async ({
   return buildRegistrationResponse(user, businessOwnerInfo);
 };
 
-const loginUser = async ({ email, password, deviceToken= '' }) => {
+const loginUser = async ({ email, password, deviceToken = '' }) => {
   const user = await User.findOne({ email: email.toLowerCase() });
   if (!user) {
     throw new AppError('Invalid email or password.', 401);
@@ -667,16 +666,20 @@ const saveEmployeeProfileStep2 = async ({
   employeeInfo.spouseGender = isMarried ? spouse?.gender || '' : '';
   employeeInfo.spouseAnniversary = isMarried ? spouse?.anniversary || null : null;
   employeeInfo.haveKids = haveKids;
-  employeeInfo.kids = haveKids ? (kids || []).map((kid) => ({
-    name: kid.name,
-    gender: kid.gender,
-    birthday: kid.birthday
-  })) : [];
+  employeeInfo.kids = haveKids
+    ? (kids || []).map((kid) => ({
+      name: kid.name,
+      gender: kid.gender,
+      birthday: kid.birthday
+    }))
+    : [];
   employeeInfo.havePets = havePets;
-  employeeInfo.pets = havePets ? (pets || []).map((pet) => ({
-    name: pet.name,
-    age: pet.age
-  })) : [];
+  employeeInfo.pets = havePets
+    ? (pets || []).map((pet) => ({
+      name: pet.name,
+      age: pet.age
+    }))
+    : [];
   employeeInfo.favouriteFlower = favoriteFlower || '';
   employeeInfo.favouriteCakeFlavour = favoriteCackeFlavor || '';
   employeeInfo.favouriteOnlineStore = favoriteOnlineStore || '';

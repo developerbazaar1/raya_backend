@@ -7,46 +7,46 @@ const adminUserSchema = new mongoose.Schema(
     name: {
       type: String,
       required: true,
-      trim: true,
+      trim: true
     },
     email: {
       type: String,
       required: true,
       unique: true,
       trim: true,
-      lowercase: true,
+      lowercase: true
     },
     password: {
       type: String,
-      required: true,
+      required: true
     },
     status: {
       type: String,
       enum: ADMIN_ACCOUNT_STATUSES,
       default: 'active',
-      index: true,
+      index: true
     },
     roleIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'AdminRole',
-      },
+        ref: 'AdminRole'
+      }
     ],
     lastLoginAt: {
       type: Date,
-      default: null,
+      default: null
     },
     passwordChangedAt: {
       type: Date,
-      default: null,
+      default: null
     },
     createdByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
-      default: null,
-    },
+      default: null
+    }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 adminUserSchema.index({ email: 1, status: 1 });
