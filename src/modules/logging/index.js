@@ -1,3 +1,3 @@
 module.exports = {
-  loggingService: require('./services/logging.service'),
+  loggingService: require('./services/logging.service')
 };

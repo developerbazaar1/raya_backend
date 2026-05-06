@@ -2,7 +2,7 @@ const {
   ApplicationLog,
   IntegrationLog,
   JobLog,
-  SecurityLog,
+  SecurityLog
 } = require('../../../models/logging');
 
 class DatabaseLogSink {

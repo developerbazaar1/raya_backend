@@ -16,5 +16,5 @@ module.exports = {
   FILE_TYPES: ['jpeg', 'jpg', 'png', 'jfif', 'avif'],
   FILE_SIZE: 10 * 1024 * 1024, // 10MB
   DO_SPACES_REGION: 'sgp1',
-  DO_SPACES_BUCKET: 'seer-app',
+  DO_SPACES_BUCKET: 'seer-app'
 };

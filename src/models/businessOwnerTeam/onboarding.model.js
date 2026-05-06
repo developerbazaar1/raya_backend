@@ -16,7 +16,7 @@ const userOnboardingSchema = new mongoose.Schema({
   steps: [
     {
       key: {
-        type: String, 
+        type: String,
         required: true
       },
 
@@ -31,7 +31,7 @@ const userOnboardingSchema = new mongoose.Schema({
   ],
 
   progress: {
-    type: Number, 
+    type: Number,
     default: 0
   },
 

@@ -5,15 +5,15 @@ const employeeRoleSchema = new mongoose.Schema(
     businessOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: true
     },
     roleName: {
       type: String,
       required: true,
-      trim: true,
-    },
+      trim: true
+    }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model('EmployeeRole', employeeRoleSchema);

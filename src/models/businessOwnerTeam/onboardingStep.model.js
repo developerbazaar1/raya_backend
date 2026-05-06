@@ -5,28 +5,28 @@
  */
 const mongoose = require('mongoose');
 const onboardingStepSchema = new mongoose.Schema({
-    key: {
-        type: String,
-        required: true,
-        unique: true
-    },
+  key: {
+    type: String,
+    required: true,
+    unique: true
+  },
 
-    title: {
-        type: String,
-        required: true
-    },
+  title: {
+    type: String,
+    required: true
+  },
 
-    description: String,
+  description: String,
 
-    order: {
-        type: Number,
-        required: true
-    },
+  order: {
+    type: Number,
+    required: true
+  },
 
-    isActive: {
-        type: Boolean,
-        default: true
-    }
+  isActive: {
+    type: Boolean,
+    default: true
+  }
 
 }, { timestamps: true });
 

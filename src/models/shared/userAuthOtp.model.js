@@ -28,7 +28,7 @@ const userAuthOtpSchema = new mongoose.Schema(
     expiresAt: {
       type: Date,
       required: true,
-      default: () => new Date(Date.now() + OTP_EXPIRY),
+      default: () => new Date(Date.now() + OTP_EXPIRY)
     },
     consumedAt: {
       type: Date,

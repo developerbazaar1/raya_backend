@@ -17,54 +17,56 @@ const integrationLogSchema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
-      index: true,
+      index: true
     },
     operation: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
-      index: true,
+      index: true
     },
     direction: {
       type: String,
       enum: ['inbound', 'outbound'],
       default: 'outbound',
-      index: true,
+      index: true
     },
     status: {
       type: String,
       enum: ['success', 'failure', 'retry', 'timeout'],
       required: true,
-      index: true,
+      index: true
     },
     externalRequestId: {
       type: String,
       trim: true,
       default: '',
-      index: true,
+      index: true
     },
     responseCode: {
       type: Number,
-      default: null,
+      default: null
     },
     durationMs: {
       type: Number,
       default: null,
-      min: 0,
+      min: 0
     },
     errorCode: {
       type: String,
       trim: true,
-      default: '',
+      default: ''
     },
     expiresAt: {
       type: Date,
       default: () =>
-        new Date(Date.now() + INTEGRATION_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000),
-    },
+        new Date(Date.now() + INTEGRATION_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
+
+
+    }
   },
-  baseLogSchemaOptions,
+  baseLogSchemaOptions
 );
 
 integrationLogSchema.index({ provider: 1, operation: 1, timestamp: -1 });

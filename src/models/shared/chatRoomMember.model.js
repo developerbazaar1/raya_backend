@@ -46,4 +46,4 @@ chatRoomMemberSchema.index(
 chatRoomMemberSchema.index({ userId: 1 });
 chatRoomMemberSchema.index({ userId: 1, unreadCount: 1 });
 
-module.exports = mongoose.model('ChatRoomMember', chatRoomMemberSchema); 
+module.exports = mongoose.model('ChatRoomMember', chatRoomMemberSchema);

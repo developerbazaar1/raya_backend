@@ -1,42 +1,43 @@
-const { SCHEDULE_STATUS, TASK_PRIORITY } = require("../../config/constant");
+const mongoose = require('mongoose');
+const { SCHEDULE_STATUS, TASK_PRIORITY } = require('../../config/constant');
 
-// This is project task schema 
+// This is project task schema
 const taskSchema = new mongoose.Schema({
-    projectId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Project',
-        required: true,
-        index: true
-    },
+  projectId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Project',
+    required: true,
+    index: true
+  },
 
-    taskName: {
-        type: String,
-        required: true,
-        trim: true
-    },
+  taskName: {
+    type: String,
+    required: true,
+    trim: true
+  },
 
-    description: String,
+  description: String,
 
-    priority: {
-        type: String,
-        enum: TASK_PRIORITY,
-        default: 'medium',
-        index: true
-    },
+  priority: {
+    type: String,
+    enum: TASK_PRIORITY,
+    default: 'medium',
+    index: true
+  },
 
-    dueDate: Date,
+  dueDate: Date,
 
-    attachments: [String],
+  attachments: [String],
 
-    status: {
-        type: String,
-        enum: SCHEDULE_STATUS,
-        default: 'not_started',
-        index: true
-    },
+  status: {
+    type: String,
+    enum: SCHEDULE_STATUS,
+    default: 'not_started',
+    index: true
+  },
 
-    totalAssigned: { type: Number, default: 0 },
-    completedCount: { type: Number, default: 0 },
+  totalAssigned: { type: Number, default: 0 },
+  completedCount: { type: Number, default: 0 }
 
 }, { timestamps: true });
 

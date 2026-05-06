@@ -8,99 +8,99 @@ const commonLogFields = {
     type: String,
     enum: ['debug', 'info', 'warn', 'error', 'critical'],
     required: true,
-    index: true,
+    index: true
   },
   service: {
     type: String,
     required: true,
     trim: true,
     lowercase: true,
-    index: true,
+    index: true
   },
   module: {
     type: String,
     required: true,
     trim: true,
     lowercase: true,
-    index: true,
+    index: true
   },
   eventType: {
     type: String,
     required: true,
     trim: true,
     lowercase: true,
-    index: true,
+    index: true
   },
   message: {
     type: String,
     required: true,
-    trim: true,
+    trim: true
   },
   environment: {
     type: String,
     trim: true,
     lowercase: true,
     default: process.env.NODE_ENV || 'development',
-    index: true,
+    index: true
   },
   correlationId: {
     type: String,
     trim: true,
     default: '',
-    index: true,
+    index: true
   },
   requestId: {
     type: String,
     trim: true,
     default: '',
-    index: true,
+    index: true
   },
   actorType: {
     type: String,
     trim: true,
     lowercase: true,
-    default: '',
+    default: ''
   },
   actorId: {
     type: String,
     trim: true,
     default: '',
-    index: true,
+    index: true
   },
   targetType: {
     type: String,
     trim: true,
     lowercase: true,
-    default: '',
+    default: ''
   },
   targetId: {
     type: String,
     trim: true,
     default: '',
-    index: true,
+    index: true
   },
   metadata: {
     type: Object,
-    default: {},
+    default: {}
   },
   timestamp: {
     type: Date,
     default: Date.now,
-    index: true,
+    index: true
   },
   expiresAt: {
     type: Date,
     default: null,
-    index: true,
-  },
+    index: true
+  }
 };
 
 const baseLogSchemaOptions = {
   timestamps: true,
-  versionKey: false,
+  versionKey: false
 };
 
 module.exports = {
   commonLogFields,
-  baseLogSchemaOptions,
+  baseLogSchemaOptions
 };

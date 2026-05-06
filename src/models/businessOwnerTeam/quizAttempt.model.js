@@ -4,44 +4,44 @@
  */
 const mongoose = require('mongoose');
 const quizAttemptSchema = new mongoose.Schema({
-    trainingVersionId: {
+  trainingVersionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TrainingVersion',
+    index: true
+  },
+
+  quizId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Quiz',
+    index: true
+  },
+  chapterId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Chapter'
+  },
+
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
+
+  answers: [
+    {
+      questionId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'TrainingVersion',
-        index: true
-    },
+        ref: 'Question'
+      },
+      selectedOptionIndex: Number
+    }
+  ],
 
-    quizId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Quiz',
-        index: true
-    },
-    chapterId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Chapter'
-    },
+  score: Number,
+  total: Number,
 
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        index: true
-    },
+  passed: Boolean,
 
-    answers: [
-        {
-            questionId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Question'
-            },
-            selectedOptionIndex: Number
-        }
-    ],
-
-    score: Number,
-    total: Number,
-
-    passed: Boolean,
-
-    attemptNumber: Number
+  attemptNumber: Number
 
 }, { timestamps: true });
 

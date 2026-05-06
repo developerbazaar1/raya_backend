@@ -19,7 +19,7 @@ const todoAssignmentSchema = new mongoose.Schema({
     required: true
   },
 
-  // Reference to the business owner user 
+  // Reference to the business owner user
   businessOwnerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

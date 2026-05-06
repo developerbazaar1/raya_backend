@@ -1,4 +1,6 @@
-const { SCHEDULE_STATUS } = require("../../config/constant");
+
+const mongoose = require('mongoose');
+const { SCHEDULE_STATUS } = require('../../config/constant');
 
 // # This is project task assignment schema to track which user is assigned to which task and their status
 const taskAssignmentSchema = new mongoose.Schema({

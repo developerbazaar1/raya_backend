@@ -8,34 +8,34 @@ const mongoose = require('mongoose');
 
 const { TRAINING_STATUS } = require('../../config/constant');
 const trainingSchema = new mongoose.Schema({
-    businessOwnerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
+  businessOwnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
 
-    title: String,
-    description: String,
+  title: String,
+  description: String,
 
-    sopFileUrl: String,
+  sopFileUrl: String,
 
-    // 👇 currently selected version
-    activeVersionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'TrainingVersion'
-    },
+  // 👇 currently selected version
+  activeVersionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TrainingVersion'
+  },
 
-    totalVersions: {
-        type: Number,
-        default: 0,
-        max: 3
-    },
+  totalVersions: {
+    type: Number,
+    default: 0,
+    max: 3
+  },
 
-    status: {
-        type: String,
-        enum: TRAINING_STATUS,
-        default: 'draft'
-    }
+  status: {
+    type: String,
+    enum: TRAINING_STATUS,
+    default: 'draft'
+  }
 
 }, { timestamps: true });
 

@@ -24,10 +24,14 @@ const comparePassword = async (password, hashedPassword) => {
   }
 
   const passwordHash = await hashPassword(password);
-  return crypto.timingSafeEqual(
-    Buffer.from(passwordHash, 'hex'),
-    Buffer.from(hashedPassword, 'hex')
-  );
+  const bufA = Buffer.from(passwordHash, 'hex');
+  const bufB = Buffer.from(hashedPassword, 'hex');
+
+  if (bufA.length !== bufB.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(bufA, bufB);
 };
 
 const createOtp = () => STATIC_OTP;
@@ -42,7 +46,6 @@ const createAuthToken = (user) =>
     JWT_SECRET,
     { expiresIn: '7d' }
   );
-
 const verifyAuthToken = (token) => jwt.verify(token, JWT_SECRET);
 
 module.exports = {

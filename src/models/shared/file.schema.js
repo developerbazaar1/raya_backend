@@ -6,9 +6,9 @@ const FileReferenceSchema = new mongoose.Schema(
     key: { type: String, default: null },
     fileName: { type: String },
     mimeType: { type: String },
-    sizeBytes: { type: Number },
+    sizeBytes: { type: Number }
   },
-  { _id: false },
+  { _id: false }
 );
 
 module.exports = { FileReferenceSchema };

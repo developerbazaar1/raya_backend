@@ -17,6 +17,6 @@ const quizSchema = new mongoose.Schema({
 
   title: String
 
-}, { timestamps: true }); 
+}, { timestamps: true });
 
 module.exports = mongoose.model('Quiz', quizSchema);

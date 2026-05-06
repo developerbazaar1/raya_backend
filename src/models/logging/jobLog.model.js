@@ -18,51 +18,50 @@ const jobLogSchema = new mongoose.Schema(
       required: true,
       trim: true,
       lowercase: true,
-      index: true,
+      index: true
     },
     runId: {
       type: String,
       trim: true,
-      default: '',
-      index: true,
+      default: ''
     },
     queueName: {
       type: String,
       trim: true,
       lowercase: true,
-      default: '',
+      default: ''
     },
     status: {
       type: String,
       enum: ['started', 'succeeded', 'failed', 'retried', 'cancelled'],
       required: true,
-      index: true,
+      index: true
     },
     attempt: {
       type: Number,
       default: 1,
-      min: 1,
+      min: 1
     },
     startedAt: {
       type: Date,
-      default: null,
+      default: null
     },
     finishedAt: {
       type: Date,
-      default: null,
+      default: null
     },
     durationMs: {
       type: Number,
       default: null,
-      min: 0,
+      min: 0
     },
     expiresAt: {
       type: Date,
       default: () =>
-        new Date(Date.now() + JOB_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000),
-    },
+        new Date(Date.now() + JOB_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
+    }
   },
-  baseLogSchemaOptions,
+  baseLogSchemaOptions
 );
 
 jobLogSchema.index({ jobName: 1, status: 1, timestamp: -1 });

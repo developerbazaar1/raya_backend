@@ -7,40 +7,40 @@
 const mongoose = require('mongoose');
 
 const chatRoomSchema = new mongoose.Schema({
-    businessOwnerId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user',
-        index: true
-    },
+  businessOwnerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
+    index: true
+  },
 
-    createdByUserId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'user',
-        required: true
-    },
+  createdByUserId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'user',
+    required: true
+  },
 
-    roomName: {
-        type: String,
-        trim: true
-    },
+  roomName: {
+    type: String,
+    trim: true
+  },
 
-    roomPhotoUrl: String,
+  roomPhotoUrl: String,
 
-    // # HERE Team means single user chat, Group means multi-user chat
-    // Beased on the client request
-    roomType: {
-        type: String,
-        enum: ['group', 'team'],
-        default: 'group',
-        index: true
-    },
+  // # HERE Team means single user chat, Group means multi-user chat
+  // Beased on the client request
+  roomType: {
+    type: String,
+    enum: ['group', 'team'],
+    default: 'group',
+    index: true
+  },
 
-    //  MESSAGE 
-    lastMessage: {
-        text: String,
-        senderId: mongoose.Schema.Types.ObjectId,
-        createdAt: Date
-    }
+  //  MESSAGE
+  lastMessage: {
+    text: String,
+    senderId: mongoose.Schema.Types.ObjectId,
+    createdAt: Date
+  }
 
 }, { timestamps: true });
 
@@ -49,4 +49,4 @@ const chatRoomSchema = new mongoose.Schema({
 chatRoomSchema.index({ updatedAt: -1 });
 chatRoomSchema.index({ businessOwnerId: 1, roomType: 1 });
 
-module.exports = mongoose.model('ChatRoom', chatRoomSchema); 
+module.exports = mongoose.model('ChatRoom', chatRoomSchema);

@@ -2,7 +2,7 @@ const {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
-  GetObjectCommand,
+  GetObjectCommand
 } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { DO_SPACES_BUCKET, DO_SPACES_REGION } = require('./constant');
@@ -18,8 +18,8 @@ const s3Client = new S3Client({
   forcePathStyle: true,
   credentials: {
     accessKeyId: DO_SPACES_KEY,
-    secretAccessKey: DO_SPACES_SECRET,
-  },
+    secretAccessKey: DO_SPACES_SECRET
+  }
 });
 
 module.exports = {
@@ -28,5 +28,5 @@ module.exports = {
   getSignedUrl,
   PutObjectCommand,
   DeleteObjectCommand,
-  GetObjectCommand,
+  GetObjectCommand
 };

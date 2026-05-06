@@ -3,27 +3,27 @@
  */
 const mongoose = require('mongoose');
 const chapterSchema = new mongoose.Schema({
-    trainingVersionId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'TrainingVersion',
-        index: true
-    },
+  trainingVersionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TrainingVersion',
+    index: true
+  },
 
-    title: String,
-    objective: String,
+  title: String,
+  objective: String,
 
-    sections: [
-        {
-            heading: String,
-            content: String,
-            order: Number
-        }
-    ],
+  sections: [
+    {
+      heading: String,
+      content: String,
+      order: Number
+    }
+  ],
 
-    summary: String,
-    estimatedTime: Number,
+  summary: String,
+  estimatedTime: Number,
 
-    order: Number
+  order: Number
 
 }, { timestamps: true });
 
