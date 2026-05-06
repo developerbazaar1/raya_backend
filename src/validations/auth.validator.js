@@ -79,12 +79,34 @@ const businessOwnerStepValidation = {
       .trim()
       .notEmpty()
       .withMessage('phoneNumberCountryCode is required'),
-    body('phoneNumber').trim().notEmpty().withMessage('phoneNumber is required'),
-    body('timeZone').trim().notEmpty().withMessage('timeZone is required'),
-    body('address').trim().notEmpty().withMessage('address is required'),
-    body('state').trim().notEmpty().withMessage('state is required'),
-    body('city').trim().notEmpty().withMessage('city is required'),
-    body('zipCode').trim().notEmpty().withMessage('zipCode is required')
+    body('phoneNumber')
+      .trim()
+      .notEmpty()
+      .withMessage('phoneNumber is required'),
+    body('timeZone')
+      .trim()
+      .notEmpty()
+      .withMessage('timeZone is required'),
+    body('address')
+      .trim()
+      .notEmpty()
+      .withMessage('address is required'),
+    body('country')
+      .trim()
+      .notEmpty()
+      .withMessage('country is required'),
+    body('state')
+      .trim()
+      .notEmpty()
+      .withMessage('state is required'),
+    body('city')
+      .trim()
+      .notEmpty()
+      .withMessage('city is required'),
+    body('zipCode')
+      .trim()
+      .notEmpty()
+      .withMessage('zipCode is required')
   ]
 };
 

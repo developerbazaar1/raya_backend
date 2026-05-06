@@ -5,7 +5,8 @@ const requestLogger = require('./requestLogging.middleware');
 const rateLimiter = require('./rateLimiter.middleware');
 const {
   uploadBusinessOwnerStep8Files,
-  uploadEmployeeProfileStep1Files
+  uploadEmployeeProfileStep1Files,
+  uploadBusinessOwnerSettingsFiles
 } = require('./upload.middleware');
 const validate = require('./validate');
 const adminAuth = require('./adminAuth.middleware');
@@ -17,6 +18,8 @@ module.exports = {
   requestLogger,
   rateLimiter,
   uploadBusinessOwnerStep8Files,
+  uploadEmployeeProfileStep1Files,
+  uploadBusinessOwnerSettingsFiles,
   validate,
   adminAuth
 };

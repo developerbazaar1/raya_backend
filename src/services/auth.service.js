@@ -437,6 +437,7 @@ const saveRegistrationStep8 = async ({
   phoneNumber,
   timeZone,
   address,
+  country,
   state,
   city,
   zipCode,
@@ -457,6 +458,7 @@ const saveRegistrationStep8 = async ({
   businessOwnerInfo.businessName = businessName;
   businessOwnerInfo.businessType = businessType;
   businessOwnerInfo.address = address;
+  businessOwnerInfo.country = country;
   businessOwnerInfo.state = state;
   businessOwnerInfo.city = city;
   businessOwnerInfo.zipCode = zipCode;
