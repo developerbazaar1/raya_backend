@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { OTP_EXPIRY , OTP_PURPOSES } = require('../../config/constant');
+const { OTP_EXPIRY, OTP_PURPOSES } = require('../../config/constant');
 
 const userAuthOtpSchema = new mongoose.Schema(
   {

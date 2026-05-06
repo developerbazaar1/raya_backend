@@ -6,44 +6,45 @@
  */
 const mongoose = require('mongoose');
 
-const chatRoomSchema = new mongoose.Schema({
-  businessOwnerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
-    index: true
+const chatRoomSchema = new mongoose.Schema(
+  {
+    businessOwnerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+      index: true
+    },
+
+    createdByUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+      required: true
+    },
+
+    roomName: {
+      type: String,
+      trim: true
+    },
+
+    roomPhotoUrl: String,
+
+    // # HERE Team means single user chat, Group means multi-user chat
+    // Beased on the client request
+    roomType: {
+      type: String,
+      enum: ['group', 'team'],
+      default: 'group',
+      index: true
+    },
+
+    //  MESSAGE
+    lastMessage: {
+      text: String,
+      senderId: mongoose.Schema.Types.ObjectId,
+      createdAt: Date
+    }
   },
-
-  createdByUserId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'user',
-    required: true
-  },
-
-  roomName: {
-    type: String,
-    trim: true
-  },
-
-  roomPhotoUrl: String,
-
-  // # HERE Team means single user chat, Group means multi-user chat
-  // Beased on the client request
-  roomType: {
-    type: String,
-    enum: ['group', 'team'],
-    default: 'group',
-    index: true
-  },
-
-  //  MESSAGE
-  lastMessage: {
-    text: String,
-    senderId: mongoose.Schema.Types.ObjectId,
-    createdAt: Date
-  }
-
-}, { timestamps: true });
-
+  { timestamps: true }
+);
 
 //INDEXES
 chatRoomSchema.index({ updatedAt: -1 });

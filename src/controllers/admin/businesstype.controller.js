@@ -1,8 +1,11 @@
-
-const { createBusinessType, updateBusinessType, getAllBusinessTypes, getBusinessTypeById } = require('../../services/admin/businesstype.service');
+const {
+  createBusinessType,
+  updateBusinessType,
+  getAllBusinessTypes,
+  getBusinessTypeById
+} = require('../../services/admin/businesstype.service');
 
 exports.createBusinessType = async (req, res) => {
-
   const businesstype = await createBusinessType(req.body);
 
   res.status(201).json({
@@ -11,7 +14,6 @@ exports.createBusinessType = async (req, res) => {
     data: businesstype
   });
 };
-
 
 exports.updateBusinessType = async (req, res) => {
   const businesstype = await updateBusinessType({ id: req.params.businessId, ...req.body });

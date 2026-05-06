@@ -52,16 +52,20 @@ const employeeInfoSchema = new mongoose.Schema(
     spouseAnniversary: { type: Date },
     spouseGender: { type: String, trim: true },
     haveKids: { type: Boolean, default: false },
-    kids:[{
-      name: { type: String, trim: true },
-      birthday: { type: Date },
-      gender: { type: String, trim: true }
-    }],
+    kids: [
+      {
+        name: { type: String, trim: true },
+        birthday: { type: Date },
+        gender: { type: String, trim: true }
+      }
+    ],
     havePets: { type: Boolean, default: false },
-    pets:[{
-      name: { type: String, trim: true },
-      age: { type: String, trim: true }
-    }],
+    pets: [
+      {
+        name: { type: String, trim: true },
+        age: { type: String, trim: true }
+      }
+    ],
     favouriteFlower: { type: String, trim: true },
     favouriteCakeFlavour: { type: String, trim: true },
     favouriteOnlineStore: { type: String, trim: true },

@@ -10,7 +10,6 @@ const {
   saveRegistrationStep8
 } = require('../../services/auth.service');
 
-
 const registerStart = async (req, res) => {
   const data = await startRegistration(req.body);
   res.status(201).json({

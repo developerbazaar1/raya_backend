@@ -73,7 +73,4 @@ const notificationCampaignSchema = new mongoose.Schema(
 notificationCampaignSchema.index({ status: 1, scheduleAt: 1 });
 notificationCampaignSchema.index({ type: 1, createdAt: -1 });
 
-module.exports = mongoose.model(
-  'NotificationCampaign',
-  notificationCampaignSchema
-);
+module.exports = mongoose.model('NotificationCampaign', notificationCampaignSchema);

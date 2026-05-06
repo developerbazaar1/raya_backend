@@ -55,7 +55,4 @@ const notificationDeliverySchema = new mongoose.Schema(
 notificationDeliverySchema.index({ campaignId: 1, status: 1 });
 notificationDeliverySchema.index({ recipientUserId: 1, createdAt: -1 });
 
-module.exports = mongoose.model(
-  'NotificationDelivery',
-  notificationDeliverySchema
-);
+module.exports = mongoose.model('NotificationDelivery', notificationDeliverySchema);

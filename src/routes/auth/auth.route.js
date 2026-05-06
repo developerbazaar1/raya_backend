@@ -95,5 +95,4 @@ router.post(
   asyncHandler(resetPasswordController)
 );
 
-
 module.exports = router;

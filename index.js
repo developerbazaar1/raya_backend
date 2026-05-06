@@ -4,7 +4,6 @@ const app = require('./src/app');
 const { PORT } = require('./src/config/env');
 const logger = require('./src/utils/logger');
 
-
 // Increase the thread pool size
 process.env.UV_THREADPOOL_SIZE = 128;
 

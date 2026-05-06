@@ -1,5 +1,11 @@
 const AppError = require('../../utils/appError');
-const { createAuthToken, comparePassword, createOtp, hashValue, hashPassword } = require('../../helper/auth.helper');
+const {
+  createAuthToken,
+  comparePassword,
+  createOtp,
+  hashValue,
+  hashPassword
+} = require('../../helper/auth.helper');
 const AdminUser = require('../../models/admin/adminUser.model');
 const AdminAuthOtp = require('../../models/admin/adminAuthOtp.model');
 const VERIFICATION_OTP_PURPOSE = 'email_verification';
@@ -7,7 +13,6 @@ const VERIFICATION_OTP_PURPOSE = 'email_verification';
 //admin login
 const adminLoginService = async (body) => {
   const { email, password } = body;
-
 
   const admin = await AdminUser.findOne({ email });
   if (!admin) {
@@ -48,18 +53,15 @@ const adminLoginService = async (body) => {
 
 //verify otp
 const verifyOtpService = async (body) => {
-
   const { email, otp } = body;
   const adminAuthOtp = await AdminAuthOtp.findOne({
     email,
     purpose: VERIFICATION_OTP_PURPOSE
   }).sort({ createdAt: -1 });
 
-
   if (!adminAuthOtp) {
     throw new AppError('Otp not found', 404);
   }
-
 
   const isOtpValid = hashValue(otp) === adminAuthOtp.otpHash;
   if (!isOtpValid) {
@@ -99,7 +101,6 @@ const resendOtpService = async (body) => {
 
 //forgot password
 const forgotPasswordService = async (body) => {
-
   const { email } = body;
   const adminAuthOtp = await AdminAuthOtp.findOne({
     email,
@@ -127,7 +128,6 @@ const forgotPasswordService = async (body) => {
   };
 };
 
-
 //reset password
 const resetPasswordService = async (body) => {
   const { email, newPassword, confirmPassword } = body;
@@ -135,7 +135,6 @@ const resetPasswordService = async (body) => {
     email,
     purpose: VERIFICATION_OTP_PURPOSE
   }).sort({ createdAt: -1 });
-
 
   if (newPassword !== confirmPassword) {
     throw new AppError('Passwords do not match', 400);
@@ -152,7 +151,6 @@ const resetPasswordService = async (body) => {
   );
   return admin;
 };
-
 
 //logout
 const logoutService = async (body) => {

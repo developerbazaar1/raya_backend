@@ -1,4 +1,11 @@
-const { adminLoginService, resendOtpService, verifyOtpService, forgotPasswordService, resetPasswordService, logoutService } = require('../../services/admin/adminauth.service');
+const {
+  adminLoginService,
+  resendOtpService,
+  verifyOtpService,
+  forgotPasswordService,
+  resetPasswordService,
+  logoutService
+} = require('../../services/admin/adminauth.service');
 
 exports.login = async (req, res) => {
   const data = await adminLoginService(req.body);
@@ -9,14 +16,12 @@ exports.login = async (req, res) => {
   });
 };
 
-
 exports.verifyOtp = async (req, res) => {
   const data = await verifyOtpService(req.body);
   res.status(200).json({
     status: 'success',
     message: 'Otp verify successfully',
     data
-
   });
 };
 

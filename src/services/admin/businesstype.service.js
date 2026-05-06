@@ -1,7 +1,6 @@
 const BusinessType = require('../../models/admin/businessType.model');
 const AppError = require('../../utils/appError');
 
-
 //create businessType
 exports.createBusinessType = async (body) => {
   const { name } = body;
@@ -26,7 +25,7 @@ exports.updateBusinessType = async (body) => {
 exports.getAllBusinessTypes = async () => {
   const businessTypes = await BusinessType.find();
 
-  const formattedBusinessType = businessTypes.map(businessType => {
+  const formattedBusinessType = businessTypes.map((businessType) => {
     return {
       id: businessType._id,
       name: businessType.name

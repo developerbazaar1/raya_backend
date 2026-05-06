@@ -4,8 +4,7 @@ const { JWT_SECRET } = require('../config/env');
 
 const STATIC_OTP = '123456';
 
-const hashValue = (value) =>
-  crypto.createHash('sha256').update(String(value)).digest('hex');
+const hashValue = (value) => crypto.createHash('sha256').update(String(value)).digest('hex');
 
 const hashPassword = (password) =>
   new Promise((resolve, reject) => {

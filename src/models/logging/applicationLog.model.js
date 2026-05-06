@@ -1,4 +1,3 @@
-
 /**
  * ApplicationLog Model
  * This model captures logs related to application-level events, such as HTTP requests, errors, and performance metrics. It includes details about the request method, route, status code, duration, and any associated tags. Logs are automatically expired after a defined retention period to manage storage efficiently.
@@ -44,8 +43,7 @@ const applicationLogSchema = new mongoose.Schema(
     },
     expiresAt: {
       type: Date,
-      default: () =>
-        new Date(Date.now() + APPLICATION_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
+      default: () => new Date(Date.now() + APPLICATION_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
     }
   },
   baseLogSchemaOptions

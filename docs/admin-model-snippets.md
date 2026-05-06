@@ -12,19 +12,13 @@ const ADMIN_ACCOUNT_STATUSES = ['active', 'pending', 'suspended'];
 const ADMIN_OTP_PURPOSES = ['forgot_password', 'email_verification'];
 const ADMIN_NOTIFICATION_CHANNELS = ['email', 'push'];
 const ADMIN_NOTIFICATION_TARGET_TYPES = ['business_owner', 'employee', 'both'];
-const ADMIN_NOTIFICATION_STATUSES = [
-  'draft',
-  'scheduled',
-  'sent',
-  'failed',
-  'cancelled',
-];
+const ADMIN_NOTIFICATION_STATUSES = ['draft', 'scheduled', 'sent', 'failed', 'cancelled'];
 const ADMIN_NOTIFICATION_TYPES = [
   'announcement',
   'scheduled_downtime',
   'compliance_update',
   'training_alert',
-  'urgent_notice',
+  'urgent_notice'
 ];
 const ADMIN_DELIVERY_STATUSES = ['queued', 'sent', 'failed'];
 const ADMIN_EMAIL_TEMPLATE_STATUSES = ['draft', 'active', 'archived'];
@@ -43,7 +37,7 @@ const adminUserSchema = new mongoose.Schema(
       type: String,
       required: true,
       trim: true,
-      maxlength: 120,
+      maxlength: 120
     },
     email: {
       type: String,
@@ -51,45 +45,45 @@ const adminUserSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      maxlength: 255,
+      maxlength: 255
     },
     passwordHash: {
       type: String,
       required: true,
-      select: false,
+      select: false
     },
     status: {
       type: String,
       enum: ADMIN_ACCOUNT_STATUSES,
       default: 'active',
-      index: true,
+      index: true
     },
     isSuperAdmin: {
       type: Boolean,
       default: false,
-      index: true,
+      index: true
     },
     roleIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'AdminRole',
-      },
+        ref: 'AdminRole'
+      }
     ],
     lastLoginAt: {
       type: Date,
-      default: null,
+      default: null
     },
     passwordChangedAt: {
       type: Date,
-      default: null,
+      default: null
     },
     createdByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
-      default: null,
-    },
+      default: null
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 adminUserSchema.index({ email: 1 }, { unique: true });
@@ -111,47 +105,47 @@ const adminRoleSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      maxlength: 80,
+      maxlength: 80
     },
     displayName: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 120,
+      maxlength: 120
     },
     description: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 500,
+      maxlength: 500
     },
     permissionIds: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'AdminPermission',
-      },
+        ref: 'AdminPermission'
+      }
     ],
     isSystemRole: {
       type: Boolean,
-      default: false,
+      default: false
     },
     isActive: {
       type: Boolean,
       default: true,
-      index: true,
+      index: true
     },
     createdByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
-      default: null,
+      default: null
     },
     updatedByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
-      default: null,
-    },
+      default: null
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 adminRoleSchema.index({ name: 1 }, { unique: true });
@@ -173,34 +167,34 @@ const adminPermissionSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      maxlength: 120,
+      maxlength: 120
     },
     module: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
-      maxlength: 80,
+      maxlength: 80
     },
     action: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
-      maxlength: 80,
+      maxlength: 80
     },
     description: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 500,
+      maxlength: 500
     },
     isActive: {
       type: Boolean,
-      default: true,
-    },
+      default: true
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 adminPermissionSchema.index({ key: 1 }, { unique: true });
@@ -223,57 +217,57 @@ const adminAuthOtpSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
       required: true,
-      index: true,
+      index: true
     },
     email: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
-      index: true,
+      index: true
     },
     purpose: {
       type: String,
       enum: ADMIN_OTP_PURPOSES,
       required: true,
-      index: true,
+      index: true
     },
     otpHash: {
       type: String,
       required: true,
-      select: false,
+      select: false
     },
     attemptCount: {
       type: Number,
       default: 0,
-      min: 0,
+      min: 0
     },
     maxAttempts: {
       type: Number,
       default: 5,
-      min: 1,
+      min: 1
     },
     expiresAt: {
       type: Date,
       required: true,
       default: () => new Date(Date.now() + OTP_EXPIRY),
-      index: true,
+      index: true
     },
     consumedAt: {
       type: Date,
-      default: null,
+      default: null
     },
     lastSentAt: {
       type: Date,
-      default: Date.now,
-    },
+      default: Date.now
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 adminAuthOtpSchema.index(
   { adminUserId: 1, purpose: 1, consumedAt: 1, expiresAt: 1 },
-  { name: 'admin_active_otp_lookup_idx' },
+  { name: 'admin_active_otp_lookup_idx' }
 );
 
 adminAuthOtpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
@@ -292,47 +286,47 @@ const adminSessionSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
       required: true,
-      index: true,
+      index: true
     },
     refreshTokenHash: {
       type: String,
       required: true,
-      select: false,
+      select: false
     },
     ipAddress: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 64,
+      maxlength: 64
     },
     userAgent: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 500,
+      maxlength: 500
     },
     deviceName: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 120,
+      maxlength: 120
     },
     lastUsedAt: {
       type: Date,
-      default: Date.now,
+      default: Date.now
     },
     expiresAt: {
       type: Date,
       required: true,
-      index: true,
+      index: true
     },
     revokedAt: {
       type: Date,
       default: null,
-      index: true,
-    },
+      index: true
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 adminSessionSchema.index({ adminUserId: 1, revokedAt: 1, expiresAt: 1 });
@@ -352,14 +346,14 @@ const auditLogSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
       required: true,
-      index: true,
+      index: true
     },
     module: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
-      maxlength: 80,
+      maxlength: 80
     },
     actionType: {
       type: String,
@@ -367,60 +361,60 @@ const auditLogSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       maxlength: 120,
-      index: true,
+      index: true
     },
     targetType: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
-      maxlength: 80,
+      maxlength: 80
     },
     targetId: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 120,
+      maxlength: 120
     },
     targetLabel: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 255,
+      maxlength: 255
     },
     metadata: {
       type: mongoose.Schema.Types.Mixed,
-      default: {},
+      default: {}
     },
     beforeState: {
       type: mongoose.Schema.Types.Mixed,
-      default: null,
+      default: null
     },
     afterState: {
       type: mongoose.Schema.Types.Mixed,
-      default: null,
+      default: null
     },
     ip: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 64,
+      maxlength: 64
     },
     userAgent: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 500,
+      maxlength: 500
     },
     correlationId: {
       type: String,
       trim: true,
       default: '',
       index: true,
-      maxlength: 120,
-    },
+      maxlength: 120
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 auditLogSchema.index({ actorAdminId: 1, createdAt: -1 });
@@ -437,19 +431,13 @@ const mongoose = require('mongoose');
 
 const ADMIN_NOTIFICATION_CHANNELS = ['email', 'push'];
 const ADMIN_NOTIFICATION_TARGET_TYPES = ['business_owner', 'employee', 'both'];
-const ADMIN_NOTIFICATION_STATUSES = [
-  'draft',
-  'scheduled',
-  'sent',
-  'failed',
-  'cancelled',
-];
+const ADMIN_NOTIFICATION_STATUSES = ['draft', 'scheduled', 'sent', 'failed', 'cancelled'];
 const ADMIN_NOTIFICATION_TYPES = [
   'announcement',
   'scheduled_downtime',
   'compliance_update',
   'training_alert',
-  'urgent_notice',
+  'urgent_notice'
 ];
 
 const notificationCampaignSchema = new mongoose.Schema(
@@ -458,72 +446,69 @@ const notificationCampaignSchema = new mongoose.Schema(
       type: String,
       enum: ADMIN_NOTIFICATION_TYPES,
       required: true,
-      index: true,
+      index: true
     },
     title: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 180,
+      maxlength: 180
     },
     message: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 5000,
+      maxlength: 5000
     },
     status: {
       type: String,
       enum: ADMIN_NOTIFICATION_STATUSES,
       default: 'draft',
       required: true,
-      index: true,
+      index: true
     },
     targetUserType: {
       type: String,
       enum: ADMIN_NOTIFICATION_TARGET_TYPES,
-      required: true,
+      required: true
     },
     channels: {
       type: [String],
       enum: ADMIN_NOTIFICATION_CHANNELS,
-      default: ['email'],
+      default: ['email']
     },
     targetFilters: {
       type: mongoose.Schema.Types.Mixed,
-      default: {},
+      default: {}
     },
     scheduleAt: {
       type: Date,
       default: null,
-      index: true,
+      index: true
     },
     sentAt: {
       type: Date,
-      default: null,
+      default: null
     },
     createdByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
       required: true,
-      index: true,
+      index: true
     },
     updatedByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
-      default: null,
-    },
+      default: null
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 notificationCampaignSchema.index({ status: 1, scheduleAt: 1 });
 notificationCampaignSchema.index({ type: 1, createdAt: -1 });
 
-module.exports = mongoose.model(
-  'NotificationCampaign',
-  notificationCampaignSchema,
-);
+module.exports = mongoose.model('NotificationCampaign', notificationCampaignSchema);
 ```
 
 ## `notificationDelivery.model.js`
@@ -539,66 +524,63 @@ const notificationDeliverySchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'NotificationCampaign',
       required: true,
-      index: true,
+      index: true
     },
     recipientUserId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
+      index: true
     },
     recipientType: {
       type: String,
       enum: ['business_owner', 'employee'],
-      required: true,
+      required: true
     },
     channel: {
       type: String,
       enum: ['email', 'push'],
-      required: true,
+      required: true
     },
     status: {
       type: String,
       enum: ADMIN_DELIVERY_STATUSES,
       default: 'queued',
       required: true,
-      index: true,
+      index: true
     },
     providerMessageId: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 255,
+      maxlength: 255
     },
     providerError: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 1000,
+      maxlength: 1000
     },
     sentAt: {
       type: Date,
-      default: null,
+      default: null
     },
     openedAt: {
       type: Date,
-      default: null,
+      default: null
     },
     clickedAt: {
       type: Date,
-      default: null,
-    },
+      default: null
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 notificationDeliverySchema.index({ campaignId: 1, status: 1 });
 notificationDeliverySchema.index({ recipientUserId: 1, createdAt: -1 });
 
-module.exports = mongoose.model(
-  'NotificationDelivery',
-  notificationDeliverySchema,
-);
+module.exports = mongoose.model('NotificationDelivery', notificationDeliverySchema);
 ```
 
 ## `emailTemplate.model.js`
@@ -616,46 +598,46 @@ const emailTemplateSchema = new mongoose.Schema(
       unique: true,
       trim: true,
       lowercase: true,
-      maxlength: 120,
+      maxlength: 120
     },
     name: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 180,
+      maxlength: 180
     },
     subject: {
       type: String,
       required: true,
       trim: true,
-      maxlength: 255,
+      maxlength: 255
     },
     htmlBody: {
       type: String,
-      required: true,
+      required: true
     },
     status: {
       type: String,
       enum: ADMIN_EMAIL_TEMPLATE_STATUSES,
       default: 'draft',
-      index: true,
+      index: true
     },
     version: {
       type: Number,
       default: 1,
-      min: 1,
+      min: 1
     },
     previewData: {
       type: mongoose.Schema.Types.Mixed,
-      default: {},
+      default: {}
     },
     updatedByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AdminUser',
-      required: true,
-    },
+      required: true
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
 emailTemplateSchema.index({ key: 1 }, { unique: true });
@@ -675,7 +657,7 @@ const supportTicketSnapshotSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'BusinessOwner',
       required: true,
-      index: true,
+      index: true
     },
     provider: {
       type: String,
@@ -683,27 +665,27 @@ const supportTicketSnapshotSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       default: 'freshdesk',
-      maxlength: 80,
+      maxlength: 80
     },
     providerTicketId: {
       type: String,
       required: true,
       trim: true,
       index: true,
-      maxlength: 120,
+      maxlength: 120
     },
     requesterEmail: {
       type: String,
       trim: true,
       lowercase: true,
       default: '',
-      maxlength: 255,
+      maxlength: 255
     },
     subject: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 255,
+      maxlength: 255
     },
     status: {
       type: String,
@@ -711,64 +693,58 @@ const supportTicketSnapshotSchema = new mongoose.Schema(
       lowercase: true,
       default: 'open',
       index: true,
-      maxlength: 80,
+      maxlength: 80
     },
     priority: {
       type: String,
       trim: true,
       lowercase: true,
       default: 'normal',
-      maxlength: 80,
+      maxlength: 80
     },
     assigneeName: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 180,
+      maxlength: 180
     },
     ticketUrl: {
       type: String,
       trim: true,
       default: '',
-      maxlength: 1000,
+      maxlength: 1000
     },
     lastResponseAt: {
       type: Date,
-      default: null,
+      default: null
     },
     lastProviderUpdateAt: {
       type: Date,
-      default: null,
+      default: null
     },
     lastSyncedAt: {
       type: Date,
       default: Date.now,
-      index: true,
+      index: true
     },
     syncStatus: {
       type: String,
       enum: ['pending', 'synced', 'failed'],
       default: 'synced',
-      index: true,
-    },
+      index: true
+    }
   },
-  { timestamps: true, versionKey: false },
+  { timestamps: true, versionKey: false }
 );
 
-supportTicketSnapshotSchema.index(
-  { provider: 1, providerTicketId: 1 },
-  { unique: true },
-);
+supportTicketSnapshotSchema.index({ provider: 1, providerTicketId: 1 }, { unique: true });
 supportTicketSnapshotSchema.index({
   businessOwnerId: 1,
   status: 1,
-  lastSyncedAt: -1,
+  lastSyncedAt: -1
 });
 
-module.exports = mongoose.model(
-  'SupportTicketSnapshot',
-  supportTicketSnapshotSchema,
-);
+module.exports = mongoose.model('SupportTicketSnapshot', supportTicketSnapshotSchema);
 ```
 
 ## `src/models/admin/index.js`
@@ -784,7 +760,7 @@ module.exports = {
   NotificationCampaign: require('./notificationCampaign.model'),
   NotificationDelivery: require('./notificationDelivery.model'),
   EmailTemplate: require('./emailTemplate.model'),
-  SupportTicketSnapshot: require('./supportTicketSnapshot.model'),
+  SupportTicketSnapshot: require('./supportTicketSnapshot.model')
 };
 ```
 

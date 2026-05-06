@@ -3,7 +3,6 @@
  * This model captures logs related to external system integrations, such as API calls to third-party services. It includes details about the provider, operation, direction (inbound/outbound), status, and performance metrics. Logs are automatically expired after a defined retention period to manage storage efficiently.
  */
 
-
 const mongoose = require('mongoose');
 const { baseLogSchemaOptions, commonLogFields } = require('./baseLogFields');
 
@@ -60,10 +59,7 @@ const integrationLogSchema = new mongoose.Schema(
     },
     expiresAt: {
       type: Date,
-      default: () =>
-        new Date(Date.now() + INTEGRATION_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
-
-
+      default: () => new Date(Date.now() + INTEGRATION_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
     }
   },
   baseLogSchemaOptions

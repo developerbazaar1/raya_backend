@@ -4,21 +4,22 @@
  * - Separate collection for scalability
  */
 const mongoose = require('mongoose');
-const chatAttachmentSchema = new mongoose.Schema({
-  messageId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'ChatMessage',
-    required: true,
-    index: true
+const chatAttachmentSchema = new mongoose.Schema(
+  {
+    messageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ChatMessage',
+      required: true,
+      index: true
+    },
+
+    fileName: String,
+    fileUrl: { type: String, required: true },
+    fileType: String,
+    fileSize: Number
   },
-
-  fileName: String,
-  fileUrl: { type: String, required: true },
-  fileType: String,
-  fileSize: Number
-
-}, { timestamps: true });
-
+  { timestamps: true }
+);
 
 // INDEXES
 chatAttachmentSchema.index({ messageId: 1 });

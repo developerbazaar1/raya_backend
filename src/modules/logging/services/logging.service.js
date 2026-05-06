@@ -48,27 +48,15 @@ class LoggingService {
   }
 
   logApplicationEventSafely(payload) {
-    this.fireAndForget(
-      'logApplicationEvent',
-      payload,
-      'Failed to persist application log'
-    );
+    this.fireAndForget('logApplicationEvent', payload, 'Failed to persist application log');
   }
 
   logSecurityEventSafely(payload) {
-    this.fireAndForget(
-      'logSecurityEvent',
-      payload,
-      'Failed to persist security log'
-    );
+    this.fireAndForget('logSecurityEvent', payload, 'Failed to persist security log');
   }
 
   logIntegrationEventSafely(payload) {
-    this.fireAndForget(
-      'logIntegrationEvent',
-      payload,
-      'Failed to persist integration log'
-    );
+    this.fireAndForget('logIntegrationEvent', payload, 'Failed to persist integration log');
   }
 
   logJobEventSafely(payload) {

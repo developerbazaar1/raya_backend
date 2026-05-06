@@ -11,11 +11,7 @@ const handleValidationResult = (req, res, next) => {
 };
 
 const validate = (validations) => {
-  return [
-    ...(Array.isArray(validations) ? validations : [validations]),
-    handleValidationResult
-  ];
+  return [...(Array.isArray(validations) ? validations : [validations]), handleValidationResult];
 };
 
 module.exports = validate;
-

@@ -26,9 +26,7 @@ const uploadBusinessOwnerStep8Files = upload.fields([
   { name: 'profilePicture', maxCount: 1 }
 ]);
 
-const uploadEmployeeProfileStep1Files = upload.fields([
-  { name: 'profilePhoto', maxCount: 1 }
-]);
+const uploadEmployeeProfileStep1Files = upload.fields([{ name: 'profilePhoto', maxCount: 1 }]);
 
 module.exports = {
   uploadBusinessOwnerStep8Files,

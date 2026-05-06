@@ -3,8 +3,6 @@
  * This model captures logs related to background job executions, such as scheduled tasks or asynchronous processing. It includes details about the job name, run ID, queue name, status, attempt count, timestamps for start and finish, and duration. Logs are automatically expired after a defined retention period to manage storage efficiently.
  */
 
-
-
 const mongoose = require('mongoose');
 const { baseLogSchemaOptions, commonLogFields } = require('./baseLogFields');
 
@@ -57,8 +55,7 @@ const jobLogSchema = new mongoose.Schema(
     },
     expiresAt: {
       type: Date,
-      default: () =>
-        new Date(Date.now() + JOB_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
+      default: () => new Date(Date.now() + JOB_LOG_RETENTION_DAYS * 24 * 60 * 60 * 1000)
     }
   },
   baseLogSchemaOptions

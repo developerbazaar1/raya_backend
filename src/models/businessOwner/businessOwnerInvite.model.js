@@ -6,48 +6,49 @@
  */
 const mongoose = require('mongoose');
 
-const businessOwnerInviteSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    trim: true,
-    lowercase: true,
-    maxlength: 150
+const businessOwnerInviteSchema = new mongoose.Schema(
+  {
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      maxlength: 150
+    },
+
+    invitedByUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true
+    },
+
+    inviteToken: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true
+    },
+
+    status: {
+      type: String,
+      enum: ['pending', 'accepted', 'expired'],
+      default: 'pending',
+      index: true
+    },
+
+    expiresAt: {
+      type: Date,
+      required: true
+    },
+
+    acceptedAt: {
+      type: Date,
+      default: null
+    }
   },
-
-  invitedByUserId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-    index: true
-  },
-
-  inviteToken: {
-    type: String,
-    required: true,
-    unique: true,
-    trim: true
-  },
-
-  status: {
-    type: String,
-    enum: ['pending', 'accepted', 'expired'],
-    default: 'pending',
-    index: true
-  },
-
-  expiresAt: {
-    type: Date,
-    required: true
-  },
-
-  acceptedAt: {
-    type: Date,
-    default: null
-  }
-
-}, { timestamps: true });
-
+  { timestamps: true }
+);
 
 // INDEXES
 businessOwnerInviteSchema.index({ email: 1, status: 1 });

@@ -1,9 +1,4 @@
-const {
-  ApplicationLog,
-  IntegrationLog,
-  JobLog,
-  SecurityLog
-} = require('../../../models/logging');
+const { ApplicationLog, IntegrationLog, JobLog, SecurityLog } = require('../../../models/logging');
 
 class DatabaseLogSink {
   async writeApplicationLog(payload) {
