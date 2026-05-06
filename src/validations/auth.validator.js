@@ -110,6 +110,10 @@ const businessOwnerStepValidation = {
       .trim()
       .notEmpty()
       .withMessage('address is required'),
+    body('country')
+      .trim()
+      .notEmpty()
+      .withMessage('country is required'),
     body('state')
       .trim()
       .notEmpty()
