@@ -33,7 +33,7 @@ const emailTemplateSchema = new mongoose.Schema(
     },
     updatedByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'AdminUser',
+      ref: 'User',
       required: true
     }
   },

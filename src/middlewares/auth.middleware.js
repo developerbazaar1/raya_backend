@@ -2,7 +2,7 @@ const User = require('../models/shared/users.model');
 const AppError = require('../utils/appError');
 const { verifyAuthToken } = require('../helper/auth.helper');
 
-const authenticate = async (req, res, next) => {
+const authenticate = (...allowedRoles) => async (req, res, next) => {
   const authorization = req.headers.authorization || '';
   const [scheme, token] = authorization.split(' ');
 
@@ -12,20 +12,25 @@ const authenticate = async (req, res, next) => {
 
   try {
     const decoded = verifyAuthToken(token);
-    const user = await User.findById(decoded.userId);
+    const currentUser = await User.findById(decoded.userId || decoded.id);
 
-    if (!user) {
+    if (!currentUser) {
       return next(new AppError('User not found.', 401));
     }
 
+    if (allowedRoles.length > 0 && !allowedRoles.includes(currentUser.role)) {
+      return next(new AppError('You do not have permission to access this resource.', 403));
+    }
+
+    req.admin = currentUser;
     req.user = {
-      userId: user._id,
-      email: user.email,
-      role: user.role
+      userId: currentUser._id,
+      email: currentUser.email,
+      role: currentUser.role
     };
-    req.authUser = user;
+    req.authUser = currentUser;
     next();
-  } catch {
+  } catch (error) {
     next(new AppError('Invalid or expired token.', 401));
   }
 };

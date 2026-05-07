@@ -1,5 +1,5 @@
 module.exports = {
-  ROLES: ['business_owner', 'employee'],
+  ROLES: ['business_owner', 'employee', 'admin'],
   TIME_OFF_STATUS: ['pending', 'approved', 'rejected', 'change_requested', 'cancelled'],
   SCHEDULE_STATUS: ['not_started', 'in_progress', 'completed'],
   TASK_PRIORITY: ['low', 'medium', 'high'],
