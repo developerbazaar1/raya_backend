@@ -5,7 +5,6 @@ const {
   uploadBusinessOwnerSettingsFiles,
   validate
 } = require('../../middlewares');
-const AppError = require('../../utils/appError');
 const {
   getSettings,
   getFoundation,
@@ -19,14 +18,7 @@ const {
   updateBusinessOwnerFoundationValidation
 } = require('../../validations/businessOwner.validator');
 
-const ensureBusinessOwnerRole = (req, res, next) => {
-  if (req.user?.role !== 'business_owner') {
-    return next(new AppError('Only business owners can access this resource.', 403));
-  }
-  next();
-};
-
-router.use(authenticate, ensureBusinessOwnerRole);
+router.use(authenticate('business_owner'));
 
 router.get('/', asyncHandler(getSettings));
 router.patch(

@@ -62,7 +62,7 @@ const notificationCampaignSchema = new mongoose.Schema(
     },
     createdByAdminId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'AdminUser',
+      ref: 'User',
       required: true,
       index: true
     }

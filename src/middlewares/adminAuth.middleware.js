@@ -1,46 +1,45 @@
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = require('../config/env');
+/**
+ * Note: This file is not in use right now
+ * Admin Authentication Middleware
+ * This middleware verifies the JWT token provided in the Authorization header,
+ * checks if the user exists, and ensures that the user has one of the allowed roles.
+ * If authentication is successful, it attaches the user information to the request object.
+ */
+
+const User = require('../models/shared/users.model');
 const AppError = require('../utils/appError');
-const AdminUser = require('../models/admin/adminUser.model');
+const { verifyAuthToken } = require('../helper/auth.helper');
 
-const adminAuth = async (req, res, next) => {
+const adminAuth = (...allowedRoles) => async (req, res, next) => {
+  const authorization = req.headers.authorization || '';
+  const [scheme, token] = authorization.split(' ');
+
+  if (scheme !== 'Bearer' || !token) {
+    return next(new AppError('Authentication is required.', 401));
+  }
+
   try {
-    let token;
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-
-    if (!token) {
-      return next(new AppError('You are not logged in! Please log in to get access.', 401));
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET);
-
-    // Check if admin user still exists
-    // (Supporting both userId and id depending on token structure)
-    const currentUser = await AdminUser.findById(decoded.userId || decoded.id);
+    const decoded = verifyAuthToken(token);
+    const currentUser = await User.findById(decoded.userId || decoded.id);
 
     if (!currentUser) {
-      return next(new AppError('The admin belonging to this token does no longer exist.', 401));
+      return next(new AppError('User not found.', 401));
     }
 
-    if (currentUser.status !== 'active') {
-      return next(new AppError('Your account is not active.', 403));
+    if (allowedRoles.length > 0 && !allowedRoles.includes(currentUser.role)) {
+      return next(new AppError('You do not have permission to access this resource.', 403));
     }
 
-    // Grant access to protected route
     req.admin = currentUser;
-    req.user = currentUser; // Also setting req.user for compatibility with generic middlewares if needed
+    req.user = {
+      userId: currentUser._id,
+      email: currentUser.email,
+      role: currentUser.role
+    };
+    req.authUser = currentUser;
     next();
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return next(new AppError('Invalid token. Please log in again!', 401));
-    }
-    if (error.name === 'TokenExpiredError') {
-      return next(new AppError('Your token has expired! Please log in again.', 401));
-    }
-    next(error);
+    next(new AppError('Invalid or expired token.', 401));
   }
 };
 

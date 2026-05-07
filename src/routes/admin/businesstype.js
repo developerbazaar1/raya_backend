@@ -14,15 +14,15 @@ const {
 
 router.post(
   '/',
-  adminAuth,
+  adminAuth('admin'),
   validate(createBusinessTypeValidation),
   asyncHandler(createBusinessType)
 );
-router.get('/', adminAuth, asyncHandler(getAllBusinessTypes));
-router.get('/:businessId', adminAuth, asyncHandler(getBusinessTypeById));
+router.get('/', adminAuth('admin'), asyncHandler(getAllBusinessTypes));
+router.get('/:businessId', adminAuth('admin'), asyncHandler(getBusinessTypeById));
 router.put(
   '/:businessId',
-  adminAuth,
+  adminAuth('admin'),
   validate(updateBusinessTypeValidation),
   asyncHandler(updateBusinessType)
 );
