@@ -40,7 +40,7 @@ const createDefaultEmployeeProfileCompletion = () => ({
 });
 
 const ensureBusinessOwnerUser = async (email) => {
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
   if (!user) {
     throw new AppError('User not found.', 404);
   }
@@ -52,8 +52,17 @@ const ensureBusinessOwnerUser = async (email) => {
   return user;
 };
 
+const ensureBusinessOwnerUserById = async (userId) => {
+  const user = await User.findOne({ _id: userId, role: REGISTRATION_ROLE, isDeleted: false });
+  if (!user) {
+    throw new AppError('User not found.', 404);
+  }
+
+  return user;
+};
+
 const findUserByEmail = async (email) => {
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
   if (!user) {
     throw new AppError('User not found.', 404);
   }
@@ -288,7 +297,10 @@ const verifyRegistrationOtp = async ({ email, otp }) => {
   markStepCompleted(businessOwnerInfo, 2, 3);
   await businessOwnerInfo.save();
 
-  return buildRegistrationResponse(user, businessOwnerInfo);
+  return {
+    ...buildRegistrationResponse(user, businessOwnerInfo),
+    token: createAuthToken(user)
+  };
 };
 
 const forgotPassword = async ({ email }) => {
@@ -366,8 +378,8 @@ const logoutUser = async ({ userId, deviceToken }) => {
   };
 };
 
-const saveRegistrationStep3 = async ({ email, whatBringsYouHere }) => {
-  const user = await ensureBusinessOwnerUser(email);
+const saveRegistrationStep3 = async ({ userId, whatBringsYouHere }) => {
+  const user = await ensureBusinessOwnerUserById(userId);
   const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
   ensureStepAccess(businessOwnerInfo, 3);
 
@@ -378,8 +390,8 @@ const saveRegistrationStep3 = async ({ email, whatBringsYouHere }) => {
   return buildRegistrationResponse(user, businessOwnerInfo);
 };
 
-const saveRegistrationStep4 = async ({ email, planId }) => {
-  const user = await ensureBusinessOwnerUser(email);
+const saveRegistrationStep4 = async ({ userId, planId }) => {
+  const user = await ensureBusinessOwnerUserById(userId);
   const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
   ensureStepAccess(businessOwnerInfo, 4);
 
@@ -390,8 +402,8 @@ const saveRegistrationStep4 = async ({ email, planId }) => {
   return buildRegistrationResponse(user, businessOwnerInfo);
 };
 
-const saveRegistrationStep5 = async ({ email }) => {
-  const user = await ensureBusinessOwnerUser(email);
+const saveRegistrationStep5 = async ({ userId }) => {
+  const user = await ensureBusinessOwnerUserById(userId);
   const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
   ensureStepAccess(businessOwnerInfo, 5);
 
@@ -402,8 +414,8 @@ const saveRegistrationStep5 = async ({ email }) => {
   return buildRegistrationResponse(user, businessOwnerInfo);
 };
 
-const saveRegistrationStep6 = async ({ email, howDidYouHearAboutUs }) => {
-  const user = await ensureBusinessOwnerUser(email);
+const saveRegistrationStep6 = async ({ userId, howDidYouHearAboutUs }) => {
+  const user = await ensureBusinessOwnerUserById(userId);
   const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
   ensureStepAccess(businessOwnerInfo, 6);
 
@@ -414,8 +426,8 @@ const saveRegistrationStep6 = async ({ email, howDidYouHearAboutUs }) => {
   return buildRegistrationResponse(user, businessOwnerInfo);
 };
 
-const saveRegistrationStep7 = async ({ email, password }) => {
-  const user = await ensureBusinessOwnerUser(email);
+const saveRegistrationStep7 = async ({ userId, password }) => {
+  const user = await ensureBusinessOwnerUserById(userId);
   const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
   ensureStepAccess(businessOwnerInfo, 7);
 
@@ -430,7 +442,7 @@ const saveRegistrationStep7 = async ({ email, password }) => {
 };
 
 const saveRegistrationStep8 = async ({
-  email,
+  userId,
   businessName,
   businessType,
   phoneNumberCountryCode,
@@ -443,7 +455,7 @@ const saveRegistrationStep8 = async ({
   zipCode,
   files = {}
 }) => {
-  const user = await ensureBusinessOwnerUser(email);
+  const user = await ensureBusinessOwnerUserById(userId);
   const businessOwnerInfo = await getOrCreateBusinessOwnerInfo(user._id);
   ensureStepAccess(businessOwnerInfo, 8);
 
@@ -488,7 +500,7 @@ const saveRegistrationStep8 = async ({
 };
 
 const loginUser = async ({ email, password, deviceToken = '' }) => {
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
   if (!user) {
     throw new AppError('Invalid email or password.', 401);
   }
@@ -521,7 +533,7 @@ const loginUser = async ({ email, password, deviceToken = '' }) => {
         message: `Registration incomplete. Continue from step ${businessOwnerInfo.registrationState.currentStep}.`,
         data: {
           ...buildRegistrationResponse(user, businessOwnerInfo),
-          token: '',
+          token: createAuthToken(user),
           resumeRegistration: true
         }
       };
@@ -587,7 +599,7 @@ const loginUser = async ({ email, password, deviceToken = '' }) => {
 };
 
 const saveEmployeeProfileStep1 = async ({
-  email,
+  userId,
   name,
   gender,
   dob,
@@ -601,7 +613,7 @@ const saveEmployeeProfileStep1 = async ({
   zipCode,
   files = {}
 }) => {
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ _id: userId, role: 'employee', isDeleted: false });
   if (!user || user.role !== 'employee') {
     throw new AppError('Employee not found.', 404);
   }
@@ -640,7 +652,7 @@ const saveEmployeeProfileStep1 = async ({
 };
 
 const saveEmployeeProfileStep2 = async ({
-  email,
+  userId,
   isMarried,
   spouse,
   haveKids,
@@ -653,7 +665,7 @@ const saveEmployeeProfileStep2 = async ({
   favoriteLocalBusiness,
   favoriteRestaurant
 }) => {
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ _id: userId, role: 'employee', isDeleted: false });
   if (!user || user.role !== 'employee') {
     throw new AppError('Employee not found.', 404);
   }
@@ -668,17 +680,17 @@ const saveEmployeeProfileStep2 = async ({
   employeeInfo.haveKids = haveKids;
   employeeInfo.kids = haveKids
     ? (kids || []).map((kid) => ({
-        name: kid.name,
-        gender: kid.gender,
-        birthday: kid.birthday
-      }))
+      name: kid.name,
+      gender: kid.gender,
+      birthday: kid.birthday
+    }))
     : [];
   employeeInfo.havePets = havePets;
   employeeInfo.pets = havePets
     ? (pets || []).map((pet) => ({
-        name: pet.name,
-        age: pet.age
-      }))
+      name: pet.name,
+      age: pet.age
+    }))
     : [];
   employeeInfo.favouriteFlower = favoriteFlower || '';
   employeeInfo.favouriteCakeFlavour = favoriteCackeFlavor || '';

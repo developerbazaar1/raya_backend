@@ -20,7 +20,9 @@ const userSchema = new mongoose.Schema(
     },
     dateOfJoining: { type: Date },
     owner: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    deviceTokens: [{ type: String }]
+    deviceTokens: [{ type: String }],
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );

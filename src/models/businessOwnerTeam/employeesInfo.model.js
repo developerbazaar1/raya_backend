@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const DISC_TYPES = ['D', 'I', 'S', 'C'];
 
 const employeeProfileCompletionSchema = new mongoose.Schema(
   {
@@ -26,8 +27,9 @@ const employeeInfoSchema = new mongoose.Schema(
     businessOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true
+      default: null
     },
+    // # Reference to the employee role
     employeeRoleId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'EmployeeRole',
@@ -40,6 +42,17 @@ const employeeInfoSchema = new mongoose.Schema(
     },
     gender: { type: String, trim: true },
     hiringDate: { type: Date },
+    personalityType: {
+      type: String,
+      enum: DISC_TYPES,
+      default: null
+    },
+    mentalHealthScore: {
+      type: Number,
+      min: 0,
+      max: 5,
+      default: null
+    },
     timeZone: { type: String, trim: true },
     department: { type: String, trim: true },
     address: { type: String, trim: true },
@@ -77,7 +90,9 @@ const employeeInfoSchema = new mongoose.Schema(
     profileCompletion: {
       type: employeeProfileCompletionSchema,
       default: () => ({})
-    }
+    },
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );

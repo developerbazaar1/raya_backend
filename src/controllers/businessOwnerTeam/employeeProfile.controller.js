@@ -5,6 +5,7 @@ const {
 
 const employeeProfileStep1 = async (req, res) => {
   const data = await saveEmployeeProfileStep1({
+    userId: req.user.userId,
     ...req.body,
     files: req.files || {}
   });
@@ -17,7 +18,10 @@ const employeeProfileStep1 = async (req, res) => {
 };
 
 const employeeProfileStep2 = async (req, res) => {
-  const data = await saveEmployeeProfileStep2(req.body);
+  const data = await saveEmployeeProfileStep2({
+    userId: req.user.userId,
+    ...req.body
+  });
 
   res.status(200).json({
     status: 'success',
