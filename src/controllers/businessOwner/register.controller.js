@@ -38,7 +38,10 @@ const verifyOtp = async (req, res) => {
 };
 
 const step3 = async (req, res) => {
-  const data = await saveRegistrationStep3(req.body);
+  const data = await saveRegistrationStep3({
+    userId: req.user.userId,
+    ...req.body
+  });
   res.status(200).json({
     status: 'success',
     message: 'Step 3 completed successfully.',
@@ -47,7 +50,10 @@ const step3 = async (req, res) => {
 };
 
 const step4 = async (req, res) => {
-  const data = await saveRegistrationStep4(req.body);
+  const data = await saveRegistrationStep4({
+    userId: req.user.userId,
+    ...req.body
+  });
   res.status(200).json({
     status: 'success',
     message: 'Plan selected successfully.',
@@ -56,7 +62,10 @@ const step4 = async (req, res) => {
 };
 
 const step5 = async (req, res) => {
-  const data = await saveRegistrationStep5(req.body);
+  const data = await saveRegistrationStep5({
+    userId: req.user.userId,
+    ...req.body
+  });
   res.status(200).json({
     status: 'success',
     message: 'Payment recorded successfully.',
@@ -65,7 +74,10 @@ const step5 = async (req, res) => {
 };
 
 const step6 = async (req, res) => {
-  const data = await saveRegistrationStep6(req.body);
+  const data = await saveRegistrationStep6({
+    userId: req.user.userId,
+    ...req.body
+  });
   res.status(200).json({
     status: 'success',
     message: 'Step 6 completed successfully.',
@@ -74,7 +86,10 @@ const step6 = async (req, res) => {
 };
 
 const step7 = async (req, res) => {
-  const data = await saveRegistrationStep7(req.body);
+  const data = await saveRegistrationStep7({
+    userId: req.user.userId,
+    ...req.body
+  });
   res.status(200).json({
     status: 'success',
     message: 'Password set successfully.',
@@ -84,6 +99,7 @@ const step7 = async (req, res) => {
 
 const step8 = async (req, res) => {
   const data = await saveRegistrationStep8({
+    userId: req.user.userId,
     ...req.body,
     files: req.files || {}
   });

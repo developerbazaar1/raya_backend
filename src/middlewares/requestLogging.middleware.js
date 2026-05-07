@@ -24,6 +24,28 @@ const getEventTypeFromStatus = (statusCode) => {
   return 'request_success';
 };
 
+// Get operation type based on HTTP method and status code
+const getOperationTag = (httpMethod, statusCode) => {
+  if (statusCode >= 400) {
+    return null; // Don't tag failed requests
+  }
+
+  const method = httpMethod.toUpperCase();
+  if (method === 'POST' || method === 'PUT') {
+    return 'CREATE';
+  }
+
+  if (method === 'PATCH') {
+    return 'UPDATE';
+  }
+
+  if (method === 'DELETE') {
+    return 'DELETE';
+  }
+
+  return null;
+};
+
 const requestLogger = (req, res, next) => {
   const startedAt = Date.now();
 
@@ -31,6 +53,13 @@ const requestLogger = (req, res, next) => {
     const durationMs = Date.now() - startedAt;
     const statusCode = res.statusCode;
     const requestError = res.locals.requestError || null;
+    const operationTag = getOperationTag(req.method, statusCode);
+
+    // Build tags array
+    const tags = ['http', statusCode >= 400 ? 'failure' : 'success'];
+    if (operationTag) {
+      tags.push(operationTag);
+    }
 
     loggingService.logApplicationEventSafely({
       level: getLogLevelFromStatus(statusCode),
@@ -56,7 +85,7 @@ const requestLogger = (req, res, next) => {
       statusCode,
       durationMs,
       stack: requestError?.stack || '',
-      tags: ['http', statusCode >= 400 ? 'failure' : 'success']
+      tags
     });
   });
 

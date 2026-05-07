@@ -47,13 +47,39 @@ const {
 router.post('/register/start', validate(registerStartValidation), asyncHandler(registerStart));
 router.post('/register/resend-otp', validate(emailOnlyValidation), asyncHandler(resendOtp));
 router.post('/register/verify-otp', validate(verifyOtpValidation), asyncHandler(verifyOtp));
-router.post('/register/step-3', validate(businessOwnerStepValidation.step3), asyncHandler(step3));
-router.post('/register/step-4', validate(businessOwnerStepValidation.step4), asyncHandler(step4));
-router.post('/register/step-5', validate(businessOwnerStepValidation.step5), asyncHandler(step5));
-router.post('/register/step-6', validate(businessOwnerStepValidation.step6), asyncHandler(step6));
-router.post('/register/step-7', validate(businessOwnerStepValidation.step7), asyncHandler(step7));
+router.post(
+  '/register/step-3',
+  authenticate('business_owner'),
+  validate(businessOwnerStepValidation.step3),
+  asyncHandler(step3)
+);
+router.post(
+  '/register/step-4',
+  authenticate('business_owner'),
+  validate(businessOwnerStepValidation.step4),
+  asyncHandler(step4)
+);
+router.post(
+  '/register/step-5',
+  authenticate('business_owner'),
+  validate(businessOwnerStepValidation.step5),
+  asyncHandler(step5)
+);
+router.post(
+  '/register/step-6',
+  authenticate('business_owner'),
+  validate(businessOwnerStepValidation.step6),
+  asyncHandler(step6)
+);
+router.post(
+  '/register/step-7',
+  authenticate('business_owner'),
+  validate(businessOwnerStepValidation.step7),
+  asyncHandler(step7)
+);
 router.post(
   '/register/step-8',
+  authenticate('business_owner'),
   uploadBusinessOwnerStep8Files,
   validate(businessOwnerStepValidation.step8),
   asyncHandler(step8)
@@ -64,12 +90,14 @@ router.post('/logout', authenticate, validate(logoutValidation), asyncHandler(lo
 
 router.post(
   '/employee/profile/step-1',
+  authenticate('employee'),
   uploadEmployeeProfileStep1Files,
   validate(employeeProfileStepValidation.step1),
   asyncHandler(employeeProfileStep1)
 );
 router.post(
   '/employee/profile/step-2',
+  authenticate('employee'),
   validate(employeeProfileStepValidation.step2),
   asyncHandler(employeeProfileStep2)
 );
