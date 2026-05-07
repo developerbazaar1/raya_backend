@@ -115,9 +115,7 @@ const updateBusinessOwnerSettings = async (userId, payload) => {
       ...(payload.phoneNumberCountryCode !== undefined
         ? { countryCode: payload.phoneNumberCountryCode }
         : {}),
-      ...(payload.phoneNumber !== undefined
-        ? { number: payload.phoneNumber }
-        : {})
+      ...(payload.phoneNumber !== undefined ? { number: payload.phoneNumber } : {})
     };
   }
 

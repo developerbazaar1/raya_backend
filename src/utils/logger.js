@@ -80,10 +80,10 @@ const logger = createLogger({
   format:
     process.env.NODE_ENV === 'development'
       ? format.combine(
-        format.timestamp(),
-        format.errors({ stack: true }),
-        format.printf(formatDevelopmentLog)
-      )
+          format.timestamp(),
+          format.errors({ stack: true }),
+          format.printf(formatDevelopmentLog)
+        )
       : format.combine(format.timestamp(), format.errors({ stack: true }), format.json()),
   transports: [new transports.Console()]
 });

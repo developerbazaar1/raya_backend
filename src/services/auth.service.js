@@ -668,17 +668,17 @@ const saveEmployeeProfileStep2 = async ({
   employeeInfo.haveKids = haveKids;
   employeeInfo.kids = haveKids
     ? (kids || []).map((kid) => ({
-      name: kid.name,
-      gender: kid.gender,
-      birthday: kid.birthday
-    }))
+        name: kid.name,
+        gender: kid.gender,
+        birthday: kid.birthday
+      }))
     : [];
   employeeInfo.havePets = havePets;
   employeeInfo.pets = havePets
     ? (pets || []).map((pet) => ({
-      name: pet.name,
-      age: pet.age
-    }))
+        name: pet.name,
+        age: pet.age
+      }))
     : [];
   employeeInfo.favouriteFlower = favoriteFlower || '';
   employeeInfo.favouriteCakeFlavour = favoriteCackeFlavor || '';

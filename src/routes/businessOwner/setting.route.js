@@ -1,10 +1,6 @@
 const router = require('express').Router();
 const asyncHandler = require('../../utils/asyncHandler');
-const {
-  authenticate,
-  uploadBusinessOwnerSettingsFiles,
-  validate
-} = require('../../middlewares');
+const { authenticate, uploadBusinessOwnerSettingsFiles, validate } = require('../../middlewares');
 const {
   getSettings,
   getFoundation,
