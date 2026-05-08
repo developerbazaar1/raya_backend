@@ -2,8 +2,8 @@ const router = require('express').Router();
 const asyncHandler = require('../../utils/asyncHandler');
 const { validate, adminAuth } = require('../../middlewares');
 const {
-  cmsCreateValidation,
-  cmsUpdateValidation
+    cmsCreateValidation,
+    cmsUpdateValidation
 } = require('../../validations/admin/cms.validator');
 const { cmsCreate, cmsUpdate, cmsGet, cmsList } = require('../../controllers/admin/cms.controller');
 

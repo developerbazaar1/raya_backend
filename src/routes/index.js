@@ -12,26 +12,12 @@ router.use("/api/v1/business-owner/team", require("./businessOwner/team.route"))
 router.use('/api/v1/business-owner/cms', require('./businessOwner/cms.route'));
 router.use('/api/v1/business-owner/projects', require('./businessOwner/project.route'));
 router.use('/api/v1/business-owner/projects/tasks', require('./businessOwner/task.route'));
+router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// All Admin routes
+// All Admin route
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));
 router.use('/api/v1/admin/businesses', require('./admin/businesstype'));
 router.use('/api/v1/admin/cms', require('./admin/cms'));

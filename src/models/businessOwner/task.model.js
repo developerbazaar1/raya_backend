@@ -28,7 +28,22 @@ const taskSchema = new mongoose.Schema(
 
     dueDate: Date,
 
-    attachments: [String],
+    attachments: [
+      {
+        url: String,
+        key: String,
+        fileName: String,
+        mimeType: String,
+        sizeBytes: Number
+      }
+    ],
+
+    businessOwnerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+      index: true
+    },
 
     status: {
       type: String,

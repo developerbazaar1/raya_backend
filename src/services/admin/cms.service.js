@@ -60,7 +60,7 @@ exports.cmsListService = async () => {
   return formattedCms;
 };
 
-exports.cmsGetService = async (id, adminId) => {
+exports.cmsGetService = async (id, _adminId) => {
   const cms = await CMS.findById(id);
 
   if (!cms) throw new AppError('Page not found', 404);

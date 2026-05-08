@@ -1,8 +1,12 @@
+const mongoose = require('mongoose');
 const Project = require('../models/businessOwner/project.model');
-// const projectTaskAssignment = require('../models/businessOwner/projectTaskAssignment.model');
+
 const Task = require('../models/businessOwner/task.model');
 const AppError = require('../utils/appError');
+const User = require('../models/shared/users.model');
+const { DEFAULT_PROFILE_IMAGE } = require('../config/constant');
 
+//create project service
 exports.projectCreateService = async (payload, userId) => {
   const { projectName, description, dueDate, assignedUsers } = payload;
   const project = new Project({
@@ -14,11 +18,11 @@ exports.projectCreateService = async (payload, userId) => {
     businessOwnerId: userId
   });
 
-  const formattedProject = formatProject(project);
   await project.save();
+  const formattedProject = formatProject(project);
+
   return formattedProject;
 };
-
 const formatProject = (project) => {
   return {
     _id: project._id,
@@ -30,31 +34,76 @@ const formatProject = (project) => {
   };
 };
 
-exports.projectListService = async (userId, skip = 0, limit = 10) => {
-  const projects = await Project.find({
-    businessOwnerId: userId
-  })
-    .skip(skip)
-    .limit(limit)
-    .sort({ createdAt: -1 });
+// Get project stats service
+exports.getProjectStatsService = async (businessOwnerId) => {
+  const stats = await Project.aggregate([
+    { $match: { businessOwnerId: new mongoose.Types.ObjectId(businessOwnerId) } },
+    {
+      $group: {
+        _id: null,
+        totalProjects: { $sum: 1 },
+        // A project is considered pending if progress is exactly 0
+        pendingProjects: {
+          $sum: {
+            $cond: [{ $eq: ['$progress', 0] }, 1, 0]
+          }
+        },
+        // A project is considered active if progress is greater than 0 but less than 100
+        activeProjects: {
+          $sum: {
+            $cond: [{ $and: [{ $gt: ['$progress', 0] }, { $lt: ['$progress', 100] }] }, 1, 0]
+          }
+        },
+        // A project is considered completed if progress is 100 or more
+        completedProjects: {
+          $sum: {
+            $cond: [{ $gte: ['$progress', 100] }, 1, 0]
+          }
+        }
+      }
+    }
+  ]);
 
-  const formattedProjects = projects.map((project) => {
-    return {
-      _id: project._id,
-      projectName: project.projectName || '',
-      description: project.description || '',
-      startDate: project.startDate || '',
-      dueDate: project.dueDate || '',
-      totalTasks: project.totalTasks || 0,
-      completedTasks: project.completedTasks || 0,
-      progress: project.progress || 0
-    };
-  });
-  return formattedProjects;
+  return {
+    totalProjects: stats[0]?.totalProjects || 0,
+    activeProjects: stats[0]?.activeProjects || 0,
+    completedProjects: stats[0]?.completedProjects || 0,
+    pendingProjects: stats[0]?.pendingProjects || 0
+  };
 };
 
+//show all projects list service
+exports.projectListService = async (userId, skip = 0, limit = 10) => {
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
+  const overallStats = await exports.getProjectStatsService(userId);
+
+  const projects = await Project.aggregate([
+    { $match: { businessOwnerId: userObjectId } },
+    { $sort: { createdAt: -1 } },
+    { $skip: skip },
+    { $limit: limit },
+    {
+      $project: {
+        totalTasks: 0,
+        completedTasks: 0,
+        __v: 0
+      }
+    }
+  ]);
+
+  return {
+    projects,
+    stats: overallStats
+  };
+};
+
+// Get project By Id service
 exports.projectDetailsService = async (projectId) => {
-  const projectDetails = await Project.findById(projectId).populate('assignedUsers', 'name email');
+  const projectDetails = await Project.findById(projectId).populate(
+    'assignedUsers',
+    'name userProfile'
+  );
   if (!projectDetails) {
     throw new AppError('Project not found', 404);
   }
@@ -64,22 +113,28 @@ exports.projectDetailsService = async (projectId) => {
   return {
     _id: projectDetails._id,
     projectName: projectDetails.projectName || '',
-    description: projectDetails.description || '',
     startDate: projectDetails.startDate || '',
     dueDate: projectDetails.dueDate || '',
-    assignedUsers: projectDetails.assignedUsers || [],
     assignedUsersCount: projectDetails.assignedUsers?.length || 0,
+    assignedUsers: (projectDetails.assignedUsers || []).map((user) => ({
+      _id: user._id,
+      name: user.name || '',
+      profileImage: user.userProfile?.url || DEFAULT_PROFILE_IMAGE
+    })),
     progress: projectDetails.progress || 0,
+    totalTasks: projectDetails.totalTasks || 0,
+    completedTasks: projectDetails.completedTasks || 0,
     tasks: tasks.map((task) => ({
       _id: task._id,
       taskName: task.taskName || '',
       description: task.description || '',
-      priority: task.priority || 'medium',
-      status: task.status || 'not_started'
+      priority: task.priority || '',
+      status: task.status || ''
     }))
   };
 };
 
+//Assigned project to employee service
 exports.assignedProjectsService = async (projectId, assignedUsers) => {
   const projectDetails = await Project.findById(projectId);
   if (!projectDetails) {
@@ -104,6 +159,8 @@ exports.assignedProjectsService = async (projectId, assignedUsers) => {
   };
 };
 
+
+//remove project from employee service
 exports.removeAssignedUserService = async (projectId, assignedUsers) => {
   const projectDetails = await Project.findById(projectId);
   if (!projectDetails) {
@@ -128,4 +185,39 @@ exports.removeAssignedUserService = async (projectId, assignedUsers) => {
     projectName: projectDetails.projectName || '',
     assignedUsers: projectDetails.assignedUsers || []
   };
+};
+
+
+//Get all employees list service
+exports.employeesListService = async (userId, skip = 0, limit = 10) => {
+  const employees = await User.find({
+    role: 'employee',
+    owner: userId
+  })
+    .skip(skip)
+    .limit(limit)
+    .sort({ createdAt: -1 });
+
+  const formattedEmployees = employees.map((employee) => {
+    return {
+      _id: employee._id,
+      name: employee?.name || '',
+      // role: employee?.role || 'employee',
+      // profileImage: employee?.userProfile?.url || DEFAULT_PROFILE_IMAGE
+    };
+  });
+  return formattedEmployees;
+};
+
+//update project stats service
+exports.updateProjectStats = async (projectId) => {
+  const totalTasks = await Task.countDocuments({ projectId });
+  const completedTasks = await Task.countDocuments({ projectId, status: 'completed' });
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  await Project.findByIdAndUpdate(projectId, {
+    totalTasks,
+    completedTasks,
+    progress
+  });
 };

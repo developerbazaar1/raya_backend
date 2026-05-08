@@ -1,4 +1,4 @@
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const mongoose = require('mongoose');
 
 exports.taskCreateValidation = [
@@ -16,8 +16,19 @@ exports.taskCreateValidation = [
     .withMessage('Due date must be a valid ISO date (YYYY-MM-DD)')
     .toDate(),
   body('assignedUsers')
+    .custom((value) => {
+      if (Array.isArray(value)) {
+        return value.every((id) => mongoose.Types.ObjectId.isValid(id));
+      }
+      return mongoose.Types.ObjectId.isValid(value);
+    })
+    .withMessage('Each assigned user must be a valid object ID')
+];
+
+exports.taskGetByIdValidation = [
+  param('taskId')
     .notEmpty()
-    .withMessage('Assigned users are required')
+    .withMessage('Task ID is required')
     .custom((id) => mongoose.Types.ObjectId.isValid(id))
-    .withMessage('Assigned user must be a valid object ID')
+    .withMessage('Task ID must be a valid object ID')
 ];

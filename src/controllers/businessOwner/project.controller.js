@@ -3,7 +3,8 @@ const {
   projectListService,
   projectDetailsService,
   assignedProjectsService,
-  removeAssignedUserService
+  removeAssignedUserService,
+  employeesListService
 } = require('../../services/project.service');
 
 exports.projectCreate = async (req, res) => {
@@ -60,3 +61,17 @@ exports.removeAssignedUser = async (req, res) => {
     data
   });
 };
+
+
+exports.employeesList = async (req, res) => {
+  const { page = 1, limit = 10 } = req.query;
+  const pageNo = parseInt(page);
+  const limitNo = parseInt(limit);
+  const skip = (pageNo - 1) * limitNo;
+  const data = await employeesListService(req.user.userId, skip, limitNo);
+  res.status(200).json({
+    success: 'success',
+    message: 'Employees list successfully',
+    data
+  });
+}

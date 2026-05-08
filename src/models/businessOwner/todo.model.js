@@ -6,6 +6,8 @@
  * - NO progress stored here (derived from assignments)
  */
 const mongoose = require('mongoose');
+
+const { RepetitionTypes } = require('../../config/constant');
 const todoSchema = new mongoose.Schema(
   {
     businessOwnerId: {
@@ -21,6 +23,13 @@ const todoSchema = new mongoose.Schema(
       trim: true
     },
 
+    assignedUsers: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ],
+
     description: String,
 
     dueDate: {
@@ -30,10 +39,12 @@ const todoSchema = new mongoose.Schema(
 
     repetition: {
       type: String,
-      enum: ['daily', 'weekly', 'monthly', 'one-time'],
+      enum: RepetitionTypes,
       default: 'one-time',
       index: true
-    }
+    },
+
+    progress: { type: Number, default: 0 }
   },
   { timestamps: true }
 );

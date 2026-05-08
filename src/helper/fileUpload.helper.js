@@ -25,7 +25,10 @@ const validateUploadFile = (file) => {
 
   const extension = normalizeExtension(file.originalname, file.mimetype);
   if (!FILE_TYPES.includes(extension)) {
-    throw new AppError('Unsupported file type.', 400);
+    throw new AppError(
+      `Unsupported file type. Allowed extensions: ${FILE_TYPES.join(', ')}.`,
+      400
+    );
   }
 };
 

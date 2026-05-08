@@ -5,6 +5,7 @@
  * - THIS is where progress lives
  */
 const mongoose = require('mongoose');
+const { SCHEDULE_STATUS } = require('../../config/constant');
 const todoAssignmentSchema = new mongoose.Schema(
   {
     todoId: {
@@ -25,13 +26,13 @@ const todoAssignmentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true
+      // index: true
     },
 
     status: {
       type: String,
-      enum: ['notStarted', 'inProgress', 'completed'],
-      default: 'notStarted',
+      enum: SCHEDULE_STATUS,
+      default: 'not_started',
       index: true
     },
 

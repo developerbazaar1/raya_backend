@@ -33,8 +33,12 @@ const uploadBusinessOwnerSettingsFiles = upload.fields([
   { name: 'profilePicture', maxCount: 1 }
 ]);
 
+const uploadTaskFiles = upload.fields([{ name: 'attachments', maxCount: 10 }]);
+
 module.exports = {
   uploadBusinessOwnerStep8Files,
-  uploadEmployeeProfileStep1Files,
-  uploadBusinessOwnerSettingsFiles
+  uploadEmployeeProfileStep1Files,  
+  uploadBusinessOwnerSettingsFiles,
+  uploadTaskFiles
+
 };
