@@ -17,4 +17,3 @@ exports.getTaskById = async (req, res) => {
     data
   });
 };
-

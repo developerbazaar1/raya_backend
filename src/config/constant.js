@@ -17,6 +17,7 @@ module.exports = {
   FILE_SIZE: 10 * 1024 * 1024, // 10MB
   DO_SPACES_REGION: 'sgp1',
   DO_SPACES_BUCKET: 'seer-app',
-  DEFAULT_PROFILE_IMAGE: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-kxsrlL89sKekYAVXwyzqv-SNUcCVDihjnA&s',
+  DEFAULT_PROFILE_IMAGE:
+    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-kxsrlL89sKekYAVXwyzqv-SNUcCVDihjnA&s',
   RepetitionTypes: ['daily', 'weekly', 'monthly', 'one-time']
 };

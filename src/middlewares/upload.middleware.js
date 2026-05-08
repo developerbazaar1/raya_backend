@@ -37,8 +37,7 @@ const uploadTaskFiles = upload.fields([{ name: 'attachments', maxCount: 10 }]);
 
 module.exports = {
   uploadBusinessOwnerStep8Files,
-  uploadEmployeeProfileStep1Files,  
+  uploadEmployeeProfileStep1Files,
   uploadBusinessOwnerSettingsFiles,
   uploadTaskFiles
-
 };

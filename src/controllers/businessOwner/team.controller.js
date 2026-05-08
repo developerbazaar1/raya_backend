@@ -79,17 +79,15 @@ const deleteMember = async (req, res) => {
   });
 };
 
-
-
 const getMembers = async (req, res) => {
-   const data = await getMemberService(req.user.userId, req.query);
+  const data = await getMemberService(req.user.userId, req.query);
 
   res.status(200).json({
     status: 'success',
     message: 'Members fetched successfully.',
     data
   });
-}
+};
 
 module.exports = {
   createRole,

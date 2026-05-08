@@ -1,7 +1,7 @@
 const Todo = require('../models/businessOwner/todo.model');
 const TodoAssignment = require('../models/businessOwnerTeam/todoAssignment.model');
 const AppError = require('../utils/appError');
-const { DEFAULT_PROFILE_IMAGE } = require('../config/constant')
+const { DEFAULT_PROFILE_IMAGE } = require('../config/constant');
 /**
  * Create a new To-Do item and its assignments
  */
@@ -21,7 +21,7 @@ exports.todoCreateService = async (data, businessOwnerId) => {
 
   // Create assignments for each user
   if (todo.assignedUsers && todo.assignedUsers.length > 0) {
-    const assignments = todo.assignedUsers.map(userId => ({
+    const assignments = todo.assignedUsers.map((userId) => ({
       todoId: todo._id,
       userId: userId,
       businessOwnerId: businessOwnerId,
@@ -33,13 +33,14 @@ exports.todoCreateService = async (data, businessOwnerId) => {
   return formatTask(todo);
 };
 
-
 exports.todoAllService = async (businessOwnerId) => {
   const todos = await Todo.find({ businessOwnerId }).sort({ createdAt: -1 });
 
   // Fetch all assignments for this business owner and populate user details
-  const assignments = await TodoAssignment.find({ businessOwnerId })
-    .populate('userId', 'name profileImage');
+  const assignments = await TodoAssignment.find({ businessOwnerId }).populate(
+    'userId',
+    'name profileImage'
+  );
 
   // Group assignments by todoId for efficient mapping
   const assignmentsByTodo = assignments.reduce((acc, assignment) => {
@@ -50,7 +51,7 @@ exports.todoAllService = async (businessOwnerId) => {
       user: {
         _id: assignment.userId._id,
         name: assignment.userId.name,
-        profileImage: assignment.userId.profileImage || DEFAULT_PROFILE_IMAGE,
+        profileImage: assignment.userId.profileImage || DEFAULT_PROFILE_IMAGE
       },
       status: assignment.status,
       startedAt: assignment.startedAt,
@@ -59,13 +60,14 @@ exports.todoAllService = async (businessOwnerId) => {
     return acc;
   }, {});
 
-  return todos.map(todo => {
+  return todos.map((todo) => {
     const todoAssignments = assignmentsByTodo[todo._id.toString()] || [];
 
     // Calculate stats
     const totalAssignments = todoAssignments.length;
-    const completedAssignments = todoAssignments.filter(a => a.status === 'completed').length;
-    const progress = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
+    const completedAssignments = todoAssignments.filter((a) => a.status === 'completed').length;
+    const progress =
+      totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
 
     // Determine due status
     const dueStatus = getDueStatus(todo.dueDate);
@@ -100,7 +102,6 @@ const getDueStatus = (dueDate) => {
   if (diffDays === 1) return 'Due Tomorrow';
   return `Due in ${diffDays} days`;
 };
-
 
 const formatTask = (todo) => {
   return {

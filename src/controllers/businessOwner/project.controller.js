@@ -62,7 +62,6 @@ exports.removeAssignedUser = async (req, res) => {
   });
 };
 
-
 exports.employeesList = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const pageNo = parseInt(page);
@@ -74,4 +73,4 @@ exports.employeesList = async (req, res) => {
     message: 'Employees list successfully',
     data
   });
-}
+};

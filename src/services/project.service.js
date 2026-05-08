@@ -159,7 +159,6 @@ exports.assignedProjectsService = async (projectId, assignedUsers) => {
   };
 };
 
-
 //remove project from employee service
 exports.removeAssignedUserService = async (projectId, assignedUsers) => {
   const projectDetails = await Project.findById(projectId);
@@ -187,7 +186,6 @@ exports.removeAssignedUserService = async (projectId, assignedUsers) => {
   };
 };
 
-
 //Get all employees list service
 exports.employeesListService = async (userId, skip = 0, limit = 10) => {
   const employees = await User.find({
@@ -201,7 +199,7 @@ exports.employeesListService = async (userId, skip = 0, limit = 10) => {
   const formattedEmployees = employees.map((employee) => {
     return {
       _id: employee._id,
-      name: employee?.name || '',
+      name: employee?.name || ''
       // role: employee?.role || 'employee',
       // profileImage: employee?.userProfile?.url || DEFAULT_PROFILE_IMAGE
     };

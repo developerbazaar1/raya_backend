@@ -8,7 +8,6 @@ const {
   uploadEmployeeProfileStep1Files,
   uploadBusinessOwnerSettingsFiles,
   uploadTaskFiles
-
 } = require('./upload.middleware');
 const validate = require('./validate');
 const adminAuth = require('./adminAuth.middleware');

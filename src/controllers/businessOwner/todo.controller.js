@@ -1,4 +1,3 @@
-
 const { todoCreateService, todoAllService } = require('../../services/todo.service');
 
 exports.todoCreate = async (req, res) => {
@@ -17,4 +16,4 @@ exports.todoAll = async (req, res) => {
     message: 'To-Do items retrieved successfully',
     data: todos
   });
-}
+};

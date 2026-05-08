@@ -31,19 +31,14 @@ exports.addMembersToRoleValidation = [
     .withMessage('Role ID is required')
     .custom((id) => mongoose.Types.ObjectId.isValid(id))
     .withMessage('Role ID must be a valid object ID'),
-  body('userIds')
-    .isArray({ min: 1 })
-    .withMessage('userIds must be a non-empty array'),
+  body('userIds').isArray({ min: 1 }).withMessage('userIds must be a non-empty array'),
   body('userIds.*')
     .custom((id) => mongoose.Types.ObjectId.isValid(id))
     .withMessage('Each user ID must be a valid object ID')
 ];
 
 exports.createMemberValidation = [
-  body('name')
-    .trim()
-    .notEmpty()
-    .withMessage('Name is required'),
+  body('name').trim().notEmpty().withMessage('Name is required'),
   body('email')
     .trim()
     .notEmpty()

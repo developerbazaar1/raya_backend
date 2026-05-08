@@ -119,12 +119,7 @@ const createRoleService = async (businessOwnerId, payload) => {
 };
 
 const getRolesService = async (businessOwnerId, query) => {
-  const {
-    search = '',
-    page,
-    limit,
-    fields
-  } = query;
+  const { search = '', page, limit, fields } = query;
 
   const ownerObjectId = toObjectId(businessOwnerId);
   const selectedFields = parseFields(fields);
@@ -136,12 +131,10 @@ const getRolesService = async (businessOwnerId, query) => {
 
   const pageNo = Number.parseInt(page, 10);
   const limitNo = Number.parseInt(limit, 10);
-  const shouldPaginate = Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
+  const shouldPaginate =
+    Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
 
-  const rolePipeline = [
-    { $match: matchStage },
-    { $sort: { createdAt: -1 } }
-  ];
+  const rolePipeline = [{ $match: matchStage }, { $sort: { createdAt: -1 } }];
 
   if (shouldPaginate) {
     rolePipeline.push({ $skip: (pageNo - 1) * limitNo }, { $limit: limitNo });
@@ -172,10 +165,7 @@ const getRolesService = async (businessOwnerId, query) => {
                 {
                   $match: {
                     $expr: {
-                      $and: [
-                        { $eq: ['$_id', '$$userId'] },
-                        { $eq: ['$isDeleted', false] }
-                      ]
+                      $and: [{ $eq: ['$_id', '$$userId'] }, { $eq: ['$isDeleted', false] }]
                     }
                   }
                 }
@@ -202,17 +192,19 @@ const getRolesService = async (businessOwnerId, query) => {
     shouldPaginate ? EmployeeRole.countDocuments(matchStage) : Promise.resolve(null)
   ]);
 
-  const formattedRoles = roles.map((role) => buildRoleResponse(role, role.memberCount, selectedFields));
+  const formattedRoles = roles.map((role) =>
+    buildRoleResponse(role, role.memberCount, selectedFields)
+  );
 
   return {
     items: formattedRoles,
     pagination: shouldPaginate
       ? {
-        page: pageNo,
-        limit: limitNo,
-        total,
-        totalPages: Math.ceil(total / limitNo)
-      }
+          page: pageNo,
+          limit: limitNo,
+          total,
+          totalPages: Math.ceil(total / limitNo)
+        }
       : null
   };
 };
@@ -248,39 +240,45 @@ const deleteRoleService = async (businessOwnerId, roleId) => {
   const deletedAt = new Date();
 
   if (userIds.length > 0) {
-    await User.updateMany({
-      _id: { $in: userIds },
-      role: 'employee',
-      owner: businessOwnerId
-    }, {
+    await User.updateMany(
+      {
+        _id: { $in: userIds },
+        role: 'employee',
+        owner: businessOwnerId
+      },
+      {
+        $set: {
+          isDeleted: true,
+          deletedAt,
+          owner: null,
+          dateOfJoining: null,
+          deviceTokens: []
+        }
+      }
+    );
+  }
+
+  await EmployeeInfo.updateMany(
+    {
+      businessOwnerId,
+      employeeRoleId: role._id
+    },
+    {
       $set: {
         isDeleted: true,
         deletedAt,
-        owner: null,
-        dateOfJoining: null,
-        deviceTokens: []
+        businessOwnerId: null,
+        employeeRoleId: null,
+        hiringDate: null,
+        department: '',
+        address: '',
+        country: '',
+        state: '',
+        city: '',
+        zipCode: ''
       }
-    });
-  }
-
-  await EmployeeInfo.updateMany({
-    businessOwnerId,
-    employeeRoleId: role._id
-  }, {
-    $set: {
-      isDeleted: true,
-      deletedAt,
-      businessOwnerId: null,
-      employeeRoleId: null,
-      hiringDate: null,
-      department: '',
-      address: '',
-      country: '',
-      state: '',
-      city: '',
-      zipCode: ''
     }
-  });
+  );
 
   await EmployeeRole.deleteOne({ _id: role._id });
 
@@ -444,7 +442,8 @@ const getMembersByRolesService = async (businessOwnerId, query) => {
 
   const pageNo = Number.parseInt(page, 10);
   const limitNo = Number.parseInt(limit, 10);
-  const shouldPaginate = Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
+  const shouldPaginate =
+    Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
 
   const roleMatch = { businessOwnerId: ownerObjectId };
   const pipeline = [
@@ -478,10 +477,7 @@ const getMembersByRolesService = async (businessOwnerId, query) => {
           {
             $match: {
               $expr: {
-                $and: [
-                  { $in: ['$_id', '$$userIds'] },
-                  { $eq: ['$isDeleted', false] }
-                ]
+                $and: [{ $in: ['$_id', '$$userIds'] }, { $eq: ['$isDeleted', false] }]
               }
             }
           }
@@ -503,7 +499,18 @@ const getMembersByRolesService = async (businessOwnerId, query) => {
                 in: {
                   $let: {
                     vars: {
-                      u: { $arrayElemAt: [{ $filter: { input: '$userDetails', as: 'ud', cond: { $eq: ['$$ud._id', '$$member.userId'] } } }, 0] }
+                      u: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: '$userDetails',
+                              as: 'ud',
+                              cond: { $eq: ['$$ud._id', '$$member.userId'] }
+                            }
+                          },
+                          0
+                        ]
+                      }
                     },
                     in: {
                       userId: '$$u._id',
@@ -544,11 +551,11 @@ const getMembersByRolesService = async (businessOwnerId, query) => {
     items: data,
     pagination: shouldPaginate
       ? {
-        page: pageNo,
-        limit: limitNo,
-        total,
-        totalPages: Math.ceil(total / limitNo)
-      }
+          page: pageNo,
+          limit: limitNo,
+          total,
+          totalPages: Math.ceil(total / limitNo)
+        }
       : null
   };
 };
@@ -629,15 +636,13 @@ const deleteMemberService = async (businessOwnerId, memberId) => {
   };
 };
 
-
-
-
 const getMemberService = async (businessOwnerId, query) => {
   const { search = '', page, limit } = query;
 
   const pageNo = Number.parseInt(page, 10);
   const limitNo = Number.parseInt(limit, 10);
-  const shouldPaginate = Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
+  const shouldPaginate =
+    Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
 
   const pipeline = [
     {
@@ -673,10 +678,7 @@ const getMemberService = async (businessOwnerId, query) => {
 
   // 2. Add Pagination and Projection to the main pipeline
   if (shouldPaginate) {
-    pipeline.push(
-      { $skip: (pageNo - 1) * limitNo },
-      { $limit: limitNo }
-    );
+    pipeline.push({ $skip: (pageNo - 1) * limitNo }, { $limit: limitNo });
   }
 
   pipeline.push({
@@ -694,11 +696,11 @@ const getMemberService = async (businessOwnerId, query) => {
     items: members,
     pagination: shouldPaginate
       ? {
-        page: pageNo,
-        limit: limitNo,
-        total,
-        totalPages: Math.ceil(total / limitNo)
-      }
+          page: pageNo,
+          limit: limitNo,
+          total,
+          totalPages: Math.ceil(total / limitNo)
+        }
       : null
   };
 };

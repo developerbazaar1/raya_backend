@@ -11,7 +11,7 @@ const timeOffRequestSchema = new mongoose.Schema(
     },
     employeeId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'Employee',
+      ref: 'User',
       required: true
     },
     reason: {
@@ -44,6 +44,9 @@ const timeOffRequestSchema = new mongoose.Schema(
     ownerComment: {
       type: String,
       maxlength: 255
+    },
+    suggestedDate: {
+      type: Date,
     }
   },
   {

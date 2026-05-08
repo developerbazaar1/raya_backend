@@ -35,6 +35,4 @@ router.get('/member', validate(getMembersValidation), asyncHandler(getMembers));
 
 router.delete('/member', validate(deleteMemberValidation), asyncHandler(deleteMember));
 
-
-
 module.exports = router;

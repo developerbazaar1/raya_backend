@@ -11,14 +11,14 @@ exports.taskCreateService = async (payload, files, userId) => {
 
   const attachments = attachmentFiles.length
     ? await Promise.all(
-      attachmentFiles.map(async (file) => {
-        const metadata = await uploadFileToSpaces(
-          file,
-          `business-owners/${userId}/tasks/attachments`
-        );
-        return metadata;
-      })
-    )
+        attachmentFiles.map(async (file) => {
+          const metadata = await uploadFileToSpaces(
+            file,
+            `business-owners/${userId}/tasks/attachments`
+          );
+          return metadata;
+        })
+      )
     : [];
 
   // Handle multiple assigned users
@@ -97,8 +97,6 @@ exports.getTaskByIdService = async (taskId, userId, filters = {}) => {
     startedAt: assignment.startedAt,
     completedAt: assignment.completedAt
   }));
-
-
 
   // Count assignees by status
   const not_started_task = assignments.filter((a) => a.status === 'not_started').length;

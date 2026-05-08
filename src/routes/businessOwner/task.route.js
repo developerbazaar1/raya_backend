@@ -13,7 +13,6 @@ router.post(
   asyncHandler(taskCreate)
 );
 
-
 router.get(
   '/:taskId',
   authenticate('business_owner'),

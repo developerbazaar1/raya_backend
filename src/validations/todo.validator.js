@@ -22,8 +22,5 @@ exports.todoCreateValidation = [
     .isIn(['daily', 'weekly', 'monthly', 'one-time'])
     .withMessage('Invalid repetition value'),
 
-  body('assignedUsers')
-    .optional()
-    .isArray()
-    .withMessage('Assigned users must be an array')
+  body('assignedUsers').optional().isArray().withMessage('Assigned users must be an array')
 ];

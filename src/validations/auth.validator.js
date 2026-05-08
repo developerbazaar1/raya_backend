@@ -40,9 +40,7 @@ const verifyOtpValidation = [
 const emailOnlyValidation = [EMAIL_RULES];
 
 const businessOwnerStepValidation = {
-  step3: [
-    body('whatBringsYouHere').trim().notEmpty().withMessage('whatBringsYouHere is required')
-  ],
+  step3: [body('whatBringsYouHere').trim().notEmpty().withMessage('whatBringsYouHere is required')],
   step4: [body('planId').trim().notEmpty().withMessage('planId is required')],
   step5: [
     body('paymentStatus').trim().equals('completed').withMessage('paymentStatus must be completed'),
