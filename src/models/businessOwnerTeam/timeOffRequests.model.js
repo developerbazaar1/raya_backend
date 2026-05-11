@@ -46,7 +46,7 @@ const timeOffRequestSchema = new mongoose.Schema(
       maxlength: 255
     },
     suggestedDate: {
-      type: Date,
+      type: Date
     }
   },
   {

@@ -12,7 +12,7 @@ const eventSchema = new mongoose.Schema(
       ref: 'User',
       required: true
     },
-    title: {
+    eventName: {
       type: String,
       required: true,
       trim: true,
@@ -29,13 +29,18 @@ const eventSchema = new mongoose.Schema(
     },
     endTime: {
       type: String,
-      required: true,
+      // required: true,
       trim: true
     },
     favorite: {
-      type: Boolean,
-      default: false
-    }
+      type: String,
+      // required: true,
+    },
+    notes: {
+      type: String,
+      trim: true
+    },
+
   },
   { timestamps: true }
 );

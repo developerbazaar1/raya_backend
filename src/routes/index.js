@@ -15,9 +15,13 @@ router.use('/api/v1/business-owner/projects/tasks', require('./businessOwner/tas
 router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
 router.use('/api/v1/business-owner/foundation', require('./businessOwner/foundation.route'));
 router.use('/api/v1/business-owner/time-off', require('./businessOwner/timeOff.route'));
+router.use('/api/v1/business-owner/event', require('./businessOwner/event.route'));
+router.use('/api/v1/business-owner/meeting', require('./businessOwner/meeting.route'));
 
 //All Business Owner Team routes
 router.use('/api/v1/business-owner-team/time-off', require('./businessOwnerTeam/timeOff.route'));
+router.use('/api/v1/business-owner-team/event', require('./businessOwnerTeam/event.route'));
+
 
 // All Admin route
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));

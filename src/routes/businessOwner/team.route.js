@@ -30,9 +30,7 @@ router.delete('/role', validate(deleteRoleValidation), asyncHandler(deleteRole))
 router.get('/role', validate(getRolesValidation), asyncHandler(getRoles));
 router.post('/member', validate(createMemberValidation), asyncHandler(createMember));
 router.get('/role-members', validate(getMembersValidationByRole), asyncHandler(getMembersByRoles));
-
 router.get('/member', validate(getMembersValidation), asyncHandler(getMembers));
-
 router.delete('/member', validate(deleteMemberValidation), asyncHandler(deleteMember));
 
 module.exports = router;

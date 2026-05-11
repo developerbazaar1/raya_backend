@@ -40,7 +40,7 @@ const createDefaultEmployeeProfileCompletion = () => ({
 });
 
 const ensureBusinessOwnerUser = async (email) => {
-  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: { $ne: true } });
   if (!user) {
     throw new AppError('User not found.', 404);
   }
@@ -53,7 +53,7 @@ const ensureBusinessOwnerUser = async (email) => {
 };
 
 const ensureBusinessOwnerUserById = async (userId) => {
-  const user = await User.findOne({ _id: userId, role: REGISTRATION_ROLE, isDeleted: false });
+  const user = await User.findOne({ _id: userId, role: REGISTRATION_ROLE, isDeleted: { $ne: true } });
   if (!user) {
     throw new AppError('User not found.', 404);
   }
@@ -62,7 +62,7 @@ const ensureBusinessOwnerUserById = async (userId) => {
 };
 
 const findUserByEmail = async (email) => {
-  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: { $ne: true } });
   if (!user) {
     throw new AppError('User not found.', 404);
   }
@@ -500,7 +500,7 @@ const saveRegistrationStep8 = async ({
 };
 
 const loginUser = async ({ email, password, deviceToken = '' }) => {
-  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: false });
+  const user = await User.findOne({ email: email.toLowerCase(), isDeleted: { $ne: true } });
   if (!user) {
     throw new AppError('Invalid email or password.', 401);
   }
@@ -613,7 +613,7 @@ const saveEmployeeProfileStep1 = async ({
   zipCode,
   files = {}
 }) => {
-  const user = await User.findOne({ _id: userId, role: 'employee', isDeleted: false });
+  const user = await User.findOne({ _id: userId, role: 'employee', isDeleted: { $ne: true } });
   if (!user || user.role !== 'employee') {
     throw new AppError('Employee not found.', 404);
   }
@@ -665,7 +665,7 @@ const saveEmployeeProfileStep2 = async ({
   favoriteLocalBusiness,
   favoriteRestaurant
 }) => {
-  const user = await User.findOne({ _id: userId, role: 'employee', isDeleted: false });
+  const user = await User.findOne({ _id: userId, role: 'employee', isDeleted: { $ne: true } });
   if (!user || user.role !== 'employee') {
     throw new AppError('Employee not found.', 404);
   }
@@ -680,17 +680,17 @@ const saveEmployeeProfileStep2 = async ({
   employeeInfo.haveKids = haveKids;
   employeeInfo.kids = haveKids
     ? (kids || []).map((kid) => ({
-        name: kid.name,
-        gender: kid.gender,
-        birthday: kid.birthday
-      }))
+      name: kid.name,
+      gender: kid.gender,
+      birthday: kid.birthday
+    }))
     : [];
   employeeInfo.havePets = havePets;
   employeeInfo.pets = havePets
     ? (pets || []).map((pet) => ({
-        name: pet.name,
-        age: pet.age
-      }))
+      name: pet.name,
+      age: pet.age
+    }))
     : [];
   employeeInfo.favouriteFlower = favoriteFlower || '';
   employeeInfo.favouriteCakeFlavour = favoriteCackeFlavor || '';

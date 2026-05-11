@@ -37,7 +37,12 @@ const meetingSchema = new mongoose.Schema(
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
       }
-    ]
+    ],
+    notes: {
+      type: String,
+      trim: true
+    },
+
   },
   { timestamps: true }
 );
