@@ -8,7 +8,8 @@ const {
   uploadEmployeeProfileStep1Files,
   uploadBusinessOwnerSettingsFiles,
   uploadTaskFiles,
-  uploadMemberProfile
+  uploadMemberProfile,
+  uploadChatRoomFiles
 } = require('./upload.middleware');
 const validate = require('./validate');
 const adminAuth = require('./adminAuth.middleware');
@@ -24,6 +25,7 @@ module.exports = {
   uploadBusinessOwnerSettingsFiles,
   uploadTaskFiles,
   uploadMemberProfile,
+  uploadChatRoomFiles,
   validate,
   adminAuth
 };

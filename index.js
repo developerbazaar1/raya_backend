@@ -3,6 +3,7 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 const app = require('./src/app');
 const { PORT } = require('./src/config/env');
 const logger = require('./src/utils/logger');
+const { initSocket } = require('./src/sockets');
 
 // Increase the thread pool size
 process.env.UV_THREADPOOL_SIZE = 128;
@@ -16,6 +17,8 @@ process.on('uncaughtException', (err) => {
 const server = app.listen(PORT, () => {
   logger.info(`Server started successfully on http://localhost:${PORT}`);
 });
+
+initSocket(server);
 
 // UnhandledRejection Error
 process.on('unhandledRejection', (err) => {

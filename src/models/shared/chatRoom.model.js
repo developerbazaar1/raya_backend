@@ -5,6 +5,7 @@
  * - Stores last message for fast chat list
  */
 const mongoose = require('mongoose');
+const { FileReferenceSchema } = require('./file.schema');
 
 const chatRoomSchema = new mongoose.Schema(
   {
@@ -25,7 +26,16 @@ const chatRoomSchema = new mongoose.Schema(
       trim: true
     },
 
-    roomPhotoUrl: String,
+    chatRoomImage: {
+      type: FileReferenceSchema,
+      default: {
+        url: '',
+        key: '',
+        fileName: '',
+        mimeType: '',
+        sizeBytes: 0
+      }
+    },
 
     // # HERE Team means single user chat, Group means multi-user chat
     // Beased on the client request

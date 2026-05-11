@@ -35,6 +35,39 @@ router.use(
 router.use('/api/v1/business-owner-team/setting', require('./businessOwnerTeam/setting.route'));
 router.use('/api/v1/business-owner-team/dashboard', require('./businessOwnerTeam/dashboard.route'));
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Shared routes (for both business owner and client)
+router.use('/api/v1/chat', require('./shared/chat.route'));
+
+
+
+
+
+
+
+
 // All Admin route
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));
 router.use('/api/v1/admin/businesses', require('./admin/businesstype'));

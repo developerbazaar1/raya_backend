@@ -14,14 +14,12 @@ const chatRoomMemberSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ChatRoom',
       required: true,
-      index: true
     },
 
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true
     },
 
     // UNREAD TRACKING

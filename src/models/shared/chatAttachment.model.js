@@ -4,19 +4,25 @@
  * - Separate collection for scalability
  */
 const mongoose = require('mongoose');
+const { FileReferenceSchema } = require('./file.schema');
 const chatAttachmentSchema = new mongoose.Schema(
   {
     messageId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ChatMessage',
       required: true,
-      index: true
     },
 
-    fileName: String,
-    fileUrl: { type: String, required: true },
-    fileType: String,
-    fileSize: Number
+    attachment: {
+      type: FileReferenceSchema,
+      default: {
+        url: '',
+        key: '',
+        fileName: '',
+        mimeType: '',
+        sizeBytes: 0
+      }
+    },
   },
   { timestamps: true }
 );
