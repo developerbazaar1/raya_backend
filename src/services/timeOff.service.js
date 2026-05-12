@@ -20,7 +20,7 @@ exports.getAllTimeOffsService = async (query, userId) => {
 
   const formattedTimeOffs = timeOffs.map((timeOff) => ({
     id: timeOff._id,
-    name: timeOff.employeeId ? timeOff.employeeId.name : 'Unknown',
+    name: timeOff.employeeId ? timeOff.employeeId.name : '',
     userProfile:
       timeOff.employeeId && timeOff.employeeId.userProfile && timeOff.employeeId.userProfile.url
         ? timeOff.employeeId.userProfile.url

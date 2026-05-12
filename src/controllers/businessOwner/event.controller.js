@@ -1,20 +1,38 @@
-const { eventCreateService, eventGetService } = require('../../services/event.service');
-
+const { eventCreateService, eventGetService, eventHistoryGetService, noteCreateService } = require('../../services/event.service');
 
 exports.eventCreate = async (req, res) => {
-    const data = await eventCreateService(req.body, req.user.userId);
-    res.status(201).json({
-        status: 'success',
-        message: 'Event created successfully.',
-        data
-    });
-}
+  const data = await eventCreateService(req.body, req.user.userId);
+  res.status(201).json({
+    status: 'success',
+    message: 'Event created successfully.',
+    data
+  });
+};
 
 exports.eventGet = async (req, res) => {
-    const data = await eventGetService(req.user.userId, req.query);
-    res.status(200).json({
-        status: 'success',
-        message: 'Events fetched successfully.',
-        data
-    });
-}
+  const data = await eventGetService(req.user.userId, req.query);
+  res.status(200).json({
+    status: 'success',
+    message: 'Events fetched successfully.',
+    data
+  });
+};
+
+
+exports.eventHistoryGet = async (req, res) => {
+  const data = await eventHistoryGetService(req.user.userId, req.query);
+  res.status(200).json({
+    status: 'success',
+    message: 'Meet history fetched successfully.',
+    data
+  });
+};
+
+exports.createNote = async (req, res) => {
+  const data = await noteCreateService(req.params.meetingId, req.body, req.user.userId);
+  res.status(201).json({
+    status: 'success',
+    message: 'Note created successfully.',
+    data
+  });
+};

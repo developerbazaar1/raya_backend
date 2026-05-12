@@ -32,7 +32,6 @@ exports.updateNewChangeOffRequest = async (req, res) => {
   });
 };
 
-
 exports.deleteTimeOffRequest = async (req, res) => {
   const data = await deleteTimeOffRequest(req.params.timeOffRequestId);
   res.status(200).json({

@@ -53,7 +53,11 @@ const ensureBusinessOwnerUser = async (email) => {
 };
 
 const ensureBusinessOwnerUserById = async (userId) => {
-  const user = await User.findOne({ _id: userId, role: REGISTRATION_ROLE, isDeleted: { $ne: true } });
+  const user = await User.findOne({
+    _id: userId,
+    role: REGISTRATION_ROLE,
+    isDeleted: { $ne: true }
+  });
   if (!user) {
     throw new AppError('User not found.', 404);
   }
@@ -680,17 +684,17 @@ const saveEmployeeProfileStep2 = async ({
   employeeInfo.haveKids = haveKids;
   employeeInfo.kids = haveKids
     ? (kids || []).map((kid) => ({
-      name: kid.name,
-      gender: kid.gender,
-      birthday: kid.birthday
-    }))
+        name: kid.name,
+        gender: kid.gender,
+        birthday: kid.birthday
+      }))
     : [];
   employeeInfo.havePets = havePets;
   employeeInfo.pets = havePets
     ? (pets || []).map((pet) => ({
-      name: pet.name,
-      age: pet.age
-    }))
+        name: pet.name,
+        age: pet.age
+      }))
     : [];
   employeeInfo.favouriteFlower = favoriteFlower || '';
   employeeInfo.favouriteCakeFlavour = favoriteCackeFlavor || '';

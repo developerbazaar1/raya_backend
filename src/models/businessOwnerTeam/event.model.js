@@ -33,14 +33,13 @@ const eventSchema = new mongoose.Schema(
       trim: true
     },
     favorite: {
-      type: String,
+      type: String
       // required: true,
     },
     notes: {
       type: String,
       trim: true
-    },
-
+    }
   },
   { timestamps: true }
 );

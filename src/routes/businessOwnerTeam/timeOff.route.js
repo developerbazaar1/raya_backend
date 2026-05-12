@@ -7,7 +7,10 @@ const {
   updateNewChangeOffRequest,
   deleteTimeOffRequest
 } = require('../../controllers/businessOwnerTeam/timeOff.controller');
-const { createTimeOffRequestValidation, updateChangeRequestValidation } = require('../../validations/timeOff.validators');
+const {
+  createTimeOffRequestValidation,
+  updateChangeRequestValidation
+} = require('../../validations/timeOff.validators');
 
 router.post(
   '/',
@@ -17,7 +20,12 @@ router.post(
 );
 
 router.get('/', authenticate('employee'), asyncHandler(getTimeOffRequest));
-router.put('/:timeOffRequestId', authenticate('employee'), validate(updateChangeRequestValidation), asyncHandler(updateNewChangeOffRequest));
+router.put(
+  '/:timeOffRequestId',
+  authenticate('employee'),
+  validate(updateChangeRequestValidation),
+  asyncHandler(updateNewChangeOffRequest)
+);
 router.delete('/:timeOffRequestId', authenticate('employee'), asyncHandler(deleteTimeOffRequest));
 
 module.exports = router;

@@ -48,19 +48,9 @@ exports.createTimeOffRequestValidation = [
     .withMessage('secondHalfDay must be a boolean')
 ];
 
-
 exports.updateChangeRequestValidation = [
-  body('status')
-    .optional()
-    .isIn(['change_requested'])
-    .withMessage('Invalid status'),
-  body('startDate')
-    .optional()
-    .isISO8601()
-    .withMessage('Date must be a valid ISO 8601 date'),
+  body('status').optional().isIn(['change_requested']).withMessage('Invalid status'),
+  body('startDate').optional().isISO8601().withMessage('Date must be a valid ISO 8601 date'),
 
-  body('endDate')
-    .optional()
-    .isISO8601()
-    .withMessage('Date must be a valid ISO 8601 date'),
+  body('endDate').optional().isISO8601().withMessage('Date must be a valid ISO 8601 date')
 ];

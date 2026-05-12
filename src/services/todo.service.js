@@ -2,6 +2,8 @@ const Todo = require('../models/businessOwner/todo.model');
 const TodoAssignment = require('../models/businessOwnerTeam/todoAssignment.model');
 const AppError = require('../utils/appError');
 const { DEFAULT_PROFILE_IMAGE } = require('../config/constant');
+
+
 /**
  * Create a new To-Do item and its assignments
  */
@@ -53,9 +55,9 @@ exports.todoAllService = async (businessOwnerId) => {
         name: assignment.userId.name,
         profileImage: assignment.userId.profileImage || DEFAULT_PROFILE_IMAGE
       },
-      status: assignment.status,
-      startedAt: assignment.startedAt,
-      completedAt: assignment.completedAt
+      status: assignment.status || 'not_started',
+      startedAt: assignment.startedAt || '',
+      completedAt: assignment.completedAt || ''
     });
     return acc;
   }, {});

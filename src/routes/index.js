@@ -17,11 +17,14 @@ router.use('/api/v1/business-owner/foundation', require('./businessOwner/foundat
 router.use('/api/v1/business-owner/time-off', require('./businessOwner/timeOff.route'));
 router.use('/api/v1/business-owner/event', require('./businessOwner/event.route'));
 router.use('/api/v1/business-owner/meeting', require('./businessOwner/meeting.route'));
+router.use('/api/v1/business-owner/vendor', require('./businessOwner/vendor.route'));
+router.use('/api/v1/business-owner/contracts', require('./businessOwner/contractor.route'));
+router.use('/api/v1/business-owner/schedule', require('./businessOwner/schedule.route'));
+
 
 //All Business Owner Team routes
 router.use('/api/v1/business-owner-team/time-off', require('./businessOwnerTeam/timeOff.route'));
 router.use('/api/v1/business-owner-team/event', require('./businessOwnerTeam/event.route'));
-
 
 // All Admin route
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));

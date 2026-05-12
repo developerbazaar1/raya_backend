@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { PROJECT_STATUS } = require('../../config/constant');
 // # This is project schema to track projects created by business owner and their details
 const projectSchema = new mongoose.Schema(
   {

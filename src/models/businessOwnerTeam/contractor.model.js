@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const { CONTRACTOR_ROLES } = require('../../config/constant');
+
 const contractorSchema = new mongoose.Schema(
   {
     // # Reference to the business owner (User)
@@ -14,6 +16,11 @@ const contractorSchema = new mongoose.Schema(
     phoneNumber: {
       countryCode: { type: String, trim: true },
       number: { type: String, trim: true }
+    },
+    role: {
+      type: String,
+      enum: CONTRACTOR_ROLES,
+      default: ""
     }
   },
   { timestamps: true }

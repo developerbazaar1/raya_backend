@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { VENDOR_ROLES } = require('../../config/constant');
 const vendorSchema = new mongoose.Schema(
   {
     businessOwnerId: {
@@ -13,7 +14,13 @@ const vendorSchema = new mongoose.Schema(
       countryCode: { type: String, trim: true },
       number: { type: String, trim: true }
     },
-    notes: { type: String, trim: true }
+    notes: { type: String, trim: true },
+    role: {
+
+      type: String,
+      enum: VENDOR_ROLES,
+      default: ""
+    }
   },
   { timestamps: true }
 );

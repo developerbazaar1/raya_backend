@@ -41,8 +41,7 @@ const meetingSchema = new mongoose.Schema(
     notes: {
       type: String,
       trim: true
-    },
-
+    }
   },
   { timestamps: true }
 );

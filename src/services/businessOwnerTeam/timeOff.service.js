@@ -95,14 +95,13 @@ exports.getTimeOffRequest = async (userId) => {
 exports.updateNewChangeOffRequest = async (body, timeOffRequestId) => {
   const { startDate, endDate } = body;
 
-  console.log("body", body)
-  console.log("id", timeOffRequestId)
+  console.log('body', body);
+  console.log('id', timeOffRequestId);
   const timeOffRequest = await TimeOffRequest.findById(timeOffRequestId);
 
   if (!timeOffRequest) {
     throw new AppError('Time off request not found', 404);
   }
-
 
   if (timeOffRequest.status !== 'change_requested') {
     throw new AppError('Only requests with "change_requested" status can be updated', 400);
@@ -116,7 +115,6 @@ exports.updateNewChangeOffRequest = async (body, timeOffRequestId) => {
   await timeOffRequest.save();
   return timeOffRequest;
 };
-
 
 exports.deleteTimeOffRequest = async (timeOffRequestId) => {
   const timeOffRequest = await TimeOffRequest.findByIdAndDelete(timeOffRequestId);
