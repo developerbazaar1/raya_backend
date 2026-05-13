@@ -3,10 +3,7 @@ const AppError = require('../utils/appError');
 
 exports.createBusinessFoundationService = async (data, userId) => {
   const { mission, vision, values } = data;
-
-  //check if user already has foundation
   const existingFoundation = await BusinessFoundationModel.findOne({ businessOwnerId: userId });
-
   if (existingFoundation) {
     throw new AppError('Foundation information already exists', 400);
   }
@@ -35,8 +32,6 @@ exports.getBusinessFoundationService = async (userId) => {
 
 exports.updateBusinessFoundationService = async (foundationId, data, userId) => {
   const existingFoundation = await BusinessFoundationModel.findById(foundationId);
-  console.log(existingFoundation);
-
   if (!existingFoundation) {
     throw new AppError('Foundation information not found', 404);
   }
@@ -49,13 +44,11 @@ exports.updateBusinessFoundationService = async (foundationId, data, userId) => 
     { mission, vision, values },
     { new: true }
   );
-
   const formattedData = {
     id: updatedFoundation._id,
     mission: updatedFoundation.mission || '',
     vision: updatedFoundation.vision || '',
     values: updatedFoundation.values || []
   };
-
   return formattedData;
 };

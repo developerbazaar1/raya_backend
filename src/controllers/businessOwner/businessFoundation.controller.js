@@ -3,7 +3,6 @@ const {
   getBusinessFoundationService,
   updateBusinessFoundationService
 } = require('../../services/businessFoundation.service');
-
 exports.createBusinessFoundation = async (req, res) => {
   const data = await createBusinessFoundationService(req.body, req.user.userId);
   res.status(201).json({
@@ -12,7 +11,6 @@ exports.createBusinessFoundation = async (req, res) => {
     data
   });
 };
-
 exports.getBusinessFoundation = async (req, res) => {
   const data = await getBusinessFoundationService(req.user.userId);
   res.status(200).json({
@@ -21,7 +19,6 @@ exports.getBusinessFoundation = async (req, res) => {
     data
   });
 };
-
 exports.updateBusinessFoundation = async (req, res) => {
   const data = await updateBusinessFoundationService(
     req.params.foundationId,

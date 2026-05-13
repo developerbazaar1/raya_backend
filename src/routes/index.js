@@ -20,7 +20,7 @@ router.use('/api/v1/business-owner/meeting', require('./businessOwner/meeting.ro
 router.use('/api/v1/business-owner/vendor', require('./businessOwner/vendor.route'));
 router.use('/api/v1/business-owner/contracts', require('./businessOwner/contractor.route'));
 router.use('/api/v1/business-owner/schedule', require('./businessOwner/schedule.route'));
-
+router.use('/api/v1/business-owner/dashboard', require('./businessOwner/dashboard.route'));
 
 //All Business Owner Team routes
 router.use('/api/v1/business-owner-team/time-off', require('./businessOwnerTeam/timeOff.route'));

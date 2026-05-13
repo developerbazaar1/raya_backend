@@ -8,7 +8,6 @@ exports.todoCreate = async (req, res) => {
     data
   });
 };
-
 exports.todoAll = async (req, res) => {
   const todos = await todoAllService(req.user.userId);
   res.status(200).json({

@@ -1,11 +1,10 @@
+const mongoose = require('mongoose');
 const Event = require('../models/businessOwnerTeam/event.model');
 const User = require('../models/shared/users.model');
-const Meeting = require('../models/businessowner/meeting.model');
+const Meeting = require('../models/businessOwner/meeting.model');
 const AppError = require('../utils/appError');
 const { DEFAULT_PROFILE_IMAGE } = require('../config/constant');
 
-
-//create Event Service
 exports.eventCreateService = async (body, userId) => {
   const { eventName, date, startTime, endTime, favorite } = body;
 
@@ -32,7 +31,6 @@ exports.eventCreateService = async (body, userId) => {
   return formattedevent;
 };
 
-//Get All Events List Service
 exports.eventGetService = async (userId, query) => {
   const { year, month } = query;
 
@@ -68,7 +66,6 @@ exports.eventGetService = async (userId, query) => {
   return formattedEvents;
 };
 
-//Get All Meet History Service
 exports.eventHistoryGetService = async (userId) => {
   const meetings = await Meeting.find({
     businessOwnerId: userId,
@@ -84,7 +81,7 @@ exports.eventHistoryGetService = async (userId) => {
     date: meeting.date || '',
     invitedMembers: (meeting.invitedMembers || []).map((member) => ({
       id: member._id,
-      profileImage: member.userProfile?.url || DEFAULT_PROFILE_IMAGE,
+      profileImage: member.userProfile?.url || DEFAULT_PROFILE_IMAGE
     })),
     notes: meeting.notes || '',
     createdAt: meeting.createdAt || ''
@@ -92,8 +89,6 @@ exports.eventHistoryGetService = async (userId) => {
   return formattedmeetings;
 };
 
-
-//create note service
 exports.noteCreateService = async (meetingId, body, userId) => {
   const { notes } = body;
 
@@ -102,9 +97,13 @@ exports.noteCreateService = async (meetingId, body, userId) => {
     throw new AppError('Meeting not found', 404);
   }
 
-  const updateNote = await Meeting.findByIdAndUpdate(meetingId, {
-    notes
-  }, { new: true });
+  const updateNote = await Meeting.findByIdAndUpdate(
+    meetingId,
+    {
+      notes
+    },
+    { new: true }
+  );
 
   const formattednote = {
     id: updateNote._id,
@@ -114,5 +113,23 @@ exports.noteCreateService = async (meetingId, body, userId) => {
     createdAt: updateNote.createdAt || ''
   };
   return formattednote;
+};
+
+exports.eventDeleteService = async (eventId, userId) => {
+  if (!mongoose.Types.ObjectId.isValid(eventId)) {
+    throw new AppError('Invalid event ID format', 400);
+  }
+
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new AppError('Event not found', 404);
+  }
+
+  if (event.businessOwnerId.toString() !== userId.toString()) {
+    throw new AppError('You are not authorized to delete this event', 401);
+  }
+
+  await Event.findByIdAndDelete(eventId);
+  return {};
 };
 

@@ -7,17 +7,13 @@ const { uploadFileToSpaces } = require('../helper/fileUpload.helper');
 
 const ensureBusinessOwner = async (userId) => {
   const user = await User.findById(userId);
-
   if (!user || user.role !== 'business_owner') {
     throw new AppError('Business owner not found.', 404);
   }
-
   let businessOwnerInfo = await BusinessOwnerInfo.findOne({ userId: user._id });
-
   if (!businessOwnerInfo) {
     businessOwnerInfo = await BusinessOwnerInfo.create({ userId: user._id });
   }
-
   return { user, businessOwnerInfo };
 };
 

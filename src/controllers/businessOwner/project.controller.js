@@ -6,7 +6,6 @@ const {
   removeAssignedUserService,
   employeesListService
 } = require('../../services/project.service');
-
 exports.projectCreate = async (req, res) => {
   const data = await projectCreateService(req.body, req.user.userId);
   res.status(201).json({
@@ -15,7 +14,6 @@ exports.projectCreate = async (req, res) => {
     data
   });
 };
-
 exports.projectList = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const pageNo = parseInt(page);
@@ -29,7 +27,6 @@ exports.projectList = async (req, res) => {
     data
   });
 };
-
 exports.projectDetails = async (req, res) => {
   const { projectId } = req.params;
   const data = await projectDetailsService(projectId);
@@ -39,7 +36,6 @@ exports.projectDetails = async (req, res) => {
     data
   });
 };
-
 exports.assignedProjects = async (req, res) => {
   const { projectId } = req.params;
   const { assignedUsers } = req.body;
@@ -50,7 +46,6 @@ exports.assignedProjects = async (req, res) => {
     data
   });
 };
-
 exports.removeAssignedUser = async (req, res) => {
   const { projectId } = req.params;
   const { assignedUsers } = req.body;
@@ -61,7 +56,6 @@ exports.removeAssignedUser = async (req, res) => {
     data
   });
 };
-
 exports.employeesList = async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const pageNo = parseInt(page);

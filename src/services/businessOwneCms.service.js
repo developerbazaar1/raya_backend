@@ -3,12 +3,10 @@ const AppError = require('../utils/appError');
 
 exports.cmsCreateService = async (body, userId) => {
   const { page_name, slug, description } = body;
-
   const existingSlug = await CMS.findOne({ slug });
   if (existingSlug) {
     throw new AppError('Slug already exists', 400);
   }
-
   const cms = await CMS.create({
     page_name,
     slug,
@@ -18,15 +16,12 @@ exports.cmsCreateService = async (body, userId) => {
   });
   return cms;
 };
-
 exports.cmsUpdateService = async (id, body, userId) => {
   const { page_name, slug, description } = body;
-
   const existingSlug = await CMS.findOne({ slug, _id: { $ne: id } });
   if (existingSlug) {
     throw new AppError('Slug already exists', 400);
   }
-
   const cms = await CMS.findOneAndUpdate(
     { _id: id, updated_by: userId, updatedByModel: 'User' },
     {
@@ -38,20 +33,16 @@ exports.cmsUpdateService = async (id, body, userId) => {
     },
     { new: true }
   );
-
   if (!cms) {
     throw new AppError('Page not found', 404);
   }
-
   return cms;
 };
-
 exports.cmsListService = async (userId) => {
   const cms = await CMS.find({ updated_by: userId, updatedByModel: 'User' }).populate(
     'updated_by',
     'name'
   );
-
   const formattedCms = cms.map((item) => {
     return {
       id: item._id,
@@ -69,11 +60,9 @@ exports.cmsGetService = async (id, userId) => {
     'updated_by',
     'name'
   );
-
   if (!cms) {
     throw new AppError('Page not found', 404);
   }
-
   return {
     id: cms._id,
     page_name: cms.page_name,

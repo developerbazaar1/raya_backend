@@ -29,6 +29,4 @@ exports.eventCreateValidationBusinessOwnerTeam = [
   body('notes').trim().notEmpty().withMessage('Notes is required')
 ];
 
-exports.eventNoteValidation = [
-  body('notes').trim().optional()
-];
+exports.eventNoteValidation = [body('notes').trim().optional()];

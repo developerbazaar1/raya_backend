@@ -16,10 +16,9 @@ const vendorSchema = new mongoose.Schema(
     },
     notes: { type: String, trim: true },
     role: {
-
       type: String,
       enum: VENDOR_ROLES,
-      default: ""
+      default: ''
     }
   },
   { timestamps: true }

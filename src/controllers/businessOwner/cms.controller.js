@@ -13,7 +13,6 @@ exports.cmsCreate = async (req, res) => {
     data
   });
 };
-
 exports.cmsUpdate = async (req, res) => {
   const data = await cmsUpdateService(req.params.id, req.body, req.user.userId);
   res.status(200).json({
@@ -31,7 +30,6 @@ exports.cmsList = async (req, res) => {
     data
   });
 };
-
 exports.cmsGet = async (req, res) => {
   const data = await cmsGetService(req.params.id, req.user.userId);
   res.status(200).json({

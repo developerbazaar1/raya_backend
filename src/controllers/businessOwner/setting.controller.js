@@ -19,13 +19,11 @@ const getSettings = async (req, res) => {
     }
   });
 };
-
 const patchSettings = async (req, res) => {
   const data = await updateBusinessOwnerSettings(req.user.userId, {
     ...req.body,
     files: req.files || {}
   });
-
   res.status(200).json({
     status: 'success',
     message: 'Business owner settings updated successfully.',
@@ -36,7 +34,6 @@ const patchSettings = async (req, res) => {
     }
   });
 };
-
 const getFoundation = async (req, res) => {
   const data = await getBusinessOwnerFoundation(req.user.userId);
 
@@ -46,7 +43,6 @@ const getFoundation = async (req, res) => {
     data
   });
 };
-
 const patchFoundation = async (req, res) => {
   const data = await updateBusinessOwnerFoundation(req.user.userId, req.body);
 
@@ -56,17 +52,14 @@ const patchFoundation = async (req, res) => {
     data
   });
 };
-
 const updatePassword = async (req, res) => {
   const data = await updateBusinessOwnerPassword(req.user.userId, req.body);
-
   res.status(200).json({
     status: 'success',
     message: 'Password updated successfully.',
     data
   });
 };
-
 module.exports = {
   getSettings,
   getFoundation,

@@ -20,6 +20,22 @@ module.exports = {
   DEFAULT_PROFILE_IMAGE:
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-kxsrlL89sKekYAVXwyzqv-SNUcCVDihjnA&s',
   RepetitionTypes: ['daily', 'weekly', 'monthly', 'one-time'],
-  VENDOR_ROLES: ['Plumber', 'Interior Designer', 'Painter', 'Electrician', 'Carpenter', 'Mason', 'Tiles'],
-  CONTRACTOR_ROLES: ['Plumber', 'Interior Designer', 'Painter', 'Electrician', 'Carpenter', 'Mason', 'Tiles']
+  VENDOR_ROLES: [
+    'Plumber',
+    'Interior Designer',
+    'Painter',
+    'Electrician',
+    'Carpenter',
+    'Mason',
+    'Tiles'
+  ],
+  CONTRACTOR_ROLES: [
+    'Plumber',
+    'Interior Designer',
+    'Painter',
+    'Electrician',
+    'Carpenter',
+    'Mason',
+    'Tiles'
+  ]
 };

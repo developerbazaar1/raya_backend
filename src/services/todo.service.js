@@ -3,7 +3,6 @@ const TodoAssignment = require('../models/businessOwnerTeam/todoAssignment.model
 const AppError = require('../utils/appError');
 const { DEFAULT_PROFILE_IMAGE } = require('../config/constant');
 
-
 /**
  * Create a new To-Do item and its assignments
  */
@@ -36,7 +35,9 @@ exports.todoCreateService = async (data, businessOwnerId) => {
 };
 
 exports.todoAllService = async (businessOwnerId) => {
-  const todos = await Todo.find({ businessOwnerId }).sort({ createdAt: -1 });
+  const todos = await Todo.find({ businessOwnerId })
+    .select('_id name description repetition dueDate')
+    .sort({ createdAt: -1 });
 
   // Fetch all assignments for this business owner and populate user details
   const assignments = await TodoAssignment.find({ businessOwnerId }).populate(
@@ -75,12 +76,11 @@ exports.todoAllService = async (businessOwnerId) => {
     const dueStatus = getDueStatus(todo.dueDate);
 
     return {
-      id: todo._id,
-      dueStatus,
-      totalAssignments,
-      completedAssignments,
-      progress,
-      assignments: todoAssignments
+      _id: todo._id,
+      name: todo.name,
+      description: todo.description,
+      repetition: todo.repetition,
+      dueDate: todo.dueDate
     };
   });
 };
@@ -107,14 +107,10 @@ const getDueStatus = (dueDate) => {
 
 const formatTask = (todo) => {
   return {
-    id: todo._id,
+    _id: todo._id,
     name: todo.name || '',
     description: todo.description || '',
-    dueDate: todo.dueDate || '',
     repetition: todo.repetition || '',
-    assignedUsers: todo.assignedUsers || [],
-    businessOwnerId: todo.businessOwnerId || '',
-    createdAt: todo.createdAt,
-    updatedAt: todo.updatedAt
+    dueDate: todo.dueDate || ''
   };
 };

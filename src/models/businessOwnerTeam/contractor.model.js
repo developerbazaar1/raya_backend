@@ -20,7 +20,7 @@ const contractorSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: CONTRACTOR_ROLES,
-      default: ""
+      default: ''
     }
   },
   { timestamps: true }

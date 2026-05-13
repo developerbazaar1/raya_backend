@@ -44,11 +44,12 @@ const todoSchema = new mongoose.Schema(
       index: true
     },
 
-    progress: { type: Number, default: 0 }
+    progress: { type: Number, default: 0 },
+    isTopPriority: { type: Boolean, default: false }
   },
   { timestamps: true }
 );
 
 todoSchema.index({ businessOwnerId: 1, createdAt: -1 });
 
-module.exports = mongoose.model('Todo', todoSchema);
+module.exports = mongoose.models.Todo || mongoose.model('Todo', todoSchema);

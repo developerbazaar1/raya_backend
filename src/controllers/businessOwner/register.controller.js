@@ -9,7 +9,6 @@ const {
   saveRegistrationStep7,
   saveRegistrationStep8
 } = require('../../services/auth.service');
-
 const registerStart = async (req, res) => {
   const data = await startRegistration(req.body);
   res.status(201).json({
@@ -18,7 +17,6 @@ const registerStart = async (req, res) => {
     data
   });
 };
-
 const resendOtp = async (req, res) => {
   const data = await resendRegistrationOtp(req.body);
   res.status(200).json({
@@ -27,7 +25,6 @@ const resendOtp = async (req, res) => {
     data
   });
 };
-
 const verifyOtp = async (req, res) => {
   const data = await verifyRegistrationOtp(req.body);
   res.status(200).json({
@@ -36,7 +33,6 @@ const verifyOtp = async (req, res) => {
     data
   });
 };
-
 const step3 = async (req, res) => {
   const data = await saveRegistrationStep3({
     userId: req.user.userId,
@@ -48,7 +44,6 @@ const step3 = async (req, res) => {
     data
   });
 };
-
 const step4 = async (req, res) => {
   const data = await saveRegistrationStep4({
     userId: req.user.userId,
@@ -60,7 +55,6 @@ const step4 = async (req, res) => {
     data
   });
 };
-
 const step5 = async (req, res) => {
   const data = await saveRegistrationStep5({
     userId: req.user.userId,
@@ -72,7 +66,6 @@ const step5 = async (req, res) => {
     data
   });
 };
-
 const step6 = async (req, res) => {
   const data = await saveRegistrationStep6({
     userId: req.user.userId,
@@ -84,7 +77,6 @@ const step6 = async (req, res) => {
     data
   });
 };
-
 const step7 = async (req, res) => {
   const data = await saveRegistrationStep7({
     userId: req.user.userId,
@@ -96,7 +88,6 @@ const step7 = async (req, res) => {
     data
   });
 };
-
 const step8 = async (req, res) => {
   const data = await saveRegistrationStep8({
     userId: req.user.userId,
@@ -109,7 +100,6 @@ const step8 = async (req, res) => {
     data
   });
 };
-
 module.exports = {
   registerStart,
   resendOtp,
