@@ -16,11 +16,7 @@ router.post(
   asyncHandler(eventCreate)
 );
 router.get('/', authenticate('business_owner'), asyncHandler(eventGet));
-router.delete(
-  '/:eventId',
-  authenticate('business_owner'),
-  asyncHandler(eventDelete)
-);
+router.delete('/:eventId', authenticate('business_owner'), asyncHandler(eventDelete));
 router.get('/history', authenticate('business_owner'), asyncHandler(eventHistoryGet)); //Meet History
 router.put(
   '/note/:meetingId',

@@ -6,6 +6,8 @@ const AppError = require('../utils/appError');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const { hashPassword } = require('../helper/auth.helper');
+const { DEFAULT_PROFILE_IMAGE } = require('../config/constant');
+const { uploadFileToSpaces } = require('../helper/fileUpload.helper');
 
 const ALLOWED_ROLE_FIELDS = [
   '_id',
@@ -200,11 +202,11 @@ const getRolesService = async (businessOwnerId, query) => {
     items: formattedRoles,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
   };
 };
@@ -551,11 +553,11 @@ const getMembersByRolesService = async (businessOwnerId, query) => {
     items: data,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
   };
 };
@@ -696,12 +698,200 @@ const getMemberService = async (businessOwnerId, query) => {
     items: members,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
+  };
+};
+
+
+const getMemberDetailsService = async (memberId) => {
+  if (!mongoose.Types.ObjectId.isValid(memberId)) {
+    throw new AppError('Invalid Member ID format.', 400);
+  }
+
+  const employeeInfo = await EmployeeInfo.findOne({ userId: memberId, isDeleted: false })
+    .populate('userId', 'name email userProfile')
+    .populate('employeeRoleId', 'roleName');
+
+  if (!employeeInfo) {
+    throw new AppError('Member not found.', 404);
+  }
+
+  return {
+    id: employeeInfo.userId?._id,
+    name: employeeInfo.userId?.name || '',
+    email: employeeInfo.userId?.email || '',
+    profileImage: employeeInfo.userId?.userProfile?.url || DEFAULT_PROFILE_IMAGE,
+    role: employeeInfo.employeeRoleId?.roleName || '',
+    hiringDate: employeeInfo.hiringDate || '',
+    phoneNumber: employeeInfo.phoneNumber || {},
+    gender: employeeInfo.gender || '',
+    department: employeeInfo.department || '',
+    address: employeeInfo.address || '',
+    personalityType: employeeInfo.personalityType || '',
+    dateOfBirth: employeeInfo.dateOfBirth || '',
+    spouseName: employeeInfo.spouseName || '',
+    spouseAnniversary: employeeInfo.spouseAnniversary || '',
+    spouseGender: employeeInfo.spouseGender || '',
+    kids: employeeInfo.kids || [],
+    pets: employeeInfo.pets || [],
+    favouriteFlower: employeeInfo.favouriteFlower || '',
+    favouriteCakeFlavour: employeeInfo.favouriteCakeFlavour || '',
+    favouriteOnlineStore: employeeInfo.favouriteOnlineStore || '',
+    favouriteLocalBusiness: employeeInfo.favouriteLocalBusiness || '',
+    favouriteRestaurants: employeeInfo.favouriteRestaurants || '',
+  };
+};
+
+
+const updateMemberService = async (memberId, payload, files) => {
+  if (!mongoose.Types.ObjectId.isValid(memberId)) {
+    throw new AppError('Invalid Member ID format.', 400);
+  }
+
+  // 1. Find the User (for Name and Email)
+  const user = await User.findById(memberId);
+  if (!user) {
+    throw new AppError('User not found.', 404);
+  }
+
+  // 2. Find the EmployeeInfo (for personal/family details)
+  const employeeInfo = await EmployeeInfo.findOne({ userId: memberId, isDeleted: false });
+  if (!employeeInfo) {
+    throw new AppError('Employee details not found.', 404);
+  }
+
+  let {
+    name,
+    email,
+    phoneNumber,
+    gender,
+    employeeRoleId,
+    address,
+    dateOfBirth,
+    hiringDate,
+    personalityType,
+    spouseName,
+    spouseAnniversary,
+    spouseGender,
+    haveKids,
+    kids,
+    havePets,
+    pets,
+    favouriteFlower,
+    favouriteCakeFlavour,
+    favouriteOnlineStore,
+    favouriteLocalBusiness,
+    favouriteRestaurants
+  } = payload;
+
+  if (employeeRoleId) {
+    if (!mongoose.Types.ObjectId.isValid(employeeRoleId)) {
+      throw new AppError('Invalid Employee Role ID format.', 400);
+    }
+    const employeeRoleInfo = await EmployeeRole.findById(employeeRoleId);
+    if (!employeeRoleInfo) {
+      throw new AppError('Employee role not found.', 404);
+    }
+  }
+
+  // Handle Profile Photo Upload
+  if (files && files.userProfile && files.userProfile[0]) {
+    const fileMetadata = await uploadFileToSpaces(files.userProfile[0], 'user-profiles');
+    user.userProfile = fileMetadata;
+  }
+
+  // Parse JSON strings from form-data if necessary
+  if (typeof phoneNumber === 'string') {
+    try {
+      phoneNumber = JSON.parse(phoneNumber);
+    } catch (e) { }
+
+  }
+  if (typeof kids === 'string') {
+    try {
+      kids = JSON.parse(kids);
+    } catch (e) { }
+  }
+  if (typeof pets === 'string') {
+    try {
+      pets = JSON.parse(pets);
+    } catch (e) { }
+  }
+
+  // Update User fields
+  if (name) user.name = name;
+  if (email) user.email = email;
+  await user.save();
+
+  // Update EmployeeInfo fields
+  if (phoneNumber) employeeInfo.phoneNumber = phoneNumber;
+  if (gender) employeeInfo.gender = gender;
+  if (address) employeeInfo.address = address;
+  if (dateOfBirth) employeeInfo.dateOfBirth = dateOfBirth;
+  if (hiringDate) employeeInfo.hiringDate = hiringDate;
+  if (personalityType) employeeInfo.personalityType = personalityType;
+  if (employeeRoleId) {
+    employeeInfo.employeeRoleId = employeeRoleId;
+  }
+
+  // Family Details
+  if (spouseName !== undefined) employeeInfo.spouseName = spouseName;
+  if (spouseAnniversary !== undefined) employeeInfo.spouseAnniversary = spouseAnniversary;
+  if (spouseGender !== undefined) employeeInfo.spouseGender = spouseGender;
+
+  if (kids) {
+    employeeInfo.kids = kids;
+    if (Array.isArray(kids) && kids.length > 0) employeeInfo.haveKids = true;
+  }
+  if (haveKids !== undefined) employeeInfo.haveKids = haveKids === 'true' || haveKids === true;
+
+  if (pets) {
+    employeeInfo.pets = pets;
+    if (Array.isArray(pets) && pets.length > 0) employeeInfo.havePets = true;
+  }
+  if (havePets !== undefined) employeeInfo.havePets = havePets === 'true' || havePets === true;
+
+  // Favorites
+  if (favouriteFlower !== undefined) employeeInfo.favouriteFlower = favouriteFlower;
+  if (favouriteCakeFlavour !== undefined) employeeInfo.favouriteCakeFlavour = favouriteCakeFlavour;
+  if (favouriteOnlineStore !== undefined) employeeInfo.favouriteOnlineStore = favouriteOnlineStore;
+  if (favouriteLocalBusiness !== undefined) employeeInfo.favouriteLocalBusiness = favouriteLocalBusiness;
+  if (favouriteRestaurants !== undefined) employeeInfo.favouriteRestaurants = favouriteRestaurants;
+
+  await employeeInfo.save();
+
+  // Populate role for consistent response
+  await employeeInfo.populate('employeeRoleId', 'roleName');
+
+  return {
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    profileImage: user.userProfile?.url || DEFAULT_PROFILE_IMAGE,
+    role: employeeInfo.employeeRoleId?.roleName || '',
+    hiringDate: employeeInfo.hiringDate || '',
+    phoneNumber: employeeInfo.phoneNumber || {},
+    gender: employeeInfo.gender || '',
+    address: employeeInfo.address || '',
+    personalityType: employeeInfo.personalityType || '',
+    dateOfBirth: employeeInfo.dateOfBirth || '',
+    spouseName: employeeInfo.spouseName || '',
+    spouseAnniversary: employeeInfo.spouseAnniversary || '',
+    spouseGender: employeeInfo.spouseGender || '',
+    haveKids: employeeInfo.haveKids,
+    kids: employeeInfo.kids || [],
+    havePets: employeeInfo.havePets,
+    pets: employeeInfo.pets || [],
+    favouriteFlower: employeeInfo.favouriteFlower || '',
+    favouriteCakeFlavour: employeeInfo.favouriteCakeFlavour || '',
+    favouriteOnlineStore: employeeInfo.favouriteOnlineStore || '',
+    favouriteLocalBusiness: employeeInfo.favouriteLocalBusiness || '',
+    favouriteRestaurants: employeeInfo.favouriteRestaurants || '',
   };
 };
 
@@ -713,5 +903,7 @@ module.exports = {
   createMemberService,
   getMembersByRolesService,
   deleteMemberService,
-  getMemberService
+  getMemberService,
+  getMemberDetailsService,
+  updateMemberService
 };

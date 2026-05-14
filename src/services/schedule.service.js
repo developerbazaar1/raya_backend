@@ -2,10 +2,27 @@ const mongoose = require('mongoose');
 const Schedule = require('../models/businessOwnerTeam/schedule.model');
 const AppError = require('../utils/appError');
 
-exports.getAllSchedule = async (userId) => {
-  const schedules = await Schedule.find({ businessOwnerId: userId })
-    .populate('vendorId', 'companyName representativeName')
-    .populate('contractorId', 'companyName contractorName');
+exports.getAllSchedule = async (userId, query = {}) => {
+  let { page = 1, limit = 10 } = query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  if (isNaN(page) || page < 1) page = 1;
+  if (isNaN(limit) || limit < 1) limit = 10;
+
+  const skip = (page - 1) * limit;
+  const filter = { businessOwnerId: userId };
+
+  const [schedules, total] = await Promise.all([
+    Schedule.find(filter)
+      .populate('vendorId', 'companyName representativeName')
+      .populate('contractorId', 'companyName contractorName')
+      .sort({ date: 1, time: 1 })
+      .skip(skip)
+      .limit(limit),
+    Schedule.countDocuments(filter)
+  ]);
 
   const formattedSchedule = schedules.map((schedule) => {
     const type = schedule.vendorId ? 'vendor' : 'contractor';
@@ -25,7 +42,13 @@ exports.getAllSchedule = async (userId) => {
     };
   });
 
-  return formattedSchedule;
+  return {
+    data: formattedSchedule,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
 };
 
 exports.updateScheduleStatus = async (scheduleId, body) => {

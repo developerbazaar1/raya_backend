@@ -1,7 +1,7 @@
 module.exports = {
   ROLES: ['business_owner', 'employee', 'admin'],
   TIME_OFF_STATUS: ['pending', 'approved', 'rejected', 'change_requested', 'cancelled'],
-  SCHEDULE_STATUS: ['not_started', 'in_progress', 'completed'],
+  SCHEDULE_STATUS: ['not_started', 'in_progress', 'completed', 'overdue'],
   TASK_PRIORITY: ['low', 'medium', 'high'],
   KPI_RESET_FREQUENCY: ['daily', 'weekly', 'monthly'],
   TRAINING_STATUS: ['draft', 'published'],
@@ -19,7 +19,8 @@ module.exports = {
   DO_SPACES_BUCKET: 'seer-app',
   DEFAULT_PROFILE_IMAGE:
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-kxsrlL89sKekYAVXwyzqv-SNUcCVDihjnA&s',
-  RepetitionTypes: ['daily', 'weekly', 'monthly', 'one-time'],
+  
+  REPETITION_TYPES: ['daily', 'weekly', 'monthly', 'one-time'],
   VENDOR_ROLES: [
     'Plumber',
     'Interior Designer',
@@ -37,5 +38,6 @@ module.exports = {
     'Carpenter',
     'Mason',
     'Tiles'
-  ]
+  ],
+  GENDER: ['Male', 'Female', 'Other']
 };

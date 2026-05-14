@@ -6,7 +6,9 @@ const {
   createMemberService,
   getMembersByRolesService,
   deleteMemberService,
-  getMemberService
+  getMemberService,
+  getMemberDetailsService,
+  updateMemberService
 } = require('../../services/team.service');
 
 const createRole = async (req, res) => {
@@ -89,6 +91,26 @@ const getMembers = async (req, res) => {
   });
 };
 
+const getMemberDetails = async (req, res) => {
+  const data = await getMemberDetailsService(req.params.memberId);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Member details fetched successfully.',
+    data
+  });
+};
+
+const updateMember = async (req, res) => {
+  const data = await updateMemberService(req.params.memberId, req.body, req.files);
+
+  res.status(200).json({
+    status: 'success',
+    message: 'Member details updated successfully.',
+    data
+  });
+};
+
 module.exports = {
   createRole,
   getRoles,
@@ -97,5 +119,8 @@ module.exports = {
   createMember,
   getMembersByRoles,
   deleteMember,
-  getMembers
+  getMembers,
+  getMemberDetails,
+  updateMember,
+  updateMemberService
 };

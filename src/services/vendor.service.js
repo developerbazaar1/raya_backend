@@ -35,10 +35,25 @@ exports.vendorCreateService = async (body, userId) => {
   return formattedVendor;
 };
 
-exports.vendorListService = async (userId) => {
-  const vendors = await Vendor.find({ businessOwnerId: userId }).select(
-    'companyName representativeName email phoneNumber role notes'
-  );
+exports.vendorListService = async (userId, query = {}) => {
+  let { page = 1, limit = 10 } = query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  if (isNaN(page) || page < 1) page = 1;
+  if (isNaN(limit) || limit < 1) limit = 10;
+
+  const skip = (page - 1) * limit;
+
+  const [vendors, total] = await Promise.all([
+    Vendor.find({ businessOwnerId: userId })
+      .select('companyName representativeName email phoneNumber role notes')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Vendor.countDocuments({ businessOwnerId: userId })
+  ]);
 
   const formattedVendors = vendors.map((vendor) => ({
     id: vendor._id,
@@ -49,7 +64,14 @@ exports.vendorListService = async (userId) => {
     role: vendor.role || '',
     notes: vendor.notes || ''
   }));
-  return formattedVendors;
+
+  return {
+    data: formattedVendors,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
 };
 
 exports.vendorDetailsService = async (vendorId, userId) => {

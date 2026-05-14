@@ -73,28 +73,44 @@ exports.getProjectStatsService = async (businessOwnerId) => {
 };
 
 //show all projects list service
-exports.projectListService = async (userId, skip = 0, limit = 10) => {
+exports.projectListService = async (userId, query = {}) => {
+  let { page = 1, limit = 10 } = query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  if (isNaN(page) || page < 1) page = 1;
+  if (isNaN(limit) || limit < 1) limit = 10;
+
+  const skip = (page - 1) * limit;
   const userObjectId = new mongoose.Types.ObjectId(userId);
 
   const overallStats = await exports.getProjectStatsService(userId);
 
-  const projects = await Project.aggregate([
-    { $match: { businessOwnerId: userObjectId } },
-    { $sort: { createdAt: -1 } },
-    { $skip: skip },
-    { $limit: limit },
-    {
-      $project: {
-        totalTasks: 0,
-        completedTasks: 0,
-        __v: 0
+  const [projects, total] = await Promise.all([
+    Project.aggregate([
+      { $match: { businessOwnerId: userObjectId } },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          totalTasks: 0,
+          completedTasks: 0,
+          __v: 0
+        }
       }
-    }
+    ]),
+    Project.countDocuments({ businessOwnerId: userObjectId })
   ]);
 
   return {
     projects,
-    stats: overallStats
+    stats: overallStats,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit)
   };
 };
 

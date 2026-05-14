@@ -15,12 +15,7 @@ exports.projectCreate = async (req, res) => {
   });
 };
 exports.projectList = async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
-  const pageNo = parseInt(page);
-  const limitNo = parseInt(limit);
-  const skip = (pageNo - 1) * limitNo;
-
-  const data = await projectListService(req.user.userId, skip, limitNo);
+  const data = await projectListService(req.user.userId, req.query);
   res.status(200).json({
     success: 'success',
     message: 'Project list successfully',

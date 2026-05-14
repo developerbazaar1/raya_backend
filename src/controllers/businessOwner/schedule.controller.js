@@ -1,11 +1,11 @@
 const { getAllSchedule, updateScheduleStatus } = require('../../services/schedule.service');
 
 exports.allSchedules = async (req, res) => {
-  const data = await getAllSchedule(req.user.userId);
+  const result = await getAllSchedule(req.user.userId, req.query);
   res.status(200).json({
     status: 'success',
     message: 'Schedules fetched successfully',
-    data
+    ...result
   });
 };
 exports.updateStatus = async (req, res) => {

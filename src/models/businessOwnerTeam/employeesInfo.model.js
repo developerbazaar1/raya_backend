@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const DISC_TYPES = ['D', 'I', 'S', 'C'];
-
+const { GENDER } = require('../../config/constant');
 const employeeProfileCompletionSchema = new mongoose.Schema(
   {
     currentStep: { type: Number, default: 1, min: 1, max: 2 },
@@ -40,7 +40,10 @@ const employeeInfoSchema = new mongoose.Schema(
       countryCode: { type: String, trim: true },
       number: { type: String, trim: true }
     },
-    gender: { type: String, trim: true },
+    gender: {
+      type: String,
+      enum: GENDER
+    },
     hiringDate: { type: Date },
     personalityType: {
       type: String,

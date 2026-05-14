@@ -8,10 +8,10 @@ exports.meetingCreate = async (req, res) => {
   });
 };
 exports.meetingAll = async (req, res) => {
-  const data = await allMeetingService(req.user.userId, req.query);
+  const result = await allMeetingService(req.user.userId, req.query);
   return res.status(200).json({
     status: 'success',
     message: 'Meetings fetched successfully',
-    data
+    ...result
   });
 };

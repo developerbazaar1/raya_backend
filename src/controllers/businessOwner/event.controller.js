@@ -14,11 +14,11 @@ exports.eventCreate = async (req, res) => {
   });
 };
 exports.eventGet = async (req, res) => {
-  const data = await eventGetService(req.user.userId, req.query);
+  const result = await eventGetService(req.user.userId, req.query);
   res.status(200).json({
     status: 'success',
     message: 'Events fetched successfully.',
-    data
+    ...result
   });
 };
 exports.eventHistoryGet = async (req, res) => {

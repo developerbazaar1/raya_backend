@@ -24,3 +24,24 @@ exports.todoCreateValidation = [
 
   body('assignedUsers').optional().isArray().withMessage('Assigned users must be an array')
 ];
+
+
+exports.todoUpdateValidation = [
+  body('name')
+    .optional()
+    .isLength({ max: 200 })
+    .withMessage('Name must be less than 200 characters'),
+  body('description')
+    .optional()
+    .isLength({ max: 500 })
+    .withMessage('Description must be less than 500 characters')
+];
+
+
+exports.updateTodoStatus = [
+  body('status')
+    .notEmpty()
+    .withMessage('Status is required')
+    .isIn(['not_started', 'in_progress', 'completed'])
+    .withMessage('Invalid status value'),
+];

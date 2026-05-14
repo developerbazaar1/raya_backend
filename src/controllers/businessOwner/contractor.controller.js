@@ -16,11 +16,11 @@ exports.contractorCreate = async (req, res) => {
   });
 };
 exports.contractorList = async (req, res) => {
-  const data = await contractorListService(req.user.userId);
+  const result = await contractorListService(req.user.userId, req.query);
   res.status(200).json({
     status: 'success',
     message: 'Contractor list fetched successfully',
-    data
+    ...result
   });
 };
 exports.contractorDetails = async (req, res) => {

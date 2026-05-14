@@ -1,5 +1,6 @@
 const { body, query } = require('express-validator');
 const mongoose = require('mongoose');
+const { GENDER } = require('../config/constant');
 
 exports.createRoleValidation = [
   body('roleName')
@@ -76,4 +77,36 @@ exports.deleteMemberValidation = [
     .withMessage('Member ID is required')
     .custom((id) => mongoose.Types.ObjectId.isValid(id))
     .withMessage('Member ID must be a valid object ID')
+];
+
+exports.updateMemberValidation = [
+  body('name').optional().trim(),
+  body('email').optional({ values: 'falsy' }).trim().isEmail().withMessage('Email must be valid'),
+  body('dateOfBirth').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid DOB format').toDate(),
+  body('hiringDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid hiring date format').toDate(),
+  body('address').optional().trim(),
+  body('profilePicture').optional().trim().notEmpty().withMessage('Profile picture cannot be empty'),
+  body('roleId')
+    .optional()
+    .custom((id) => mongoose.Types.ObjectId.isValid(id))
+    .withMessage('Role ID must be a valid object ID'),
+  body('gender')
+    .optional({ values: 'falsy' })
+    .isIn(GENDER)
+    .withMessage('Gender must be Male, Female, or Other'),
+  body('spouseName').optional().trim(),
+  body('spouseAnniversary').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid anniversary date format').toDate(),
+  body('spouseGender').optional().trim(),
+  body('kids').optional().isArray(),
+  body('kids.*.name').optional().trim(),
+  body('kids.*.birthday').optional().isISO8601().withMessage('Invalid birthday format').toDate(),
+  body('kids.*.gender').optional().trim(),
+  body('pets').optional().isArray(),
+  body('pets.*.name').optional().trim(),
+  body('pets.*.age').optional().trim(),
+  body('favouriteFlower').optional().trim(),
+  body('favouriteCakeFlavour').optional().trim(),
+  body('favouriteOnlineStore').optional().trim(),
+  body('favouriteLocalBusiness').optional().trim(),
+  body('favouriteRestaurants').optional().trim(),
 ];

@@ -25,6 +25,7 @@ router.use('/api/v1/business-owner/dashboard', require('./businessOwner/dashboar
 //All Business Owner Team routes
 router.use('/api/v1/business-owner-team/time-off', require('./businessOwnerTeam/timeOff.route'));
 router.use('/api/v1/business-owner-team/event', require('./businessOwnerTeam/event.route'));
+router.use('/api/v1/business-owner-team/to-do', require('./businessOwnerTeam/todo.route'));
 
 // All Admin route
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));

@@ -33,10 +33,26 @@ exports.contractorCreateService = async (body, userId) => {
   return formattedContractor;
 };
 
-exports.contractorListService = async (businessOwnerId) => {
-  const contractors = await Contractor.find({ businessOwnerId }).select(
-    'companyName contractorName email phoneNumber role notes'
-  );
+exports.contractorListService = async (businessOwnerId, query = {}) => {
+  let { page = 1, limit = 10 } = query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  if (isNaN(page) || page < 1) page = 1;
+  if (isNaN(limit) || limit < 1) limit = 10;
+
+  const skip = (page - 1) * limit;
+  const filter = { businessOwnerId };
+
+  const [contractors, total] = await Promise.all([
+    Contractor.find(filter)
+      .select('companyName contractorName email phoneNumber role notes createdAt')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Contractor.countDocuments(filter)
+  ]);
 
   const formattedContractors = contractors.map((contractor) => ({
     id: contractor._id,
@@ -44,9 +60,17 @@ exports.contractorListService = async (businessOwnerId) => {
     contractorName: contractor.contractorName || '',
     email: contractor.email || '',
     phoneNumber: contractor.phoneNumber || '',
-    role: contractor.role || ''
+    role: contractor.role || '',
+    notes: contractor.notes || ''
   }));
-  return formattedContractors;
+
+  return {
+    data: formattedContractors,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
 };
 
 exports.contractorDetailsService = async (contractorId, businessOwnerId) => {

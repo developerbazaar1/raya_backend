@@ -13,20 +13,15 @@ const todoAssignmentSchema = new mongoose.Schema(
       ref: 'Todo',
       required: true
     },
-
-    // Reference to the user assigned to this todo
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
     },
-
-    // Reference to the business owner user
     businessOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
-      // index: true
     },
 
     status: {
@@ -37,7 +32,11 @@ const todoAssignmentSchema = new mongoose.Schema(
     },
 
     startedAt: Date,
-    completedAt: Date
+    completedAt: Date,
+    instanceDueDate: {
+      type: Date,
+      index: true
+    }
   },
   { timestamps: true }
 );

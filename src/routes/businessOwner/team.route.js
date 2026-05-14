@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const asyncHandler = require('../../utils/asyncHandler');
-const { authenticate, validate } = require('../../middlewares');
+const { authenticate, validate, uploadMemberProfile } = require('../../middlewares');
 const {
   createRoleValidation,
   getRolesValidation,
@@ -9,7 +9,8 @@ const {
   createMemberValidation,
   getMembersValidation,
   getMembersValidationByRole,
-  deleteMemberValidation
+  deleteMemberValidation,
+  updateMemberValidation
 } = require('../../validations/team.validator');
 const {
   createRole,
@@ -19,7 +20,9 @@ const {
   createMember,
   getMembersByRoles,
   getMembers,
-  deleteMember
+  deleteMember,
+  getMemberDetails,
+  updateMember
 } = require('../../controllers/businessOwner/team.controller');
 
 router.use(authenticate('business_owner'));
@@ -30,6 +33,14 @@ router.delete('/role', validate(deleteRoleValidation), asyncHandler(deleteRole))
 router.get('/role', validate(getRolesValidation), asyncHandler(getRoles));
 router.post('/member', validate(createMemberValidation), asyncHandler(createMember));
 router.get('/role-members', validate(getMembersValidationByRole), asyncHandler(getMembersByRoles));
+router.get('/role-members/:memberId', asyncHandler(getMemberDetails));
+router.put(
+  '/role-members/:memberId',
+  uploadMemberProfile,
+  validate(updateMemberValidation),
+  asyncHandler(updateMember)
+);
+
 router.get('/member', validate(getMembersValidation), asyncHandler(getMembers));
 router.delete('/member', validate(deleteMemberValidation), asyncHandler(deleteMember));
 

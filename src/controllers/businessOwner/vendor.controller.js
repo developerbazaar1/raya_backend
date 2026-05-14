@@ -15,11 +15,11 @@ exports.vendorCreate = async (req, res) => {
   });
 };
 exports.vendorList = async (req, res) => {
-  const data = await vendorListService(req.user.userId);
+  const data = await vendorListService(req.user.userId, req.query);
   res.status(200).json({
     status: 'success',
     message: 'Vendor list fetched successfully',
-    data
+    data,
   });
 };
 exports.vendorDetails = async (req, res) => {
