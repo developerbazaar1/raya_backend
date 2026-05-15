@@ -25,7 +25,6 @@ exports.todoCreateValidation = [
   body('assignedUsers').optional().isArray().withMessage('Assigned users must be an array')
 ];
 
-
 exports.todoUpdateValidation = [
   body('name')
     .optional()
@@ -37,11 +36,10 @@ exports.todoUpdateValidation = [
     .withMessage('Description must be less than 500 characters')
 ];
 
-
 exports.updateTodoStatus = [
   body('status')
     .notEmpty()
     .withMessage('Status is required')
     .isIn(['not_started', 'in_progress', 'completed'])
-    .withMessage('Invalid status value'),
+    .withMessage('Invalid status value')
 ];

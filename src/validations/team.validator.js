@@ -82,10 +82,22 @@ exports.deleteMemberValidation = [
 exports.updateMemberValidation = [
   body('name').optional().trim(),
   body('email').optional({ values: 'falsy' }).trim().isEmail().withMessage('Email must be valid'),
-  body('dateOfBirth').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid DOB format').toDate(),
-  body('hiringDate').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid hiring date format').toDate(),
+  body('dateOfBirth')
+    .optional({ values: 'falsy' })
+    .isISO8601()
+    .withMessage('Invalid DOB format')
+    .toDate(),
+  body('hiringDate')
+    .optional({ values: 'falsy' })
+    .isISO8601()
+    .withMessage('Invalid hiring date format')
+    .toDate(),
   body('address').optional().trim(),
-  body('profilePicture').optional().trim().notEmpty().withMessage('Profile picture cannot be empty'),
+  body('profilePicture')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('Profile picture cannot be empty'),
   body('roleId')
     .optional()
     .custom((id) => mongoose.Types.ObjectId.isValid(id))
@@ -95,7 +107,11 @@ exports.updateMemberValidation = [
     .isIn(GENDER)
     .withMessage('Gender must be Male, Female, or Other'),
   body('spouseName').optional().trim(),
-  body('spouseAnniversary').optional({ values: 'falsy' }).isISO8601().withMessage('Invalid anniversary date format').toDate(),
+  body('spouseAnniversary')
+    .optional({ values: 'falsy' })
+    .isISO8601()
+    .withMessage('Invalid anniversary date format')
+    .toDate(),
   body('spouseGender').optional().trim(),
   body('kids').optional().isArray(),
   body('kids.*.name').optional().trim(),
@@ -108,5 +124,5 @@ exports.updateMemberValidation = [
   body('favouriteCakeFlavour').optional().trim(),
   body('favouriteOnlineStore').optional().trim(),
   body('favouriteLocalBusiness').optional().trim(),
-  body('favouriteRestaurants').optional().trim(),
+  body('favouriteRestaurants').optional().trim()
 ];

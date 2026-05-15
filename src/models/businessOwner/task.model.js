@@ -10,24 +10,25 @@ const taskSchema = new mongoose.Schema(
       required: true,
       index: true
     },
-
     taskName: {
       type: String,
       required: true,
       trim: true
     },
-
     description: String,
-
     priority: {
       type: String,
       enum: TASK_PRIORITY,
       default: 'medium',
       index: true
     },
-
+    status: {
+      type: String,
+      enum: SCHEDULE_STATUS,
+      default: 'not_started',
+      index: true
+    },
     dueDate: Date,
-
     attachments: [
       {
         url: String,
@@ -37,21 +38,12 @@ const taskSchema = new mongoose.Schema(
         sizeBytes: Number
       }
     ],
-
     businessOwnerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
       index: true
     },
-
-    status: {
-      type: String,
-      enum: SCHEDULE_STATUS,
-      default: 'not_started',
-      index: true
-    },
-
     totalAssigned: { type: Number, default: 0 },
     completedCount: { type: Number, default: 0 }
   },

@@ -19,7 +19,7 @@ module.exports = {
   DO_SPACES_BUCKET: 'seer-app',
   DEFAULT_PROFILE_IMAGE:
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-kxsrlL89sKekYAVXwyzqv-SNUcCVDihjnA&s',
-  
+
   REPETITION_TYPES: ['daily', 'weekly', 'monthly', 'one-time'],
   VENDOR_ROLES: [
     'Plumber',

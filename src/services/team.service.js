@@ -707,7 +707,6 @@ const getMemberService = async (businessOwnerId, query) => {
   };
 };
 
-
 const getMemberDetailsService = async (memberId) => {
   if (!mongoose.Types.ObjectId.isValid(memberId)) {
     throw new AppError('Invalid Member ID format.', 400);
@@ -743,10 +742,9 @@ const getMemberDetailsService = async (memberId) => {
     favouriteCakeFlavour: employeeInfo.favouriteCakeFlavour || '',
     favouriteOnlineStore: employeeInfo.favouriteOnlineStore || '',
     favouriteLocalBusiness: employeeInfo.favouriteLocalBusiness || '',
-    favouriteRestaurants: employeeInfo.favouriteRestaurants || '',
+    favouriteRestaurants: employeeInfo.favouriteRestaurants || ''
   };
 };
-
 
 const updateMemberService = async (memberId, payload, files) => {
   if (!mongoose.Types.ObjectId.isValid(memberId)) {
@@ -809,18 +807,25 @@ const updateMemberService = async (memberId, payload, files) => {
   if (typeof phoneNumber === 'string') {
     try {
       phoneNumber = JSON.parse(phoneNumber);
-    } catch (e) { }
-
+    } catch (_e) {
+      console.warn('Failed to parse phoneNumber JSON', _e.message);
+    }
   }
+
   if (typeof kids === 'string') {
     try {
       kids = JSON.parse(kids);
-    } catch (e) { }
+    } catch (_e) {
+      console.warn('Failed to parse kids JSON', _e.message);
+    }
   }
+
   if (typeof pets === 'string') {
     try {
       pets = JSON.parse(pets);
-    } catch (e) { }
+    } catch (_e) {
+      console.warn('Failed to parse pets JSON', _e.message);
+    }
   }
 
   // Update User fields
@@ -860,7 +865,8 @@ const updateMemberService = async (memberId, payload, files) => {
   if (favouriteFlower !== undefined) employeeInfo.favouriteFlower = favouriteFlower;
   if (favouriteCakeFlavour !== undefined) employeeInfo.favouriteCakeFlavour = favouriteCakeFlavour;
   if (favouriteOnlineStore !== undefined) employeeInfo.favouriteOnlineStore = favouriteOnlineStore;
-  if (favouriteLocalBusiness !== undefined) employeeInfo.favouriteLocalBusiness = favouriteLocalBusiness;
+  if (favouriteLocalBusiness !== undefined)
+    employeeInfo.favouriteLocalBusiness = favouriteLocalBusiness;
   if (favouriteRestaurants !== undefined) employeeInfo.favouriteRestaurants = favouriteRestaurants;
 
   await employeeInfo.save();
@@ -891,7 +897,7 @@ const updateMemberService = async (memberId, payload, files) => {
     favouriteCakeFlavour: employeeInfo.favouriteCakeFlavour || '',
     favouriteOnlineStore: employeeInfo.favouriteOnlineStore || '',
     favouriteLocalBusiness: employeeInfo.favouriteLocalBusiness || '',
-    favouriteRestaurants: employeeInfo.favouriteRestaurants || '',
+    favouriteRestaurants: employeeInfo.favouriteRestaurants || ''
   };
 };
 

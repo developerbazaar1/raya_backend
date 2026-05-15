@@ -15,7 +15,7 @@ const todoHistorySchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum:SCHEDULE_STATUS,
+      enum: SCHEDULE_STATUS,
       required: true
     },
     dueDate: {

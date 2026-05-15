@@ -19,7 +19,7 @@ exports.vendorList = async (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'Vendor list fetched successfully',
-    data,
+    data
   });
 };
 exports.vendorDetails = async (req, res) => {

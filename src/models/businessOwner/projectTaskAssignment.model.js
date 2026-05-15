@@ -9,25 +9,21 @@ const taskAssignmentSchema = new mongoose.Schema(
       ref: 'Task',
       required: true
     },
-
     projectId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Project',
       required: true
     },
-
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
     },
-
     status: {
       type: String,
       enum: SCHEDULE_STATUS,
       default: 'not_started'
     },
-
     startedAt: Date,
     completedAt: Date
   },

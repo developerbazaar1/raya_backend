@@ -1,5 +1,6 @@
 const { body, param } = require('express-validator');
 const mongoose = require('mongoose');
+const { SCHEDULE_STATUS } = require('../config/constant');
 
 exports.projectCreateValidation = [
   body('projectName')
@@ -53,4 +54,23 @@ exports.unAssignProjectValidation = [
     .withMessage('Assigned users must be an array')
     .custom((arr) => arr.every((id) => mongoose.Types.ObjectId.isValid(id)))
     .withMessage('All assigned users must be valid object IDs')
+];
+
+
+exports.updateProjectStatusValidation = [
+  param('projectId')
+    .notEmpty()
+    .withMessage('Project ID is required')
+    .custom((id) => mongoose.Types.ObjectId.isValid(id))
+    .withMessage('Project ID must be a valid object ID'),
+  body('taskId')
+    .notEmpty()
+    .withMessage('Task ID is required')
+    .custom((id) => mongoose.Types.ObjectId.isValid(id))
+    .withMessage('Task ID must be a valid object ID'),
+  body('status')
+    .notEmpty()
+    .withMessage('Status is required')
+    .isIn(SCHEDULE_STATUS)
+    .withMessage(`Invalid status. Must be one of: ${SCHEDULE_STATUS.join(', ')}`)
 ];

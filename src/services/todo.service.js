@@ -1,7 +1,6 @@
 const Todo = require('../models/businessOwner/todo.model');
 const TodoAssignment = require('../models/businessOwnerTeam/todoAssignment.model');
 const EmployeeInfo = require('../models/businessOwnerTeam/employeesInfo.model');
-const EmployeeRole = require('../models/businessOwner/employeeRoles.model');
 const { DEFAULT_PROFILE_IMAGE } = require('../config/constant');
 
 //Create a new To-Do item and its initial assignments
@@ -26,16 +25,14 @@ exports.todoCreateService = async (data, businessOwnerId) => {
     await createTodoAssignments(todo, instanceDueDate, businessOwnerId);
   }
 
-  return ({
+  return {
     id: todo._id,
     name: todo.name,
     description: todo.description,
     dueDate: todo.dueDate,
     repetition: todo.repetition
-  });
-
+  };
 };
-
 
 //Helper: Creates assignment records and syncs user statistics
 const createTodoAssignments = async (todo, instanceDueDate, businessOwnerId) => {
@@ -63,7 +60,6 @@ const calculateInitialInstanceDueDate = (repetition, finalDueDate) => {
   if (repetition === 'daily') {
     instanceDate = new Date(now);
     instanceDate.setHours(23, 59, 59, 999);
-
   } else if (repetition === 'weekly') {
     instanceDate = new Date(now);
     const day = instanceDate.getDay();
@@ -78,7 +74,6 @@ const calculateInitialInstanceDueDate = (repetition, finalDueDate) => {
 };
 
 exports.todoAllService = async (businessOwnerId) => {
-
   // 1. Calculate Start and End of Today
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -138,6 +133,55 @@ exports.todoAllService = async (businessOwnerId) => {
   return { teamStats: Object.values(roleGroups) };
 };
 
+
+exports.ceoToDoListService = async (userId) => {
+  // Fetch all todos where userId is in assignedUsers
+  const todos = await Todo.find({
+    assignedUsers: userId
+  }).sort({ createdAt: -1 });
+
+  if (!todos.length) {
+    return { todos: [] };
+  }
+
+  // Get TodoAssignment records for these todos
+  const todoIds = todos.map(todo => todo._id);
+  const assignments = await TodoAssignment.find({
+    todoId: { $in: todoIds },
+    userId: userId
+  });
+
+  // Create assignment status map
+  const assignmentStatusMap = assignments.reduce((map, assignment) => {
+    map[assignment.todoId.toString()] = {
+      status: assignment.status,
+      instanceDueDate: assignment.instanceDueDate,
+      startedAt: assignment.startedAt,
+      completedAt: assignment.completedAt
+    };
+    return map;
+  }, {});
+
+  // Format todos with assignment details
+  const formattedTodos = todos.map((todo) => ({
+    id: todo._id,
+    name: todo.name,
+    description: todo.description,
+    dueDate: todo.dueDate,
+    repetition: todo.repetition,
+    assignedUsers: todo.assignedUsers || [],
+    createdAt: todo.createdAt,
+    updatedAt: todo.updatedAt,
+    assignment: assignmentStatusMap[todo._id.toString()] || {
+      status: 'not_started',
+      instanceDueDate: null,
+      startedAt: null,
+      completedAt: null
+    }
+  }));
+
+  return { todos: formattedTodos };
+};
 
 // const getDueStatus = (dueDate) => {
 //   if (!dueDate) return '';

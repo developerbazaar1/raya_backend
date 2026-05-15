@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Project = require('../models/businessOwner/project.model');
-
 const Task = require('../models/businessOwner/task.model');
 const AppError = require('../utils/appError');
 const User = require('../models/shared/users.model');
@@ -19,11 +18,7 @@ exports.projectCreateService = async (payload, userId) => {
   });
 
   await project.save();
-  const formattedProject = formatProject(project);
 
-  return formattedProject;
-};
-const formatProject = (project) => {
   return {
     _id: project._id,
     projectName: project.projectName || '',
@@ -33,6 +28,47 @@ const formatProject = (project) => {
     assignedUsers: project.assignedUsers || []
   };
 };
+
+//show all projects list service
+exports.projectListService = async (userId, query = {}) => {
+  let { page = 1, limit = 10 } = query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  if (isNaN(page) || page < 1) page = 1;
+  if (isNaN(limit) || limit < 1) limit = 10;
+
+  const skip = (page - 1) * limit;
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
+  const overallStats = await exports.getProjectStatsService(userId);
+
+  const [projects, total] = await Promise.all([
+    Project.aggregate([
+      { $match: { businessOwnerId: userObjectId } },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          __v: 0
+        }
+      }
+    ]),
+    Project.countDocuments({ businessOwnerId: userObjectId })
+  ]);
+
+  return {
+    projects,
+    stats: overallStats,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
+};
+
 
 // Get project stats service
 exports.getProjectStatsService = async (businessOwnerId) => {
@@ -72,83 +108,88 @@ exports.getProjectStatsService = async (businessOwnerId) => {
   };
 };
 
-//show all projects list service
-exports.projectListService = async (userId, query = {}) => {
-  let { page = 1, limit = 10 } = query;
 
-  page = parseInt(page);
-  limit = parseInt(limit);
 
-  if (isNaN(page) || page < 1) page = 1;
-  if (isNaN(limit) || limit < 1) limit = 10;
 
-  const skip = (page - 1) * limit;
-  const userObjectId = new mongoose.Types.ObjectId(userId);
+// Get Project Details Service
+exports.projectDetailsService = async (projectId) => {
+  // Validate Project ID
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    throw new AppError('Invalid project id', 400);
+  }
 
-  const overallStats = await exports.getProjectStatsService(userId);
+  // Fetch project and tasks simultaneously
+  const [projectDetails, tasks] = await Promise.all([
+    Project.findById(projectId)
+      .select(
+        `
+          projectName
+          startDate
+          dueDate
+          progress
+          totalTasks
+          completedTasks
+          assignedUsers
+        `
+      )
+      .populate({
+        path: 'assignedUsers',
+        select: 'name userProfile'
+      })
+      .lean(),
 
-  const [projects, total] = await Promise.all([
-    Project.aggregate([
-      { $match: { businessOwnerId: userObjectId } },
-      { $sort: { createdAt: -1 } },
-      { $skip: skip },
-      { $limit: limit },
-      {
-        $project: {
-          totalTasks: 0,
-          completedTasks: 0,
-          __v: 0
-        }
-      }
-    ]),
-    Project.countDocuments({ businessOwnerId: userObjectId })
+    Task.find({ projectId })
+      .select(
+        `
+          taskName
+          description
+          priority
+          dueDate
+          attachments
+          totalAssigned
+          completedCount
+        `
+      )
+      .lean()
   ]);
 
-  return {
-    projects,
-    stats: overallStats,
-    page,
-    limit,
-    total,
-    totalPages: Math.ceil(total / limit)
-  };
-};
-
-// Get project By Id service
-exports.projectDetailsService = async (projectId) => {
-  const projectDetails = await Project.findById(projectId).populate(
-    'assignedUsers',
-    'name userProfile'
-  );
+  // Project not found
   if (!projectDetails) {
     throw new AppError('Project not found', 404);
   }
 
-  const tasks = await Task.find({ projectId });
-
+  // Final response
   return {
-    _id: projectDetails._id,
-    projectName: projectDetails.projectName || '',
-    startDate: projectDetails.startDate || '',
-    dueDate: projectDetails.dueDate || '',
-    assignedUsersCount: projectDetails.assignedUsers?.length || 0,
-    assignedUsers: (projectDetails.assignedUsers || []).map((user) => ({
-      _id: user._id,
-      name: user.name || '',
-      profileImage: user.userProfile?.url || DEFAULT_PROFILE_IMAGE
-    })),
+    id: projectDetails._id,
+    projectName: projectDetails.projectName || "",
+    startDate: projectDetails.startDate || "",
+    dueDate: projectDetails.dueDate || "",
     progress: projectDetails.progress || 0,
     totalTasks: projectDetails.totalTasks || 0,
     completedTasks: projectDetails.completedTasks || 0,
+    assignedUsersCount:
+      projectDetails.assignedUsers?.length || 0,
+    assignedUsers: (projectDetails.assignedUsers || []).map(
+      (user) => ({
+        _id: user._id,
+        name: user.name,
+        profileImage:
+          user.userProfile?.url || DEFAULT_PROFILE_IMAGE
+      })
+    ),
     tasks: tasks.map((task) => ({
-      _id: task._id,
-      taskName: task.taskName || '',
-      description: task.description || '',
-      priority: task.priority || '',
-      status: task.status || ''
+      id: task._id,
+      taskName: task.taskName || "",
+      description: task.description || "",
+      priority: task.priority || "",
+      dueDate: task.dueDate || "",
+      attachments: task.attachments || [],
+      totalAssigned: task.totalAssigned || 0,
+      completedCount: task.completedCount || 0
     }))
   };
 };
+
 
 //Assigned project to employee service
 exports.assignedProjectsService = async (projectId, assignedUsers) => {
@@ -223,15 +264,3 @@ exports.employeesListService = async (userId, skip = 0, limit = 10) => {
   return formattedEmployees;
 };
 
-//update project stats service
-exports.updateProjectStats = async (projectId) => {
-  const totalTasks = await Task.countDocuments({ projectId });
-  const completedTasks = await Task.countDocuments({ projectId, status: 'completed' });
-  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
-
-  await Project.findByIdAndUpdate(projectId, {
-    totalTasks,
-    completedTasks,
-    progress
-  });
-};
