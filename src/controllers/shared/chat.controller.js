@@ -135,8 +135,7 @@ exports.updateMessageReadStatus = async (req, res) => {
   const { messageId } = req.params;
   const data = await updateMessageReadStatusService({
     messageId,
-    userId: req.user.userId,
-    readStatus: req.body.readStatus || 'read'
+    userId: req.user.userId
   });
   const io = getIO();
   if (io) {

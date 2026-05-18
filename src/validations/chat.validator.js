@@ -133,11 +133,7 @@ exports.updateMessageReadStatusValidation = [
     .notEmpty()
     .withMessage('Message ID is required')
     .custom((id) => mongoose.Types.ObjectId.isValid(id))
-    .withMessage('Message ID must be a valid object ID'),
-  body('readStatus')
-    .optional()
-    .isIn(['received', 'read'])
-    .withMessage('readStatus must be either received or read')
+    .withMessage('Message ID must be a valid object ID')
 ];
 
 exports.markRoomMessagesReadValidation = [

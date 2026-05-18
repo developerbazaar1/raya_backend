@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 const ChatRoom = require('../models/shared/chatRoom.model');
 const ChatRoomMember = require('../models/shared/chatRoomMember.model');
 const ChatMessage = require('../models/shared/chatMessage.model');
-const ChatMessageRead = require('../models/shared/chatMessageRead.model');
 const ChatAttachment = require('../models/shared/chatAttachment.model');
 const User = require('../models/shared/users.model');
 const AppError = require('../utils/appError');
@@ -146,10 +145,7 @@ exports.deleteChatRoomService = async (chatRoomId, userId) => {
   const messageIds = messages.map((message) => message._id);
 
   if (messageIds.length > 0) {
-    await Promise.all([
-      ChatAttachment.deleteMany({ messageId: { $in: messageIds } }),
-      ChatMessageRead.deleteMany({ messageId: { $in: messageIds } })
-    ]);
+    await ChatAttachment.deleteMany({ messageId: { $in: messageIds } });
   }
 
   await Promise.all([
@@ -186,23 +182,6 @@ const buildMessageWithAttachment = async (messages) => {
     createdAt: msg.createdAt,
     attachment: attachmentMap[msg._id.toString()] || []
   }));
-};
-
-const updateMessageAggregateReadStatus = async (message) => {
-  const recipientReceipts = await ChatMessageRead.find({
-    messageId: message._id,
-    userId: { $ne: message.senderUserId }
-  })
-    .select('readStatus')
-    .lean();
-
-  let status = 'sent';
-  if (recipientReceipts.length > 0) {
-    status = recipientReceipts.every((receipt) => receipt.readStatus === 'read') ? 'read' : 'delivered';
-  }
-
-  await ChatMessage.updateOne({ _id: message._id }, { $set: { status } });
-  return { status };
 };
 
 /**
@@ -243,18 +222,6 @@ exports.sendChatMessageService = async ({
   });
   await chatMessage.save();
 
-  const roomMembers = await ChatRoomMember.find({ roomId }).select('userId').lean();
-  const receiptDocs = roomMembers.map((member) => ({
-    messageId: chatMessage._id,
-    roomId,
-    userId: member.userId,
-    readStatus: member.userId.toString() === senderUserId.toString() ? 'sent' : 'received',
-    readAt: null
-  }));
-  if (receiptDocs.length) {
-    await ChatMessageRead.insertMany(receiptDocs);
-  }
-
   if (Array.isArray(attachments) && attachments.length > 0) {
     const docs = attachments
       .filter((a) => a && (a.url || a.fileUrl))
@@ -282,23 +249,15 @@ exports.sendChatMessageService = async ({
   await room.save();
 
   await ChatRoomMember.updateMany({ roomId, userId: { $ne: senderUserId } }, { $inc: { unreadCount: 1 } });
-  const aggregateStatus = await updateMessageAggregateReadStatus(chatMessage);
 
   const lean = await ChatMessage.findById(chatMessage._id).lean();
   const [formatted] = await buildMessageWithAttachment([lean]);
-  return {
-    ...formatted,
-    ...aggregateStatus
-  };
+  return formatted;
 };
 
-exports.updateMessageReadStatusService = async ({ messageId, userId, readStatus = 'read' }) => {
+exports.updateMessageReadStatusService = async ({ messageId, userId }) => {
   if (!mongoose.Types.ObjectId.isValid(messageId)) {
     throw new AppError('Invalid message id', 400);
-  }
-
-  if (!['received', 'read'].includes(readStatus)) {
-    throw new AppError('readStatus must be received or read', 400);
   }
 
   const message = await ChatMessage.findById(messageId).lean();
@@ -311,29 +270,7 @@ exports.updateMessageReadStatusService = async ({ messageId, userId, readStatus 
     throw new AppError('You are not a member of this chat room', 403);
   }
 
-  const readAt = readStatus === 'read' ? new Date() : null;
-  const previousReceipt = await ChatMessageRead.findOne({ messageId, userId }).select('readStatus').lean();
-  const receipt = await ChatMessageRead.findOneAndUpdate(
-    { messageId, userId },
-    {
-      $set: {
-        roomId: message.roomId,
-        readStatus,
-        readAt
-      }
-    },
-    {
-      new: true,
-      upsert: true,
-      setDefaultsOnInsert: true
-    }
-  ).lean();
-
-  if (
-    readStatus === 'read' &&
-    previousReceipt?.readStatus !== 'read' &&
-    message.senderUserId.toString() !== userId.toString()
-  ) {
+  if (message.senderUserId.toString() !== userId.toString()) {
     await ChatRoomMember.updateOne(
       {
         roomId: message.roomId,
@@ -344,16 +281,17 @@ exports.updateMessageReadStatusService = async ({ messageId, userId, readStatus 
     );
   }
 
-  const aggregateStatus = await updateMessageAggregateReadStatus(message);
+  const room = await ChatRoom.findById(message.roomId).select('roomType').lean();
+  if (room?.roomType === 'team' && message.senderUserId.toString() !== userId.toString()) {
+    await ChatMessage.updateOne({ _id: message._id }, { $set: { status: 'read' } });
+  }
 
   return {
     messageId,
     roomId: message.roomId,
     userId,
     senderId: message.senderUserId,
-    readStatus: receipt.readStatus,
-    messageStatus: aggregateStatus.status,
-    readAt: receipt.readAt
+    messageStatus: room?.roomType === 'team' && message.senderUserId.toString() !== userId.toString() ? 'read' : message.status
   };
 };
 
@@ -372,54 +310,16 @@ exports.markRoomMessagesReadService = async ({ roomId, userId }) => {
     throw new AppError('Chat room not found', 404);
   }
 
-  const pendingReceipts = await ChatMessageRead.find({
-    roomId,
-    userId,
-    readStatus: { $ne: 'read' }
-  })
-    .select('messageId')
-    .lean();
-
-  const pendingMessageIds = pendingReceipts.map((receipt) => receipt.messageId);
-  if (!pendingMessageIds.length) {
-    await ChatRoomMember.updateOne({ roomId, userId }, { $set: { unreadCount: 0 } });
-    return {
-      roomId,
-      roomType: room.roomType,
-      userId,
-      readStatus: 'read',
-      updatedMessagesCount: 0,
-      messageIds: []
-    };
-  }
-
-  const messagesToRead = await ChatMessage.find({
-    _id: { $in: pendingMessageIds },
-    roomId,
-    senderUserId: { $ne: userId }
-  })
-    .select('_id roomId senderUserId')
-    .lean();
-
-  const messageIds = messagesToRead.map((message) => message._id);
-  const now = new Date();
-
-  if (messageIds.length) {
-    await ChatMessageRead.updateMany(
+  const unreadCount = membership.unreadCount || 0;
+  if (room.roomType === 'team' && unreadCount > 0) {
+    await ChatMessage.updateMany(
       {
         roomId,
-        userId,
-        messageId: { $in: messageIds }
+        senderUserId: { $ne: userId },
+        status: { $ne: 'read' }
       },
-      {
-        $set: {
-          readStatus: 'read',
-          readAt: now
-        }
-      }
+      { $set: { status: 'read' } }
     );
-
-    await Promise.all(messagesToRead.map((message) => updateMessageAggregateReadStatus(message)));
   }
 
   await ChatRoomMember.updateOne({ roomId, userId }, { $set: { unreadCount: 0 } });
@@ -428,9 +328,8 @@ exports.markRoomMessagesReadService = async ({ roomId, userId }) => {
     roomId,
     roomType: room.roomType,
     userId,
-    readStatus: 'read',
-    updatedMessagesCount: messageIds.length,
-    messageIds
+    unreadCount: 0,
+    clearedUnreadCount: unreadCount
   };
 };
 
@@ -605,7 +504,7 @@ exports.getRoomDetailsService = async (userId, roomId, skip = 0, limit = 20) => 
     .skip(skip)
     .limit(limit)
     .lean();
-  const messagesWithAttachments = await buildMessageWithAttachment(rawMessages);
+  const messagesWithAttachments = await buildMessageWithAttachment(rawMessages.reverse());
 
   return {
     groupImage: room.chatRoomImage?.url || '',
