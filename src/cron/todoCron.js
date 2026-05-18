@@ -8,20 +8,21 @@ const logger = require('../utils/logger');
  */
 const initTodoCron = () => {
   // Schedule: Minute(0) Hour(0) Day(*) Month(*) DayOfWeek(*)
-  cron.schedule('0 0 * * *', async () => {
+  cron.schedule(
+    '0 0 * * *',
+    async () => {
+      // cron.schedule(
+      //   '0 0 * * *',
+      //   async () => {
+      logger.info('--- Starting Nightly Todo Cron Job ---');
 
-    // cron.schedule(
-    //   '0 0 * * *',
-    //   async () => {
-    logger.info('--- Starting Nightly Todo Cron Job ---');
-
-    try {
-      const result = await processTodoResets();
-      logger.info(`--- Todo Cron Completed: Processed ${result.processedCount} tasks ---`);
-    } catch (error) {
-      logger.error('Error during Todo Cron Job:', error);
-    }
-  },
+      try {
+        const result = await processTodoResets();
+        logger.info(`--- Todo Cron Completed: Processed ${result.processedCount} tasks ---`);
+      } catch (error) {
+        logger.error('Error during Todo Cron Job:', error);
+      }
+    },
     {
       scheduled: true,
       timezone: 'Asia/Kolkata' // You can change this to your server's timezone

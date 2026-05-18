@@ -202,11 +202,11 @@ const getRolesService = async (businessOwnerId, query) => {
     items: formattedRoles,
     pagination: shouldPaginate
       ? {
-        page: pageNo,
-        limit: limitNo,
-        total,
-        totalPages: Math.ceil(total / limitNo)
-      }
+          page: pageNo,
+          limit: limitNo,
+          total,
+          totalPages: Math.ceil(total / limitNo)
+        }
       : null
   };
 };
@@ -553,11 +553,11 @@ const getMembersByRolesService = async (businessOwnerId, query) => {
     items: data,
     pagination: shouldPaginate
       ? {
-        page: pageNo,
-        limit: limitNo,
-        total,
-        totalPages: Math.ceil(total / limitNo)
-      }
+          page: pageNo,
+          limit: limitNo,
+          total,
+          totalPages: Math.ceil(total / limitNo)
+        }
       : null
   };
 };
@@ -698,11 +698,11 @@ const getMemberService = async (businessOwnerId, query) => {
     items: members,
     pagination: shouldPaginate
       ? {
-        page: pageNo,
-        limit: limitNo,
-        total,
-        totalPages: Math.ceil(total / limitNo)
-      }
+          page: pageNo,
+          limit: limitNo,
+          total,
+          totalPages: Math.ceil(total / limitNo)
+        }
       : null
   };
 };

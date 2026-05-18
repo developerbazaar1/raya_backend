@@ -267,8 +267,6 @@ exports.ceoProjectListService = async (userId, query = {}) => {
   const skip = (page - 1) * limit;
   const userObjectId = new mongoose.Types.ObjectId(userId);
 
-
-
   const [projects, total] = await Promise.all([
     Project.aggregate([
       { $match: { businessOwnerId: userObjectId } },

@@ -182,7 +182,6 @@ exports.ceoToDoListService = async (userId) => {
   return { todos: formattedTodos };
 };
 
-
 exports.todoHistoryService = async (businessOwnerId, query = {}) => {
   const { page = 1, limit = 10, status } = query;
   const pageNo = Math.max(1, parseInt(page, 10));
@@ -232,7 +231,7 @@ exports.todoHistoryService = async (businessOwnerId, query = {}) => {
       totalPages: Math.ceil(total / limitNo)
     }
   };
-}
+};
 
 // const getDueStatus = (dueDate) => {
 //   if (!dueDate) return '';

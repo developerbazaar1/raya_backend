@@ -41,7 +41,6 @@ exports.ceoToDoList = async (req, res) => {
   });
 };
 
-
 exports.todoHistory = async (req, res) => {
   const result = await todoHistoryService(req.user.userId, req.query);
   res.status(200).json({

@@ -1,77 +1,68 @@
 // models/MentalHealthCheckin.js
 
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 const MentalHealthCheckinSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
+      ref: 'User',
+      required: true
     },
 
     moodScore: {
       type: Number,
       required: true,
       min: 1,
-      max: 10,
+      max: 10
     },
 
     moodLabel: {
       type: String,
-      enum: [
-        "Critical",
-        "Struggling",
-        "Neutral",
-        "Good",
-        "Excellent",
-      ],
+      enum: ['Critical', 'Struggling', 'Neutral', 'Good', 'Excellent']
     },
 
     note: {
       type: String,
       trim: true,
-      maxlength: 1000,
+      maxlength: 1000
     },
 
     tags: [
       {
         type: String,
-        trim: true,
-      },
+        trim: true
+      }
     ],
 
     isCrisis: {
       type: Boolean,
-      default: false,
-    },
+      default: false
+    }
   },
   {
-    timestamps: true,
+    timestamps: true
   }
 );
 
 // Auto-generate mood label + crisis status
-MentalHealthCheckinSchema.pre("save", function (next) {
+MentalHealthCheckinSchema.pre('save', function (next) {
   const score = this.moodScore;
 
   if (score <= 2) {
-    this.moodLabel = "Critical";
+    this.moodLabel = 'Critical';
     this.isCrisis = true;
   } else if (score <= 4) {
-    this.moodLabel = "Struggling";
+    this.moodLabel = 'Struggling';
   } else if (score <= 6) {
-    this.moodLabel = "Neutral";
+    this.moodLabel = 'Neutral';
   } else if (score <= 8) {
-    this.moodLabel = "Good";
+    this.moodLabel = 'Good';
   } else {
-    this.moodLabel = "Excellent";
+    this.moodLabel = 'Excellent';
   }
 
   next();
 });
 
-module.exports = mongoose.model(
-  "MentalHealthCheckin",
-  MentalHealthCheckinSchema
-);
+module.exports = mongoose.model('MentalHealthCheckin', MentalHealthCheckinSchema);

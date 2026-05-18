@@ -72,4 +72,4 @@ exports.ceoProjectList = async (req, res) => {
     message: 'CEO Project list successfully',
     data
   });
-}
+};
