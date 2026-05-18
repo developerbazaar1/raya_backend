@@ -8,9 +8,11 @@ const logger = require('../utils/logger');
  */
 const initTodoCron = () => {
   // Schedule: Minute(0) Hour(0) Day(*) Month(*) DayOfWeek(*)
-  // cron.schedule('0 0 * * *', async () => {
-
   cron.schedule('0 0 * * *', async () => {
+
+    // cron.schedule(
+    //   '0 0 * * *',
+    //   async () => {
     logger.info('--- Starting Nightly Todo Cron Job ---');
 
     try {

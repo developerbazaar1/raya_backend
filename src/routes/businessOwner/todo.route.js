@@ -6,7 +6,8 @@ const {
   todoCreate,
   todoAll,
   updateTodo,
-  ceoToDoList
+  ceoToDoList,
+  todoHistory
 } = require('../../controllers/businessOwner/todo.controller');
 
 router.post(
@@ -24,8 +25,8 @@ router.put(
   asyncHandler(updateTodo)
 );
 
-
 // Ceo list
 router.get('/ceoToDo', authenticate('business_owner'), asyncHandler(ceoToDoList));
+router.get('/todoHistory', authenticate('business_owner'), asyncHandler(todoHistory));
 
 module.exports = router;

@@ -34,7 +34,7 @@ const taskAssignmentHistorySchema = new mongoose.Schema(
     totalNotStartedTask: {
       type: Number,
       default: 0
-    },
+    }
   },
   { timestamps: true }
 );

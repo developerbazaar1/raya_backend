@@ -4,7 +4,8 @@ const {
   projectDetailsService,
   assignedProjectsService,
   removeAssignedUserService,
-  employeesListService
+  employeesListService,
+  ceoProjectListService
 } = require('../../services/project.service');
 exports.projectCreate = async (req, res) => {
   const data = await projectCreateService(req.body, req.user.userId);
@@ -63,3 +64,12 @@ exports.employeesList = async (req, res) => {
     data
   });
 };
+
+exports.ceoProjectList = async (req, res) => {
+  const data = await ceoProjectListService(req.user.userId, { ceoProjects: true });
+  res.status(200).json({
+    success: 'success',
+    message: 'CEO Project list successfully',
+    data
+  });
+}

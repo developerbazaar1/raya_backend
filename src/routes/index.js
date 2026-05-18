@@ -13,7 +13,6 @@ router.use('/api/v1/business-owner/cms', require('./businessOwner/cms.route'));
 router.use('/api/v1/business-owner/projects', require('./businessOwner/project.route'));
 router.use('/api/v1/business-owner/projects/tasks', require('./businessOwner/task.route'));
 router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
-
 router.use('/api/v1/business-owner/foundation', require('./businessOwner/foundation.route'));
 router.use('/api/v1/business-owner/time-off', require('./businessOwner/timeOff.route'));
 router.use('/api/v1/business-owner/event', require('./businessOwner/event.route'));
@@ -24,13 +23,17 @@ router.use('/api/v1/business-owner/schedule', require('./businessOwner/schedule.
 router.use('/api/v1/business-owner/dashboard', require('./businessOwner/dashboard.route'));
 // router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
 
-
-
 //All Business Owner Team routes
 router.use('/api/v1/business-owner-team/time-off', require('./businessOwnerTeam/timeOff.route'));
 router.use('/api/v1/business-owner-team/event', require('./businessOwnerTeam/event.route'));
 router.use('/api/v1/business-owner-team/to-do', require('./businessOwnerTeam/todo.route'));
 router.use('/api/v1/business-owner-team/projects', require('./businessOwnerTeam/project.route'));
+router.use(
+  '/api/v1/business-owner-team/foundation',
+  require('./businessOwnerTeam/foundation.route')
+);
+router.use('/api/v1/business-owner-team/setting', require('./businessOwnerTeam/setting.route'));
+router.use('/api/v1/business-owner-team/dashboard', require('./businessOwnerTeam/dashboard.route'));
 
 // All Admin route
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));

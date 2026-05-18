@@ -56,7 +56,6 @@ exports.unAssignProjectValidation = [
     .withMessage('All assigned users must be valid object IDs')
 ];
 
-
 exports.updateProjectStatusValidation = [
   param('projectId')
     .notEmpty()

@@ -58,12 +58,11 @@ const createTaskAssignments = async (projectId, taskId, userIds) => {
     totalAssignedTask: assignments.length,
     totalCompletedTask: 0,
     totalInProgressTask: 0,
-    totalNotStartedTask: assignments.length,
+    totalNotStartedTask: assignments.length
   }));
 
   await TaskAssignmentHistory.insertMany(historyRecords);
 };
-
 
 const updateProjectStats = async (projectId) => {
   //update project total task count when new task create
@@ -81,7 +80,9 @@ exports.taskCreateService = async (payload, files, userId) => {
   const userIds = normalizeAssignedUsers(assignedUsers);
 
   // Step 3: Verify project exists and all assignees are project members
-  const project = await Project.findOne({ _id: projectId, businessOwnerId: userId }).select('assignedUsers');
+  const project = await Project.findOne({ _id: projectId, businessOwnerId: userId }).select(
+    'assignedUsers'
+  );
   if (!project) {
     throw new AppError('Project not found', 404);
   }
@@ -90,7 +91,10 @@ exports.taskCreateService = async (payload, files, userId) => {
     const projectMemberIds = project.assignedUsers.map((id) => id.toString());
     const invalidUsers = userIds.filter((id) => !projectMemberIds.includes(id.toString()));
     if (invalidUsers.length > 0) {
-      throw new AppError(`These users are not assigned to the project: ${invalidUsers.join(', ')}`, 400);
+      throw new AppError(
+        `These users are not assigned to the project: ${invalidUsers.join(', ')}`,
+        400
+      );
     }
   }
 
@@ -117,7 +121,6 @@ exports.taskCreateService = async (payload, files, userId) => {
   // Step 7: Return the clean, formatted task response
   return formatTask(task);
 };
-
 
 exports.getTaskByIdService = async (taskId, userId, filters = {}) => {
   const { status } = filters;

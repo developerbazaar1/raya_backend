@@ -133,7 +133,6 @@ exports.todoAllService = async (businessOwnerId) => {
   return { teamStats: Object.values(roleGroups) };
 };
 
-
 exports.ceoToDoListService = async (userId) => {
   // Fetch all todos where userId is in assignedUsers
   const todos = await Todo.find({
@@ -145,7 +144,7 @@ exports.ceoToDoListService = async (userId) => {
   }
 
   // Get TodoAssignment records for these todos
-  const todoIds = todos.map(todo => todo._id);
+  const todoIds = todos.map((todo) => todo._id);
   const assignments = await TodoAssignment.find({
     todoId: { $in: todoIds },
     userId: userId
@@ -182,6 +181,58 @@ exports.ceoToDoListService = async (userId) => {
 
   return { todos: formattedTodos };
 };
+
+
+exports.todoHistoryService = async (businessOwnerId, query = {}) => {
+  const { page = 1, limit = 10, status } = query;
+  const pageNo = Math.max(1, parseInt(page, 10));
+  const limitNo = Math.max(1, parseInt(limit, 10));
+  const skip = (pageNo - 1) * limitNo;
+
+  const filter = {
+    businessOwnerId,
+    status: { $in: ['completed', 'overdue'] }
+  };
+
+  if (status && ['not_started', 'in_progress', 'completed', 'overdue'].includes(status)) {
+    filter.status = status;
+  }
+
+  const [historyItems, total] = await Promise.all([
+    TodoAssignment.find(filter)
+      .populate('todoId', 'name dueDate repetition')
+      .populate('userId', 'name profileImage')
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limitNo),
+    TodoAssignment.countDocuments(filter)
+  ]);
+
+  const items = historyItems.map((item) => ({
+    id: item._id,
+    todoId: item.todoId?._id,
+    todoName: item.todoId?.name || '',
+    userId: item.userId?._id,
+    userName: item.userId?.name || '',
+    userProfileImage: item.userId?.profileImage || '',
+    status: item.status,
+    dueDate: item.instanceDueDate || item.todoId?.dueDate,
+    startedAt: item.startedAt,
+    completedAt: item.completedAt,
+    updatedAt: item.updatedAt,
+    createdAt: item.createdAt
+  }));
+
+  return {
+    items,
+    pagination: {
+      total,
+      page: pageNo,
+      limit: limitNo,
+      totalPages: Math.ceil(total / limitNo)
+    }
+  };
+}
 
 // const getDueStatus = (dueDate) => {
 //   if (!dueDate) return '';

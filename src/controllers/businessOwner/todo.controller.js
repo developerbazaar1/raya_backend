@@ -2,7 +2,8 @@ const {
   todoCreateService,
   todoAllService,
   updateTodoService,
-  ceoToDoListService
+  ceoToDoListService,
+  todoHistoryService
 } = require('../../services/todo.service');
 
 exports.todoCreate = async (req, res) => {
@@ -31,9 +32,18 @@ exports.updateTodo = async (req, res) => {
   });
 };
 
-
 exports.ceoToDoList = async (req, res) => {
   const result = await ceoToDoListService(req.user.userId, req.query);
+  res.status(200).json({
+    status: 'success',
+    message: 'To-Do items retrieved successfully',
+    ...result
+  });
+};
+
+
+exports.todoHistory = async (req, res) => {
+  const result = await todoHistoryService(req.user.userId, req.query);
   res.status(200).json({
     status: 'success',
     message: 'To-Do items retrieved successfully',

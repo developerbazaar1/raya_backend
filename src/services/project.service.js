@@ -69,7 +69,6 @@ exports.projectListService = async (userId, query = {}) => {
   };
 };
 
-
 // Get project stats service
 exports.getProjectStatsService = async (businessOwnerId) => {
   const stats = await Project.aggregate([
@@ -107,9 +106,6 @@ exports.getProjectStatsService = async (businessOwnerId) => {
     pendingProjects: stats[0]?.pendingProjects || 0
   };
 };
-
-
-
 
 // Get Project Details Service
 exports.projectDetailsService = async (projectId) => {
@@ -161,35 +157,30 @@ exports.projectDetailsService = async (projectId) => {
   // Final response
   return {
     id: projectDetails._id,
-    projectName: projectDetails.projectName || "",
-    startDate: projectDetails.startDate || "",
-    dueDate: projectDetails.dueDate || "",
+    projectName: projectDetails.projectName || '',
+    startDate: projectDetails.startDate || '',
+    dueDate: projectDetails.dueDate || '',
     progress: projectDetails.progress || 0,
     totalTasks: projectDetails.totalTasks || 0,
     completedTasks: projectDetails.completedTasks || 0,
-    assignedUsersCount:
-      projectDetails.assignedUsers?.length || 0,
-    assignedUsers: (projectDetails.assignedUsers || []).map(
-      (user) => ({
-        _id: user._id,
-        name: user.name,
-        profileImage:
-          user.userProfile?.url || DEFAULT_PROFILE_IMAGE
-      })
-    ),
+    assignedUsersCount: projectDetails.assignedUsers?.length || 0,
+    assignedUsers: (projectDetails.assignedUsers || []).map((user) => ({
+      _id: user._id,
+      name: user.name,
+      profileImage: user.userProfile?.url || DEFAULT_PROFILE_IMAGE
+    })),
     tasks: tasks.map((task) => ({
       id: task._id,
-      taskName: task.taskName || "",
-      description: task.description || "",
-      priority: task.priority || "",
-      dueDate: task.dueDate || "",
+      taskName: task.taskName || '',
+      description: task.description || '',
+      priority: task.priority || '',
+      dueDate: task.dueDate || '',
       attachments: task.attachments || [],
       totalAssigned: task.totalAssigned || 0,
       completedCount: task.completedCount || 0
     }))
   };
 };
-
 
 //Assigned project to employee service
 exports.assignedProjectsService = async (projectId, assignedUsers) => {
@@ -264,3 +255,60 @@ exports.employeesListService = async (userId, skip = 0, limit = 10) => {
   return formattedEmployees;
 };
 
+exports.ceoProjectListService = async (userId, query = {}) => {
+  let { page = 1, limit = 10 } = query;
+
+  page = parseInt(page);
+  limit = parseInt(limit);
+
+  if (isNaN(page) || page < 1) page = 1;
+  if (isNaN(limit) || limit < 1) limit = 10;
+
+  const skip = (page - 1) * limit;
+  const userObjectId = new mongoose.Types.ObjectId(userId);
+
+
+
+  const [projects, total] = await Promise.all([
+    Project.aggregate([
+      { $match: { businessOwnerId: userObjectId } },
+      { $sort: { createdAt: -1 } },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          __v: 0
+        }
+      }
+    ]),
+    Project.countDocuments({ businessOwnerId: userObjectId })
+  ]);
+
+  const projectsWithStatus = projects.map((project) => {
+    const progress = project.progress || 0;
+    let status = 'pending';
+
+    if (progress >= 100) {
+      status = 'completed';
+    } else if (progress > 0) {
+      status = 'inprogress';
+    }
+
+    return {
+      id: project._id,
+      projectName: project.projectName || '',
+      startDate: project.startDate || '',
+      dueDate: project.dueDate || '',
+      progress,
+      status
+    };
+  });
+
+  return {
+    projects: projectsWithStatus,
+    page,
+    limit,
+    total,
+    totalPages: Math.ceil(total / limit)
+  };
+};

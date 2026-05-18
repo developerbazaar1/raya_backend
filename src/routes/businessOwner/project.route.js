@@ -11,7 +11,8 @@ const {
   projectDetails,
   assignedProjects,
   removeAssignedUser,
-  employeesList
+  employeesList,
+  ceoProjectList
 } = require('../../controllers/businessOwner/project.controller');
 
 router.post(
@@ -22,6 +23,7 @@ router.post(
 );
 router.get('/employees', authenticate('business_owner'), asyncHandler(employeesList));
 router.get('/', authenticate('business_owner'), asyncHandler(projectList));
+router.get('/CEO-projects', authenticate('business_owner'), asyncHandler(ceoProjectList));
 router.get('/:projectId', authenticate('business_owner'), asyncHandler(projectDetails));
 router.patch(
   '/assign/:projectId',
