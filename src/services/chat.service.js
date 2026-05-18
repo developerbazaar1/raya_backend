@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const ChatRoom = require('../models/shared/chatRoom.model');
 const ChatRoomMember = require('../models/shared/chatRoomMember.model');
 const ChatMessage = require('../models/shared/chatMessage.model');
+const ChatMessageRead = require('../models/shared/chatMessageRead.model');
 const ChatAttachment = require('../models/shared/chatAttachment.model');
 const User = require('../models/shared/users.model');
 const AppError = require('../utils/appError');
@@ -145,7 +146,10 @@ exports.deleteChatRoomService = async (chatRoomId, userId) => {
   const messageIds = messages.map((message) => message._id);
 
   if (messageIds.length > 0) {
-    await ChatAttachment.deleteMany({ messageId: { $in: messageIds } });
+    await Promise.all([
+      ChatAttachment.deleteMany({ messageId: { $in: messageIds } }),
+      ChatMessageRead.deleteMany({ messageId: { $in: messageIds } })
+    ]);
   }
 
   await Promise.all([
@@ -175,10 +179,30 @@ const buildMessageWithAttachment = async (messages) => {
     id: msg._id,
     roomId: msg.roomId,
     senderUserId: msg.senderUserId,
+    senderId: msg.senderUserId,
     message: msg.message || '',
+    messageType: msg.messageType || 'text',
+    status: msg.status || 'sent',
     createdAt: msg.createdAt,
     attachment: attachmentMap[msg._id.toString()] || []
   }));
+};
+
+const updateMessageAggregateReadStatus = async (message) => {
+  const recipientReceipts = await ChatMessageRead.find({
+    messageId: message._id,
+    userId: { $ne: message.senderUserId }
+  })
+    .select('readStatus')
+    .lean();
+
+  let status = 'sent';
+  if (recipientReceipts.length > 0) {
+    status = recipientReceipts.every((receipt) => receipt.readStatus === 'read') ? 'read' : 'delivered';
+  }
+
+  await ChatMessage.updateOne({ _id: message._id }, { $set: { status } });
+  return { status };
 };
 
 /**
@@ -214,9 +238,22 @@ exports.sendChatMessageService = async ({
     roomId,
     senderUserId,
     message: text,
-    messageType: type
+    messageType: type,
+    status: 'sent'
   });
   await chatMessage.save();
+
+  const roomMembers = await ChatRoomMember.find({ roomId }).select('userId').lean();
+  const receiptDocs = roomMembers.map((member) => ({
+    messageId: chatMessage._id,
+    roomId,
+    userId: member.userId,
+    readStatus: member.userId.toString() === senderUserId.toString() ? 'sent' : 'received',
+    readAt: null
+  }));
+  if (receiptDocs.length) {
+    await ChatMessageRead.insertMany(receiptDocs);
+  }
 
   if (Array.isArray(attachments) && attachments.length > 0) {
     const docs = attachments
@@ -245,10 +282,156 @@ exports.sendChatMessageService = async ({
   await room.save();
 
   await ChatRoomMember.updateMany({ roomId, userId: { $ne: senderUserId } }, { $inc: { unreadCount: 1 } });
+  const aggregateStatus = await updateMessageAggregateReadStatus(chatMessage);
 
   const lean = await ChatMessage.findById(chatMessage._id).lean();
   const [formatted] = await buildMessageWithAttachment([lean]);
-  return formatted;
+  return {
+    ...formatted,
+    ...aggregateStatus
+  };
+};
+
+exports.updateMessageReadStatusService = async ({ messageId, userId, readStatus = 'read' }) => {
+  if (!mongoose.Types.ObjectId.isValid(messageId)) {
+    throw new AppError('Invalid message id', 400);
+  }
+
+  if (!['received', 'read'].includes(readStatus)) {
+    throw new AppError('readStatus must be received or read', 400);
+  }
+
+  const message = await ChatMessage.findById(messageId).lean();
+  if (!message) {
+    throw new AppError('Message not found', 404);
+  }
+
+  const membership = await ChatRoomMember.findOne({ roomId: message.roomId, userId }).lean();
+  if (!membership) {
+    throw new AppError('You are not a member of this chat room', 403);
+  }
+
+  const readAt = readStatus === 'read' ? new Date() : null;
+  const previousReceipt = await ChatMessageRead.findOne({ messageId, userId }).select('readStatus').lean();
+  const receipt = await ChatMessageRead.findOneAndUpdate(
+    { messageId, userId },
+    {
+      $set: {
+        roomId: message.roomId,
+        readStatus,
+        readAt
+      }
+    },
+    {
+      new: true,
+      upsert: true,
+      setDefaultsOnInsert: true
+    }
+  ).lean();
+
+  if (
+    readStatus === 'read' &&
+    previousReceipt?.readStatus !== 'read' &&
+    message.senderUserId.toString() !== userId.toString()
+  ) {
+    await ChatRoomMember.updateOne(
+      {
+        roomId: message.roomId,
+        userId,
+        unreadCount: { $gt: 0 }
+      },
+      { $inc: { unreadCount: -1 } }
+    );
+  }
+
+  const aggregateStatus = await updateMessageAggregateReadStatus(message);
+
+  return {
+    messageId,
+    roomId: message.roomId,
+    userId,
+    senderId: message.senderUserId,
+    readStatus: receipt.readStatus,
+    messageStatus: aggregateStatus.status,
+    readAt: receipt.readAt
+  };
+};
+
+exports.markRoomMessagesReadService = async ({ roomId, userId }) => {
+  if (!mongoose.Types.ObjectId.isValid(roomId)) {
+    throw new AppError('Invalid room id', 400);
+  }
+
+  const membership = await ChatRoomMember.findOne({ roomId, userId }).lean();
+  if (!membership) {
+    throw new AppError('You are not a member of this chat room', 403);
+  }
+
+  const room = await ChatRoom.findById(roomId).select('_id roomType').lean();
+  if (!room) {
+    throw new AppError('Chat room not found', 404);
+  }
+
+  const pendingReceipts = await ChatMessageRead.find({
+    roomId,
+    userId,
+    readStatus: { $ne: 'read' }
+  })
+    .select('messageId')
+    .lean();
+
+  const pendingMessageIds = pendingReceipts.map((receipt) => receipt.messageId);
+  if (!pendingMessageIds.length) {
+    await ChatRoomMember.updateOne({ roomId, userId }, { $set: { unreadCount: 0 } });
+    return {
+      roomId,
+      roomType: room.roomType,
+      userId,
+      readStatus: 'read',
+      updatedMessagesCount: 0,
+      messageIds: []
+    };
+  }
+
+  const messagesToRead = await ChatMessage.find({
+    _id: { $in: pendingMessageIds },
+    roomId,
+    senderUserId: { $ne: userId }
+  })
+    .select('_id roomId senderUserId')
+    .lean();
+
+  const messageIds = messagesToRead.map((message) => message._id);
+  const now = new Date();
+
+  if (messageIds.length) {
+    await ChatMessageRead.updateMany(
+      {
+        roomId,
+        userId,
+        messageId: { $in: messageIds }
+      },
+      {
+        $set: {
+          readStatus: 'read',
+          readAt: now
+        }
+      }
+    );
+
+    await Promise.all(messagesToRead.map((message) => updateMessageAggregateReadStatus(message)));
+  }
+
+  await ChatRoomMember.updateOne({ roomId, userId }, { $set: { unreadCount: 0 } });
+
+  return {
+    roomId,
+    roomType: room.roomType,
+    userId,
+    readStatus: 'read',
+    updatedMessagesCount: messageIds.length,
+    messageIds
+  };
 };
 
 exports.getTeamsService = async (userId, search = '', skip = 0, limit = 10) => {
@@ -306,7 +489,7 @@ exports.getTeamsService = async (userId, search = '', skip = 0, limit = 10) => {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
 
-  return teamList.slice(skip, skip + limit).map(({ updatedAt, ...rest }) => rest);
+  return teamList.slice(skip, skip + limit).map(({ updatedAt: _updatedAt, ...rest }) => rest);
 };
 
 exports.getTeamDetailsService = async (userId, chatId, skip = 0, limit = 20) => {
@@ -327,7 +510,7 @@ exports.getTeamDetailsService = async (userId, chatId, skip = 0, limit = 20) => 
     .skip(skip)
     .limit(limit)
     .lean();
-  const messagesWithAttachments = await buildMessageWithAttachment(rawMessages);
+  const messagesWithAttachments = await buildMessageWithAttachment(rawMessages.reverse());
 
   return {
     user: {
@@ -341,8 +524,14 @@ exports.getTeamDetailsService = async (userId, chatId, skip = 0, limit = 20) => 
     },
     messages: messagesWithAttachments.map((msg) => ({
       id: msg.id,
+      roomId: msg.roomId,
+      senderId: msg.senderId,
+      senderUserId: msg.senderUserId,
+      isSelf: msg.senderUserId.toString() === userId.toString(),
       profileImage: '',
       message: msg.message,
+      messageType: msg.messageType,
+      status: msg.status,
       attachment: msg.attachment,
       createdAt: msg.createdAt
     }))
@@ -391,7 +580,7 @@ exports.getRoomsService = async (userId, search = '', skip = 0, limit = 10) => {
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
 
-  return roomList.slice(skip, skip + limit).map(({ updatedAt, ...rest }) => rest);
+  return roomList.slice(skip, skip + limit).map(({ updatedAt: _updatedAt, ...rest }) => rest);
 };
 
 exports.getRoomDetailsService = async (userId, roomId, skip = 0, limit = 20) => {
@@ -423,9 +612,15 @@ exports.getRoomDetailsService = async (userId, roomId, skip = 0, limit = 20) => 
     name: room.roomName || '',
     totalMembersCount: memberDocs.length,
     messageList: messagesWithAttachments.map((msg) => ({
+      id: msg.id,
+      roomId: msg.roomId,
       userId: msg.senderUserId,
+      senderId: msg.senderId,
+      isSelf: msg.senderUserId.toString() === userId.toString(),
       name: usersMap[msg.senderUserId.toString()]?.name || '',
       message: msg.message,
+      messageType: msg.messageType,
+      status: msg.status,
       attachment: msg.attachment,
       profileImage: usersMap[msg.senderUserId.toString()]?.userProfile?.url || '',
       createdAt: msg.createdAt

@@ -19,7 +19,6 @@ const ack = (callback, err, data) => {
 const registerChatSocketHandlers = (io, socket) => {
   socket.on('join_room', async (payload, callback) => {
     try {
-      console.log("Join a room")
       const roomId = payload?.roomId;
       if (!roomId || !mongoose.Types.ObjectId.isValid(roomId)) {
         ack(callback, new Error('Invalid room id'));
@@ -59,7 +58,6 @@ const registerChatSocketHandlers = (io, socket) => {
   socket.on('send_message', async (payload, callback) => {
     try {
       const { roomId, message, messageType, attachments } = payload || {};
-      console.log("Chat-Payload", payload)
       if (!roomId || !mongoose.Types.ObjectId.isValid(roomId)) {
         ack(callback, new Error('Invalid room id'));
         return;
@@ -78,7 +76,8 @@ const registerChatSocketHandlers = (io, socket) => {
         ...formatted
       };
 
-      io.to(roomChannel(roomId)).emit('message_received', broadcastPayload);
+      socket.emit('message_sent', broadcastPayload);
+      socket.to(roomChannel(roomId)).emit('message_received', broadcastPayload);
       ack(callback, null, broadcastPayload);
     } catch (err) {
       logger.error('Socket send_message failed', err);

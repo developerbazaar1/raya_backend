@@ -127,3 +127,23 @@ exports.getRoomDetailsValidation = [
     .isInt({ min: 1, max: 100 })
     .withMessage('limit must be between 1 and 100')
 ];
+
+exports.updateMessageReadStatusValidation = [
+  param('messageId')
+    .notEmpty()
+    .withMessage('Message ID is required')
+    .custom((id) => mongoose.Types.ObjectId.isValid(id))
+    .withMessage('Message ID must be a valid object ID'),
+  body('readStatus')
+    .optional()
+    .isIn(['received', 'read'])
+    .withMessage('readStatus must be either received or read')
+];
+
+exports.markRoomMessagesReadValidation = [
+  param('roomId')
+    .notEmpty()
+    .withMessage('Room ID is required')
+    .custom((id) => mongoose.Types.ObjectId.isValid(id))
+    .withMessage('Room ID must be a valid object ID')
+];

@@ -7,8 +7,11 @@ const {
   getTeamsService,
   getTeamDetailsService,
   getRoomsService,
-  getRoomDetailsService
+  getRoomDetailsService,
+  updateMessageReadStatusService,
+  markRoomMessagesReadService
 } = require('../../services/chat.service');
+const { getIO } = require('../../sockets');
 
 exports.createChatRoom = async (req, res) => {
   const data = await createChatRoomService(
@@ -123,6 +126,45 @@ exports.getRoomDetails = async (req, res) => {
   res.status(200).json({
     success: 'success',
     message: 'Room details fetched successfully',
+    data
+  });
+};
+
+// update message read status
+exports.updateMessageReadStatus = async (req, res) => {
+  const { messageId } = req.params;
+  const data = await updateMessageReadStatusService({
+    messageId,
+    userId: req.user.userId,
+    readStatus: req.body.readStatus || 'read'
+  });
+  const io = getIO();
+  if (io) {
+    io.to(`chat:${data.roomId}`).emit('message_read_status_updated', data);
+  }
+
+  res.status(200).json({
+    success: 'success',
+    message: 'Message read status updated successfully',
+    data
+  });
+};
+
+exports.markRoomMessagesRead = async (req, res) => {
+  const { roomId } = req.params;
+  const data = await markRoomMessagesReadService({
+    roomId,
+    userId: req.user.userId
+  });
+
+  const io = getIO();
+  if (io) {
+    io.to(`chat:${data.roomId}`).emit('room_read_status_updated', data);
+  }
+
+  res.status(200).json({
+    success: 'success',
+    message: 'Room messages marked as read successfully',
     data
   });
 };

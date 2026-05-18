@@ -10,7 +10,9 @@ const {
   getTeamsValidation,
   getTeamDetailsValidation,
   getRoomsValidation,
-  getRoomDetailsValidation
+  getRoomDetailsValidation,
+  updateMessageReadStatusValidation,
+  markRoomMessagesReadValidation
 } = require('../../validations/chat.validator');
 const {
   createChatRoom,
@@ -21,13 +23,27 @@ const {
   getTeams,
   getTeamDetails,
   getRooms,
-  getRoomDetails
+  getRoomDetails,
+  updateMessageReadStatus,
+  markRoomMessagesRead
 } = require('../../controllers/shared/chat.controller');
 
 router.get('/teams', authenticate(), validate(getTeamsValidation), asyncHandler(getTeams));
 router.get('/team/:chatId', authenticate(), validate(getTeamDetailsValidation), asyncHandler(getTeamDetails));
 router.get('/rooms', authenticate(), validate(getRoomsValidation), asyncHandler(getRooms));
 router.get('/room/:roomId', authenticate(), validate(getRoomDetailsValidation), asyncHandler(getRoomDetails));
+router.patch(
+  '/rooms/:roomId/read-status',
+  authenticate(),
+  validate(markRoomMessagesReadValidation),
+  asyncHandler(markRoomMessagesRead)
+);
+router.patch(
+  '/messages/:messageId/read-status',
+  authenticate(),
+  validate(updateMessageReadStatusValidation),
+  asyncHandler(updateMessageReadStatus)
+);
 
 router.post(
   '/rooms',
