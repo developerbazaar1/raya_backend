@@ -21,6 +21,8 @@ router.use('/api/v1/business-owner/vendor', require('./businessOwner/vendor.rout
 router.use('/api/v1/business-owner/contracts', require('./businessOwner/contractor.route'));
 router.use('/api/v1/business-owner/schedule', require('./businessOwner/schedule.route'));
 router.use('/api/v1/business-owner/dashboard', require('./businessOwner/dashboard.route'));
+router.use('/api/v1/business-owner/kpi', require('./businessOwner/kpi.route'));
+router.use('/api/v1/business-owner/measurement-type', require('./businessOwner/measurementType.route'));
 // router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
 
 //All Business Owner Team routes
