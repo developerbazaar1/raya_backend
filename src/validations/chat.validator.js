@@ -128,14 +128,6 @@ exports.getRoomDetailsValidation = [
     .withMessage('limit must be between 1 and 100')
 ];
 
-exports.updateMessageReadStatusValidation = [
-  param('messageId')
-    .notEmpty()
-    .withMessage('Message ID is required')
-    .custom((id) => mongoose.Types.ObjectId.isValid(id))
-    .withMessage('Message ID must be a valid object ID')
-];
-
 exports.markRoomMessagesReadValidation = [
   param('roomId')
     .notEmpty()

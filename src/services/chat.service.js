@@ -32,6 +32,13 @@ exports.createChatRoomService = async (payload, userId) => {
   const { roomName, roomType = 'group' } = payload;
   const memberIds = parseMemberIds(payload.memberIds);
   const memberSet = new Set([userId.toString(), ...memberIds.map((id) => id.toString())]);
+  if (memberSet.size < 2) {
+    throw new AppError('At least one chat member is required', 400);
+  }
+  if (roomType === 'team' && memberSet.size !== 2) {
+    throw new AppError('Team chat must have exactly two members', 400);
+  }
+
   const chatRoomImageFile = payload.files?.chatRoomImage?.[0];
   const imageMetadata = await uploadFileToSpaces(chatRoomImageFile, `chat/${userId}/rooms/images`);
   const room = new ChatRoom({
@@ -212,6 +219,11 @@ exports.sendChatMessageService = async ({
   const allowedTypes = ['text', 'image', 'file'];
   const type = allowedTypes.includes(messageType) ? messageType : 'text';
   const text = String(message).trim();
+  const validAttachments = Array.isArray(attachments) ? attachments.filter((a) => a && (a.url || a.fileUrl)) : [];
+
+  if (!text && !validAttachments.length) {
+    throw new AppError('Message or attachment is required', 400);
+  }
 
   const chatMessage = new ChatMessage({
     roomId,
@@ -222,10 +234,8 @@ exports.sendChatMessageService = async ({
   });
   await chatMessage.save();
 
-  if (Array.isArray(attachments) && attachments.length > 0) {
-    const docs = attachments
-      .filter((a) => a && (a.url || a.fileUrl))
-      .map((a) => ({
+  if (validAttachments.length > 0) {
+    const docs = validAttachments.map((a) => ({
         messageId: chatMessage._id,
         attachment: {
           url: a.url || a.fileUrl,
@@ -253,46 +263,6 @@ exports.sendChatMessageService = async ({
   const lean = await ChatMessage.findById(chatMessage._id).lean();
   const [formatted] = await buildMessageWithAttachment([lean]);
   return formatted;
-};
-
-exports.updateMessageReadStatusService = async ({ messageId, userId }) => {
-  if (!mongoose.Types.ObjectId.isValid(messageId)) {
-    throw new AppError('Invalid message id', 400);
-  }
-
-  const message = await ChatMessage.findById(messageId).lean();
-  if (!message) {
-    throw new AppError('Message not found', 404);
-  }
-
-  const membership = await ChatRoomMember.findOne({ roomId: message.roomId, userId }).lean();
-  if (!membership) {
-    throw new AppError('You are not a member of this chat room', 403);
-  }
-
-  if (message.senderUserId.toString() !== userId.toString()) {
-    await ChatRoomMember.updateOne(
-      {
-        roomId: message.roomId,
-        userId,
-        unreadCount: { $gt: 0 }
-      },
-      { $inc: { unreadCount: -1 } }
-    );
-  }
-
-  const room = await ChatRoom.findById(message.roomId).select('roomType').lean();
-  if (room?.roomType === 'team' && message.senderUserId.toString() !== userId.toString()) {
-    await ChatMessage.updateOne({ _id: message._id }, { $set: { status: 'read' } });
-  }
-
-  return {
-    messageId,
-    roomId: message.roomId,
-    userId,
-    senderId: message.senderUserId,
-    messageStatus: room?.roomType === 'team' && message.senderUserId.toString() !== userId.toString() ? 'read' : message.status
-  };
 };
 
 exports.markRoomMessagesReadService = async ({ roomId, userId }) => {

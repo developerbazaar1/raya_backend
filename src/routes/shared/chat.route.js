@@ -11,7 +11,6 @@ const {
   getTeamDetailsValidation,
   getRoomsValidation,
   getRoomDetailsValidation,
-  updateMessageReadStatusValidation,
   markRoomMessagesReadValidation
 } = require('../../validations/chat.validator');
 const {
@@ -24,7 +23,6 @@ const {
   getTeamDetails,
   getRooms,
   getRoomDetails,
-  updateMessageReadStatus,
   markRoomMessagesRead
 } = require('../../controllers/shared/chat.controller');
 
@@ -37,12 +35,6 @@ router.patch(
   authenticate(),
   validate(markRoomMessagesReadValidation),
   asyncHandler(markRoomMessagesRead)
-);
-router.patch(
-  '/messages/:messageId/read-status',
-  authenticate(),
-  validate(updateMessageReadStatusValidation),
-  asyncHandler(updateMessageReadStatus)
 );
 
 router.post(
