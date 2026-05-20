@@ -49,9 +49,13 @@ const getLatestAdminOtp = async (email, purpose = VERIFICATION_OTP_PURPOSE) =>
 const adminLoginService = async (body) => {
   const { email, password } = body;
 
-  const admin = await User.findOne({ email, role: ADMIN_ROLE });
+  const admin = await User.findOne({
+    email: email.toLowerCase(),
+    role: ADMIN_ROLE,
+    isDeleted: { $ne: true }
+  });
   if (!admin) {
-    throw new AppError('Admin not found', 404);
+    throw new AppError('Invalid email or password', 404);
   }
 
   const isPasswordValid = await comparePassword(password, admin.password);

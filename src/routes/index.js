@@ -36,6 +36,7 @@ router.use(
 );
 router.use('/api/v1/business-owner-team/setting', require('./businessOwnerTeam/setting.route'));
 router.use('/api/v1/business-owner-team/dashboard', require('./businessOwnerTeam/dashboard.route'));
+router.use('/api/v1/business-owner-team/mental-health', require('./businessOwnerTeam/mentalHealthCheck.route'));
 
 
 
@@ -74,5 +75,6 @@ router.use('/api/v1/chat', require('./shared/chat.route'));
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));
 router.use('/api/v1/admin/businesses', require('./admin/businesstype'));
 router.use('/api/v1/admin/cms', require('./admin/cms'));
+router.use('/api/v1/admin/user', require('./admin/user.route'));
 
 module.exports = router;

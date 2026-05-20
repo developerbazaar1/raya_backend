@@ -39,5 +39,6 @@ module.exports = {
     'Mason',
     'Tiles'
   ],
-  GENDER: ['Male', 'Female', 'Other']
+  GENDER: ['Male', 'Female', 'Other'],
+  MOOD_LABELS: ['Critical', 'Struggling', 'Neutral', 'Good', 'Excellent']
 };

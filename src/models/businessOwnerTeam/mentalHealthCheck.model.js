@@ -1,6 +1,7 @@
 // models/MentalHealthCheckin.js
 
 const mongoose = require('mongoose');
+const { MoodLabelEnum } = require('../../config/constant');
 
 const MentalHealthCheckinSchema = new mongoose.Schema(
   {
@@ -19,7 +20,8 @@ const MentalHealthCheckinSchema = new mongoose.Schema(
 
     moodLabel: {
       type: String,
-      enum: ['Critical', 'Struggling', 'Neutral', 'Good', 'Excellent']
+      enum: MoodLabelEnum,
+      default: 'Neutral'
     },
 
     note: {
@@ -46,7 +48,7 @@ const MentalHealthCheckinSchema = new mongoose.Schema(
 );
 
 // Auto-generate mood label + crisis status
-MentalHealthCheckinSchema.pre('save', function (next) {
+MentalHealthCheckinSchema.pre('save', function () {
   const score = this.moodScore;
 
   if (score <= 2) {
@@ -61,8 +63,6 @@ MentalHealthCheckinSchema.pre('save', function (next) {
   } else {
     this.moodLabel = 'Excellent';
   }
-
-  next();
 });
 
 module.exports = mongoose.model('MentalHealthCheckin', MentalHealthCheckinSchema);

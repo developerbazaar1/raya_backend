@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const { authenticate, validate } = require('../../middlewares');
+const { authenticate } = require('../../middlewares');
 const asyncHandler = require('../../utils/asyncHandler');
 const { getFoundation } = require('../../controllers/businessOwnerTeam/foundation.controller');
 
