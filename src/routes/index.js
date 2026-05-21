@@ -24,7 +24,7 @@ router.use('/api/v1/business-owner/dashboard', require('./businessOwner/dashboar
 router.use('/api/v1/business-owner/kpi', require('./businessOwner/kpi.route'));
 router.use('/api/v1/business-owner/measurement-type', require('./businessOwner/measurementType.route'));
 // router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
-
+router.use('/api/v1/business-owner/kpi-categories', require('./businessOwner/kpiCategory.route'));
 //All Business Owner Team routes
 router.use('/api/v1/business-owner-team/time-off', require('./businessOwnerTeam/timeOff.route'));
 router.use('/api/v1/business-owner-team/event', require('./businessOwnerTeam/event.route'));
@@ -38,37 +38,8 @@ router.use('/api/v1/business-owner-team/setting', require('./businessOwnerTeam/s
 router.use('/api/v1/business-owner-team/dashboard', require('./businessOwnerTeam/dashboard.route'));
 router.use('/api/v1/business-owner-team/mental-health', require('./businessOwnerTeam/mentalHealthCheck.route'));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Shared routes (for both business owner and client)
 router.use('/api/v1/chat', require('./shared/chat.route'));
-
-
-
-
-
-
 
 
 // All Admin route
