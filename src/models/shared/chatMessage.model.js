@@ -17,7 +17,7 @@ const chatMessageSchema = new mongoose.Schema(
     senderUserId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: true
     },
 
     message: {

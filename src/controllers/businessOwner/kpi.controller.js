@@ -38,7 +38,7 @@ exports.deleteKpiCategory = async (req, res) => {
 
 /**
  * Controller to handle KPI creation.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - req.body: Contains categoryId, measurementType, kpiName.
  * - req.user.userId: Identifies the business owner creating the KPI.
@@ -54,7 +54,7 @@ exports.createKpi = async (req, res) => {
 
 /**
  * Controller to fetch all KPIs grouped by category.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - req.user.userId: Identifies the business owner.
  * - kpiGetService: Core service executing the complex aggregation pipeline.
@@ -70,7 +70,7 @@ exports.getKpis = async (req, res) => {
 
 /**
  * Controller to handle updating a KPI.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - req.params.kpiId: Identifies the KPI.
  * - req.body: Contains the new kpiName.
@@ -87,7 +87,7 @@ exports.updateKpi = async (req, res) => {
 
 /**
  * Controller to handle deleting a KPI.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - req.params.kpiId: Identifies the KPI to delete.
  * - req.user.userId: Identifies the owner executing the deletion.

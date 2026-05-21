@@ -35,7 +35,7 @@ exports.kpiCategoryCreateService = async (body, userId) => {
 
 exports.kpiCategoryGetService = async (userId, query = {}) => {
   const { page, limit, search } = query;
-  
+
   const filter = { businessOwnerId: new mongoose.Types.ObjectId(userId) };
 
   if (search) {
@@ -173,7 +173,7 @@ exports.kpiCategoryDeleteService = async (categoryId, userId) => {
 
 /**
  * Service to create a new KPI under a specific category.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - body.categoryId: Must be a valid ObjectId and belong to the authenticated user.
  * - body.measurementType: Must be a valid ObjectId from MeasurementType collection.
@@ -219,7 +219,7 @@ exports.kpiCreateService = async (body, userId) => {
 
 /**
  * Service to fetch all KPIs grouped by their category for a business owner.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - userId: Identifies the business owner to fetch data for.
  * - KpiCategory (Model): The root collection to aggregate from.
@@ -297,7 +297,7 @@ exports.kpiGetService = async (userId) => {
 
 /**
  * Service to update an existing KPI name.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - kpiId: The unique identifier of the KPI to update.
  * - body.kpiName: The new name for the KPI.
@@ -341,7 +341,7 @@ exports.kpiUpdateService = async (kpiId, body, userId) => {
 
 /**
  * Service to delete an existing KPI.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - kpiId: The unique identifier of the KPI to delete.
  * - userId: The ID of the currently authenticated business owner.

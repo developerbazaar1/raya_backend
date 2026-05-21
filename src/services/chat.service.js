@@ -109,7 +109,7 @@ exports.getChatRoomService = async (chatRoomId, userId) => {
     roomName: room.roomName || '',
     chatRoomImage: room.chatRoomImage?.url || '',
     roomType: room.roomType,
-    lastMessage: room.lastMessage || "",
+    lastMessage: room.lastMessage || '',
     members
   };
 };
@@ -236,15 +236,15 @@ exports.sendChatMessageService = async ({
 
   if (validAttachments.length > 0) {
     const docs = validAttachments.map((a) => ({
-        messageId: chatMessage._id,
-        attachment: {
-          url: a.url || a.fileUrl,
-          key: a.key || '',
-          fileName: a.fileName || '',
-          mimeType: a.mimeType || a.fileType || '',
-          sizeBytes: typeof a.sizeBytes === 'number' ? a.sizeBytes : typeof a.fileSize === 'number' ? a.fileSize : 0
-        }
-      }));
+      messageId: chatMessage._id,
+      attachment: {
+        url: a.url || a.fileUrl,
+        key: a.key || '',
+        fileName: a.fileName || '',
+        mimeType: a.mimeType || a.fileType || '',
+        sizeBytes: typeof a.sizeBytes === 'number' ? a.sizeBytes : typeof a.fileSize === 'number' ? a.fileSize : 0
+      }
+    }));
     if (docs.length) {
       await ChatAttachment.insertMany(docs);
     }

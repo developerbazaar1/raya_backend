@@ -202,11 +202,11 @@ const getRolesService = async (businessOwnerId, query) => {
     items: formattedRoles,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
   };
 };
@@ -438,6 +438,7 @@ const createMemberService = async (businessOwnerId, payload) => {
  * @param {*} query
  * @returns
  */
+
 const getMembersByRolesService = async (businessOwnerId, query) => {
   const { search = '', page, limit } = query;
   const ownerObjectId = toObjectId(businessOwnerId);
@@ -553,11 +554,11 @@ const getMembersByRolesService = async (businessOwnerId, query) => {
     items: data,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
   };
 };
@@ -698,11 +699,11 @@ const getMemberService = async (businessOwnerId, query) => {
     items: members,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
   };
 };

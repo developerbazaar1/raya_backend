@@ -2,7 +2,7 @@ const { measurementTypeGetService } = require('../../services/measurementType.se
 
 /**
  * Controller to handle the request for fetching measurement types.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - req.query: Allows passing query parameters to the service layer.
  * - measurementTypeGetService: The service function responsible for data retrieval.

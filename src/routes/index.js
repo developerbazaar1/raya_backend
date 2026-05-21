@@ -42,32 +42,8 @@ router.use('/api/v1/business-owner-team/mental-health', require('./businessOwner
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Shared routes (for both business owner and client)
 router.use('/api/v1/chat', require('./shared/chat.route'));
-
-
-
-
-
 
 
 
@@ -75,6 +51,10 @@ router.use('/api/v1/chat', require('./shared/chat.route'));
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));
 router.use('/api/v1/admin/businesses', require('./admin/businesstype'));
 router.use('/api/v1/admin/cms', require('./admin/cms'));
+
 router.use('/api/v1/admin/user', require('./admin/user.route'));
+router.use('/api/v1/admin/time-off', require('./admin/timeOff.route'));
+router.use('/api/v1/admin/meeting', require('./admin/meeting.route'));
+
 
 module.exports = router;
