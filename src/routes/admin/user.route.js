@@ -9,5 +9,4 @@ const { userList } = require('../../controllers/admin/user.controller');
 
 router.get('/', adminAuth('admin'), asyncHandler(userList));
 
-
 module.exports = router;

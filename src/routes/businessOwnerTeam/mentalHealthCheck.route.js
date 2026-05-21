@@ -5,7 +5,9 @@ const {
   createMentalHealthCheck,
   getMentalHealthChecks
 } = require('../../controllers/businessOwnerTeam/mentalHealthCheck.controller');
-const { createMentalHealthCheckValidation } = require('../../validations/mentalHealthCheck.validator');
+const {
+  createMentalHealthCheckValidation
+} = require('../../validations/mentalHealthCheck.validator');
 
 router.post(
   '/',

@@ -14,5 +14,5 @@ module.exports = {
   DO_SPACES_SECRET: process.env.DO_SPACES_SECRET,
 
   // CORS ORIGIN
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN,
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN
 };

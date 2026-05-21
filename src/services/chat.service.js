@@ -102,14 +102,16 @@ exports.getChatRoomService = async (chatRoomId, userId) => {
     throw new AppError('Chat room not found', 404);
   }
 
-  const members = await ChatRoomMember.find({ roomId: chatRoomId }).select('userId unreadCount joinedAt').lean();
+  const members = await ChatRoomMember.find({ roomId: chatRoomId })
+    .select('userId unreadCount joinedAt')
+    .lean();
 
   return {
     _id: room._id,
     roomName: room.roomName || '',
     chatRoomImage: room.chatRoomImage?.url || '',
     roomType: room.roomType,
-    lastMessage: room.lastMessage || "",
+    lastMessage: room.lastMessage || '',
     members
   };
 };
@@ -219,7 +221,9 @@ exports.sendChatMessageService = async ({
   const allowedTypes = ['text', 'image', 'file'];
   const type = allowedTypes.includes(messageType) ? messageType : 'text';
   const text = String(message).trim();
-  const validAttachments = Array.isArray(attachments) ? attachments.filter((a) => a && (a.url || a.fileUrl)) : [];
+  const validAttachments = Array.isArray(attachments)
+    ? attachments.filter((a) => a && (a.url || a.fileUrl))
+    : [];
 
   if (!text && !validAttachments.length) {
     throw new AppError('Message or attachment is required', 400);
@@ -236,15 +240,20 @@ exports.sendChatMessageService = async ({
 
   if (validAttachments.length > 0) {
     const docs = validAttachments.map((a) => ({
-        messageId: chatMessage._id,
-        attachment: {
-          url: a.url || a.fileUrl,
-          key: a.key || '',
-          fileName: a.fileName || '',
-          mimeType: a.mimeType || a.fileType || '',
-          sizeBytes: typeof a.sizeBytes === 'number' ? a.sizeBytes : typeof a.fileSize === 'number' ? a.fileSize : 0
-        }
-      }));
+      messageId: chatMessage._id,
+      attachment: {
+        url: a.url || a.fileUrl,
+        key: a.key || '',
+        fileName: a.fileName || '',
+        mimeType: a.mimeType || a.fileType || '',
+        sizeBytes:
+          typeof a.sizeBytes === 'number'
+            ? a.sizeBytes
+            : typeof a.fileSize === 'number'
+              ? a.fileSize
+              : 0
+      }
+    }));
     if (docs.length) {
       await ChatAttachment.insertMany(docs);
     }
@@ -258,7 +267,10 @@ exports.sendChatMessageService = async ({
   };
   await room.save();
 
-  await ChatRoomMember.updateMany({ roomId, userId: { $ne: senderUserId } }, { $inc: { unreadCount: 1 } });
+  await ChatRoomMember.updateMany(
+    { roomId, userId: { $ne: senderUserId } },
+    { $inc: { unreadCount: 1 } }
+  );
 
   const lean = await ChatMessage.findById(chatMessage._id).lean();
   const [formatted] = await buildMessageWithAttachment([lean]);
@@ -321,10 +333,13 @@ exports.getTeamsService = async (userId, search = '', skip = 0, limit = 10) => {
   const teamRoomIds = teamRooms.map((room) => room._id);
   if (!teamRoomIds.length) return [];
 
-  const teamMembers = await ChatRoomMember.find({ roomId: { $in: teamRoomIds } }).select('roomId userId').lean();
+  const teamMembers = await ChatRoomMember.find({ roomId: { $in: teamRoomIds } })
+    .select('roomId userId')
+    .lean();
   const otherUserIdsSet = new Set();
   for (const member of teamMembers) {
-    if (member.userId.toString() !== userId.toString()) otherUserIdsSet.add(member.userId.toString());
+    if (member.userId.toString() !== userId.toString())
+      otherUserIdsSet.add(member.userId.toString());
   }
 
   const otherUsers = await User.find({ _id: { $in: [...otherUserIdsSet] }, isDeleted: false })
@@ -371,7 +386,9 @@ exports.getTeamDetailsService = async (userId, chatId, skip = 0, limit = 20) => 
   const members = await ChatRoomMember.find({ roomId: chatId }).select('userId joinedAt').lean();
   const otherMember = members.find((member) => member.userId.toString() !== userId.toString());
   const user = otherMember
-    ? await User.findById(otherMember.userId).select('name email role userProfile dateOfJoining').lean()
+    ? await User.findById(otherMember.userId)
+        .select('name email role userProfile dateOfJoining')
+        .lean()
     : null;
 
   const rawMessages = await ChatMessage.find({ roomId: chatId })
