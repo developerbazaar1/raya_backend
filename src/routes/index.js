@@ -2,11 +2,15 @@ const router = require('express').Router();
 
 // Health check route
 router.use('/health', require('./health.route'));
-
 // Authentication routes
 router.use('/api/v1/auth', require('./auth/auth.route'));
 
-//All Business Owner routes
+/* These routes are shared between business owners and their teams (employees) */
+router.use('/api/v1/chat', require('./shared/chat.route'));
+
+/*
+These are all the routes which is belongs to business owner only
+*/
 router.use('/api/v1/business-owner/setting', require('./businessOwner/setting.route'));
 router.use('/api/v1/business-owner/team', require('./businessOwner/team.route'));
 router.use('/api/v1/business-owner/cms', require('./businessOwner/cms.route'));
@@ -33,7 +37,9 @@ router.use(
 // router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
 router.use('/api/v1/business-owner/kpi-categories', require('./businessOwner/kpiCategory.route'));
 
-//All Business Owner Team routes
+/*
+These are all the routes which is belongs to Business Owner Team only i.e [Employee]
+*/
 router.use('/api/v1/business-owner-team/time-off', require('./businessOwnerTeam/timeOff.route'));
 router.use('/api/v1/business-owner-team/event', require('./businessOwnerTeam/event.route'));
 router.use('/api/v1/business-owner-team/to-do', require('./businessOwnerTeam/todo.route'));
@@ -49,16 +55,14 @@ router.use(
   require('./businessOwnerTeam/mentalHealthCheck.route')
 );
 
-// Shared routes (for both business owner and client)
-router.use('/api/v1/chat', require('./shared/chat.route'));
-
 // All Admin route
-router.use('/api/v1/admin/auth', require('./admin/adminauth'));
-router.use('/api/v1/admin/businesses', require('./admin/businesstype'));
-router.use('/api/v1/admin/cms', require('./admin/cms'));
-
+router.use('/api/v1/admin/auth', require('./admin/adminauth.route'));
+router.use('/api/v1/admin/businesses', require('./admin/businesstype.route'));
+router.use('/api/v1/admin/cms', require('./admin/cms.route'));
 router.use('/api/v1/admin/user', require('./admin/user.route'));
 router.use('/api/v1/admin/time-off', require('./admin/timeOff.route'));
 router.use('/api/v1/admin/meeting', require('./admin/meeting.route'));
+router.use('/api/v1/admin/foundation', require('./admin/foundation.route'));
+router.use('/api/v1/admin/project', require('./admin/project.route'));
 
 module.exports = router;

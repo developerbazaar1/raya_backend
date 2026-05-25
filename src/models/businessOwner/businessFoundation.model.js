@@ -8,12 +8,13 @@ const mongoose = require('mongoose');
 
 const businessFoundationSchema = new mongoose.Schema(
   {
-    businessOwnerId: {
+    userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
       unique: true
     },
+
     mission: { type: String, trim: true, default: '' },
     vision: { type: String, trim: true, default: '' },
     values: {

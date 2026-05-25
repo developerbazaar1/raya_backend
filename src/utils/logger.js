@@ -1,20 +1,15 @@
 const { createLogger, format, transports } = require('winston');
-
 const DEFAULT_LEVEL =
   process.env.LOG_LEVEL || (process.env.NODE_ENV === 'development' ? 'debug' : 'info');
-
 const formatMetaValue = (value) => {
   if (value === undefined || value === null) {
     return '';
   }
-
   if (typeof value === 'string') {
     return value;
   }
-
   return JSON.stringify(value, null, 2);
 };
-
 const normalizeMeta = (meta) => {
   if (!meta) {
     return undefined;
@@ -27,10 +22,8 @@ const normalizeMeta = (meta) => {
       stack: meta.stack
     };
   }
-
   return meta;
 };
-
 const formatDevelopmentLog = ({ timestamp, level, message, meta }) => {
   const header = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
 

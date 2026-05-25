@@ -5,6 +5,7 @@ const {
   createNoteService
 } = require('../../services/businessOwnerTeam/event.service');
 
+//Shows the list of events for the employee
 exports.createEvent = async (req, res) => {
   const data = await createEventService(req.user.userId, req.body);
   res.status(201).json({
@@ -13,7 +14,7 @@ exports.createEvent = async (req, res) => {
     data
   });
 };
-
+//Show the list of events for the employee
 exports.getEvents = async (req, res) => {
   const data = await getEventsService(req.user.userId, req.query);
   res.status(200).json({
@@ -22,7 +23,7 @@ exports.getEvents = async (req, res) => {
     data
   });
 };
-
+//
 exports.eventHistoryGet = async (req, res) => {
   const data = await eventHistoryService(req.user.userId, req.query);
   res.status(200).json({

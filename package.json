@@ -7,10 +7,10 @@
     "test": "jest",
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
     "prepare": "husky install"
   },
   "repository": {
@@ -25,7 +25,6 @@
   "homepage": "https://github.com/developerbazaar1/raya_backend#readme",
   "lint-staged": {
     "*.js": [
-      "eslint --fix",
       "prettier --write"
     ],
     "*.json": [
@@ -60,6 +59,7 @@
     "lint-staged": "^16.4.0",
     "nodemon": "^3.1.14",
     "prettier": "^3.8.3",
+    "eslint": "^8.2.0",
     "supertest": "^7.2.2"
   }
 }

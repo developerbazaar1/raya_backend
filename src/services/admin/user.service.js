@@ -7,7 +7,6 @@ const AppError = require('../../utils/appError');
 const mongoose = require('mongoose');
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
 const toObjectId = (id) => new mongoose.Types.ObjectId(id);
 
 exports.userListService = async () => {
@@ -68,7 +67,6 @@ const buildMemberSearchStages = (search) => {
     }
   ];
 };
-
 exports.ownerEmployeeListService = async (businessOwnerId, query) => {
   const { search = '', page, limit } = query;
 
@@ -123,10 +121,7 @@ exports.ownerEmployeeListService = async (businessOwnerId, query) => {
           {
             $match: {
               $expr: {
-                $and: [
-                  { $in: ['$_id', '$$userIds'] },
-                  { $eq: ['$isDeleted', false] }
-                ]
+                $and: [{ $in: ['$_id', '$$userIds'] }, { $eq: ['$isDeleted', false] }]
               }
             }
           }
@@ -173,10 +168,7 @@ exports.ownerEmployeeListService = async (businessOwnerId, query) => {
                           { $eq: ['$$member.mentalHealthScore', null] },
                           '',
                           {
-                            $concat: [
-                              { $toString: '$$member.mentalHealthScore' },
-                              '/5'
-                            ]
+                            $concat: [{ $toString: '$$member.mentalHealthScore' }, '/5']
                           }
                         ]
                       }
@@ -217,12 +209,10 @@ exports.ownerEmployeeListService = async (businessOwnerId, query) => {
       : null
   };
 };
-
 exports.ownerEmployeeListByIdService = async (employeeId) => {
   if (!mongoose.Types.ObjectId.isValid(employeeId)) {
     throw new AppError('Invalid Employee ID format.', 400);
   }
-
   const employeeInfo = await EmployeeInfo.findOne({ userId: employeeId, isDeleted: false })
     .populate('userId', 'name email userProfile')
     .populate('employeeRoleId', 'roleName');
@@ -230,7 +220,6 @@ exports.ownerEmployeeListByIdService = async (employeeId) => {
   if (!employeeInfo) {
     throw new AppError('Employee not found.', 404);
   }
-
   return {
     id: employeeInfo.userId?._id,
     name: employeeInfo.userId?.name || '',
@@ -257,28 +246,22 @@ exports.ownerEmployeeListByIdService = async (employeeId) => {
   };
 };
 
-exports.rolesListByBusinessOwnerIdService = async (businessOwnerId,query) => {
+exports.rolesListByBusinessOwnerIdService = async (businessOwnerId, query) => {
   const { search = '', page, limit, fields } = query;
-
   const ownerObjectId = toObjectId(businessOwnerId);
   const selectedFields = parseFields(fields);
   const matchStage = { businessOwnerId: ownerObjectId };
-
   if (search?.trim()) {
     matchStage.roleName = { $regex: escapeRegExp(search.trim()), $options: 'i' };
   }
-
   const pageNo = Number.parseInt(page, 10);
   const limitNo = Number.parseInt(limit, 10);
   const shouldPaginate =
-      Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
-
+    Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
   const rolePipeline = [{ $match: matchStage }, { $sort: { createdAt: -1 } }];
-
   if (shouldPaginate) {
     rolePipeline.push({ $skip: (pageNo - 1) * limitNo }, { $limit: limitNo });
   }
-
   rolePipeline.push(
     {
       $lookup: {
@@ -325,16 +308,13 @@ exports.rolesListByBusinessOwnerIdService = async (businessOwnerId,query) => {
     },
     { $project: { memberStats: 0 } }
   );
-
   const [roles, total] = await Promise.all([
     EmployeeRole.aggregate(rolePipeline),
     shouldPaginate ? EmployeeRole.countDocuments(matchStage) : Promise.resolve(null)
   ]);
-
   const formattedRoles = roles.map((role) =>
     buildRoleResponse(role, role.memberCount, selectedFields)
   );
-
   return {
     items: formattedRoles,
     pagination: shouldPaginate
@@ -347,13 +327,11 @@ exports.rolesListByBusinessOwnerIdService = async (businessOwnerId,query) => {
       : null
   };
 };
-
 // Define parseFields function to fix 'no-undef' error
 const parseFields = (fields) => {
   if (!fields) return [];
   return fields.split(',').map((field) => field.trim());
 };
-
 // Define buildRoleResponse function to fix 'no-undef' error
 const buildRoleResponse = (role, memberCount, selectedFields) => {
   const response = { id: role._id, name: role.roleName, memberCount };

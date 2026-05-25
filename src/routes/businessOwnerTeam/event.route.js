@@ -6,7 +6,7 @@ const {
   getEvents,
   eventHistoryGet,
   createNote
-} = require('../../controllers/businessOwnerTeam/even.controller');
+} = require('../../controllers/businessOwnerTeam/event.controller');
 const {
   eventCreateValidationBusinessOwnerTeam,
   eventNoteValidation
