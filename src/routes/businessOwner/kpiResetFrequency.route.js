@@ -2,9 +2,9 @@ const router = require('express').Router({ mergeParams: true });
 const asyncHandler = require('../../utils/asyncHandler');
 const { authenticate } = require('../../middlewares');
 const {
-  getMeasurementTypes
-} = require('../../controllers/businessOwner/measurementType.controller');
+  getKpiResetFrequencies
+} = require('../../controllers/businessOwner/kpiResetFrequency.controller');
 
-router.get('/', authenticate('business_owner'), asyncHandler(getMeasurementTypes));
+router.get('/', authenticate('business_owner'), asyncHandler(getKpiResetFrequencies));
 
 module.exports = router;

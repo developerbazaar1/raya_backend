@@ -3,6 +3,9 @@ const KpiCategory = require('../models/businessOwner/kpiCategory.model');
 const Kpi = require('../models/businessOwner/kpis.model');
 const KpiAssignment = require('../models/businessOwner/kpiAssignment.model');
 const AppError = require('../utils/appError');
+const EmployeeInfo = require('../models/businessOwnerTeam/employeesInfo.model');
+const EmployeeRole = require('../models/businessOwner/employeeRoles.model');
+const KpiResetFrequency = require('../models/shared/kpiResetFrequency.model');
 
 exports.kpiCategoryCreateService = async (body, userId) => {
   const { categoryName } = body;
@@ -164,7 +167,10 @@ exports.kpiCategoryDeleteService = async (categoryId, userId) => {
   // Referential Integrity check: ensure no KPIs are orphaned
   const linkedKpisCount = await Kpi.countDocuments({ categoryId: categoryId });
   if (linkedKpisCount > 0) {
-    throw new AppError(`Cannot delete category. It currently has ${linkedKpisCount} associated KPI(s). Please delete or reassign them first.`, 400);
+    throw new AppError(
+      `Cannot delete category. It currently has ${linkedKpisCount} associated KPI(s). Please delete or reassign them first.`,
+      400
+    );
   }
 
   await KpiCategory.findByIdAndDelete(categoryId);
@@ -286,7 +292,7 @@ exports.kpiGetService = async (userId) => {
 
   const categoriesWithKpis = await KpiCategory.aggregate(pipeline);
 
-  const formattedData = categoriesWithKpis.map(cat => ({
+  const formattedData = categoriesWithKpis.map((cat) => ({
     id: cat._id,
     kpiCategoryName: cat.categoryName,
     KPIs: cat.kpis || []
@@ -363,9 +369,134 @@ exports.kpiDeleteService = async (kpiId, userId) => {
   // Referential Integrity check: ensure no KPI Assignments are orphaned
   const linkedAssignmentsCount = await KpiAssignment.countDocuments({ kpiId: kpiId });
   if (linkedAssignmentsCount > 0) {
-    throw new AppError(`Cannot delete KPI. It is currently assigned to ${linkedAssignmentsCount} record(s). Please remove these assignments first.`, 400);
+    throw new AppError(
+      `Cannot delete KPI. It is currently assigned to ${linkedAssignmentsCount} record(s). Please remove these assignments first.`,
+      400
+    );
   }
 
   await Kpi.findByIdAndDelete(kpiId);
   return {};
+};
+
+/**
+ * Core service to handle the complex KPI assignment logic across three distinct scenarios.
+ * It resolves the target employees to assign the KPI to, maps dynamic database frequencies,
+ * and performs a bulk upsert operation.
+ *
+ * Required parameters:
+ * - businessOwnerId: The authenticated business owner's ObjectID.
+ * - payload: Request body containing the following fields:
+ *   - categoryId: String (Valid MongoDB ObjectId) - The KPI Category ID.
+ *   - kpiId: String (Valid MongoDB ObjectId) - The specific KPI ID.
+ *   - goalValue: Number (Greater than zero) - The target KPI score/metric goal.
+ *   - resetFrequency: String (Valid MongoDB ObjectId) - Dynamic reference to KpiResetFrequency document.
+ *   - isRepeat: Boolean (Optional, defaults to false) - Flag for recurring cyclical resets.
+ *   - roleId: String (Valid MongoDB ObjectId OR 'all') - Target role for KPI assignment.
+ *   - assignedUserIds: Array of Strings (Valid User ObjectIds OR ['all']) - Target employee User IDs.
+ */
+exports.kpiAssignService = async (businessOwnerId, payload) => {
+  const {
+    categoryId,
+    kpiId,
+    goalValue,
+    resetFrequency,
+    isRepeat = false,
+    roleId,
+    assignedUserIds
+  } = payload;
+
+  // 1. Verify Category exists and belongs to the business owner
+  const categoryExists = await KpiCategory.findOne({ _id: categoryId, businessOwnerId });
+  if (!categoryExists) {
+    throw new AppError('KPI Category not found or unauthorized access.', 404);
+  }
+
+  // 2. Verify KPI exists, belongs to the business owner and matches the category
+  const kpiExists = await Kpi.findOne({ _id: kpiId, categoryId, businessOwnerId });
+  if (!kpiExists) {
+    throw new AppError(
+      'KPI not found, unauthorized, or does not belong to the selected category.',
+      404
+    );
+  }
+
+  // 3. Resolve the Reset Frequency display name (e.g. 'Weekly') to lowercased enum values (e.g. 'weekly')
+  const freqDoc = await KpiResetFrequency.findById(resetFrequency);
+  if (!freqDoc) {
+    throw new AppError('The selected reset frequency reference was not found.', 404);
+  }
+  const frequencyCode = freqDoc.name.toLowerCase();
+
+  // 4. Resolve the target employee users based on the assignment scenarios
+  let targetEmployees;
+
+  if (roleId === 'all') {
+    // Scenario 3: All roles and all users in the company
+    targetEmployees = await EmployeeInfo.find({
+      businessOwnerId,
+      isDeleted: false
+    }).select('userId employeeRoleId');
+  } else {
+    // Check if the specified role exists
+    const roleExists = await EmployeeRole.findOne({ _id: roleId, businessOwnerId });
+    if (!roleExists) {
+      throw new AppError('The specified employee role was not found.', 404);
+    }
+
+    if (assignedUserIds.includes('all')) {
+      // Scenario 2: Specific role, all users in that role
+      targetEmployees = await EmployeeInfo.find({
+        businessOwnerId,
+        employeeRoleId: roleId,
+        isDeleted: false
+      }).select('userId employeeRoleId');
+    } else {
+      // Scenario 1: Specific role, specific subset of users in that role
+      targetEmployees = await EmployeeInfo.find({
+        businessOwnerId,
+        employeeRoleId: roleId,
+        userId: { $in: assignedUserIds },
+        isDeleted: false
+      }).select('userId employeeRoleId');
+    }
+  }
+
+  if (targetEmployees.length === 0) {
+    throw new AppError('No active employees matching the assignment criteria were found.', 404);
+  }
+
+  // 5. Build bulk upsert operations to assign/update KPIs efficiently
+  const bulkOps = targetEmployees.map((emp) => ({
+    updateOne: {
+      filter: {
+        businessOwnerId,
+        kpiId,
+        assignedUserId: emp.userId
+      },
+      update: {
+        $set: {
+          categoryId,
+          roleId: emp.employeeRoleId || null,
+          goalValue,
+          resetFrequency: frequencyCode,
+          isRepeat: isRepeat === true || isRepeat === 'true',
+          status: 'on_track'
+        },
+        $setOnInsert: {
+          progress: 0
+        }
+      },
+      upsert: true
+    }
+  }));
+
+  const result = await KpiAssignment.bulkWrite(bulkOps);
+
+  return {
+    matchedCount: result.matchedCount,
+    modifiedCount: result.modifiedCount,
+    upsertedCount: result.upsertedCount,
+    totalAssignments: targetEmployees.length
+  };
 };

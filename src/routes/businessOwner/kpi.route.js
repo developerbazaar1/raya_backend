@@ -1,8 +1,24 @@
 const router = require('express').Router({ mergeParams: true });
 const asyncHandler = require('../../utils/asyncHandler');
 const { authenticate, validate } = require('../../middlewares');
-const { kpiCategoryCreateValidation, kpiCategoryUpdateValidation, kpiCreateValidation, kpiUpdateValidation } = require('../../validations/kpi.validator');
-const { createKpiCategory, getKpiCategory, updateKpiCategory, deleteKpiCategory, createKpi, getKpis, updateKpi, deleteKpi } = require('../../controllers/businessOwner/kpi.controller');
+const {
+  kpiCategoryCreateValidation,
+  kpiCategoryUpdateValidation,
+  kpiCreateValidation,
+  kpiUpdateValidation,
+  kpiAssignValidation
+} = require('../../validations/kpi.validator');
+const {
+  createKpiCategory,
+  getKpiCategory,
+  updateKpiCategory,
+  deleteKpiCategory,
+  createKpi,
+  getKpis,
+  updateKpi,
+  deleteKpi,
+  assignKpi
+} = require('../../controllers/businessOwner/kpi.controller');
 
 router.post(
   '/category',
@@ -11,11 +27,7 @@ router.post(
   asyncHandler(createKpiCategory)
 );
 
-router.get(
-  '/category',
-  authenticate('business_owner'),
-  asyncHandler(getKpiCategory)
-);
+router.get('/category', authenticate('business_owner'), asyncHandler(getKpiCategory));
 
 router.put(
   '/category/:categoryId',
@@ -37,11 +49,7 @@ router.post(
   asyncHandler(createKpi)
 );
 
-router.get(
-  '/',
-  authenticate('business_owner'),
-  asyncHandler(getKpis)
-);
+router.get('/', authenticate('business_owner'), asyncHandler(getKpis));
 
 router.put(
   '/:kpiId',
@@ -50,10 +58,13 @@ router.put(
   asyncHandler(updateKpi)
 );
 
-router.delete(
-  '/:kpiId',
+router.post(
+  '/assign',
   authenticate('business_owner'),
-  asyncHandler(deleteKpi)
+  validate(kpiAssignValidation),
+  asyncHandler(assignKpi)
 );
+
+router.delete('/:kpiId', authenticate('business_owner'), asyncHandler(deleteKpi));
 
 module.exports = router;
