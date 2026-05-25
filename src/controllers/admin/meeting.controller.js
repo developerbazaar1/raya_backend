@@ -1,4 +1,7 @@
-const { meetingListService ,meetingListEmployeeService } = require('../../services/admin/meeting.service');
+const {
+  meetingListService,
+  meetingListEmployeeService
+} = require('../../services/admin/meeting.service');
 
 exports.meetingList = async (req, res) => {
   const data = await meetingListService(req.params.businessOwnerId, req.query);

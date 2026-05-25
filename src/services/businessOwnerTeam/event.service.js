@@ -1,68 +1,130 @@
+const mongoose = require('mongoose');
 const Event = require('../../models/businessOwnerTeam/event.model');
 const User = require('../../models/shared/users.model');
 const Meeting = require('../../models/businessOwner/meeting.model');
 const AppError = require('../../utils/appError');
 const { DEFAULT_PROFILE_IMAGE } = require('../../config/constant');
 
-//create Event Service
+/**
+ * Validate MongoDB ObjectId
+ */
+const validateObjectId = (id, fieldName = 'Id') => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError(`Invalid ${fieldName}`, 400);
+  }
+  return new mongoose.Types.ObjectId(id);
+};
+/**
+ * Validate Employee
+ */
+const validateEmployee = async (userId) => {
+  // Validate ObjectId
+  const userObjectId = validateObjectId(userId, 'User ID');
+
+  // Check user exists
+  const user = await User.findById(userObjectId).select('role owner businessId');
+
+  if (!user) {
+    throw new AppError('Employee not found', 404);
+  }
+  // Validate role
+  if (user.role !== 'employee') {
+    throw new AppError('User is not an employee', 400);
+  }
+  return user;
+};
+
+/**
+ * Create Event Service
+ */
 exports.createEventService = async (userId, payload) => {
   const { eventName, date, notes, startTime } = payload;
+  // Validate employee
+  const user = await validateEmployee(userId);
 
-  const user = await User.findById(userId).select('owner businessId');
   const businessOwnerId = user.owner;
 
-  const event = new Event({
+  // Create event
+  const event = await Event.create({
     eventName,
     date,
     startTime,
     notes,
-    createdByUserId: userId,
-    businessOwnerId: businessOwnerId
+    createdByUserId: user._id,
+    businessOwnerId
   });
-  await event.save();
 
-  const formattedEvent = {
+  return {
     id: event._id,
-    businessOwnerId: event.businessOwnerId,
-    createdByUserId: event.createdByUserId,
+    businessOwnerId: event.businessOwnerId || '',
+    createdByUserId: event.createdByUserId || '',
     eventName: event.eventName || '',
     date: event.date || '',
     startTime: event.startTime || '',
     notes: event.notes || ''
   };
-
-  return formattedEvent;
 };
 
-//get Events Service
+/**
+ * Get Events Service
+ */
 exports.getEventsService = async (userId, query) => {
   const { year, month } = query;
-  const user = await User.findById(userId);
+  // Validate employee
+  const user = await validateEmployee(userId);
 
   const businessOwnerId = user.owner;
 
+  // Filters
   const filter = {
-    $or: [{ createdByUserId: userId }, { createdByUserId: businessOwnerId }]
+    $or: [
+      {
+        createdByUserId: user._id
+      },
+      {
+        createdByUserId: businessOwnerId
+      }
+    ]
   };
 
+  // Year + Month filter
   if (year && month) {
     const y = parseInt(year, 10);
     const m = parseInt(month, 10);
+
     const startDate = new Date(Date.UTC(y, m - 1, 1));
     const endDate = new Date(Date.UTC(y, m, 0, 23, 59, 59, 999));
-    filter.date = { $gte: startDate, $lte: endDate };
-  } else if (year) {
+
+    filter.date = {
+      $gte: startDate,
+      $lte: endDate
+    };
+  }
+
+  // Only year filter
+  else if (year) {
     const y = parseInt(year, 10);
     const startDate = new Date(Date.UTC(y, 0, 1));
     const endDate = new Date(Date.UTC(y, 11, 31, 23, 59, 59, 999));
-    filter.date = { $gte: startDate, $lte: endDate };
+
+    filter.date = {
+      $gte: startDate,
+      $lte: endDate
+    };
   }
 
-  const events = await Event.find(filter).select(
-    'eventName date startTime notes createdByUserId createdAt'
-  );
+  // Fetch events
+  const events = await Event.find(filter).select(`
+      eventName
+      date
+      startTime
+      notes
+      createdByUserId
+      createdAt
+    `);
 
-  const formattedEvents = events.map((event) => ({
+  // Format response
+  return events.map((event) => ({
     id: event._id,
     eventName: event.eventName || '',
     date: event.date || '',
@@ -71,60 +133,86 @@ exports.getEventsService = async (userId, query) => {
     createdByUserId: event.createdByUserId || '',
     createdAt: event.createdAt || ''
   }));
-  return formattedEvents;
 };
 
-//Get All Meet History Service
+/**
+ * Event History Service
+ */
 exports.eventHistoryService = async (userId) => {
-  const user = await User.findById(userId);
-
+  // Validate employee
+  const user = await validateEmployee(userId);
   const businessOwnerId = user.owner;
-
+  // Fetch meetings
   const meetings = await Meeting.find({
-    $or: [{ createdByUserId: userId }, { createdByUserId: businessOwnerId }],
-    date: { $lt: new Date() }
+    $or: [
+      {
+        createdByUserId: user._id
+      },
+      {
+        createdByUserId: businessOwnerId
+      }
+    ],
+
+    date: {
+      $lt: new Date()
+    }
   })
     .sort({ date: -1 })
-    .select('title date invitedMembers notes createdAt')
+    .select(
+      `
+          title
+          date
+          invitedMembers
+          notes
+          createdAt
+        `
+    )
     .populate('invitedMembers', 'name userProfile');
 
-  const formattedmeetings = meetings.map((meeting) => ({
+  // Format response
+  return meetings.map((meeting) => ({
     id: meeting._id,
     title: meeting.title || '',
     date: meeting.date || '',
     invitedMembers: (meeting.invitedMembers || []).map((member) => ({
       id: member._id,
+      name: member.name || '',
       profileImage: member.userProfile?.url || DEFAULT_PROFILE_IMAGE
     })),
     notes: meeting.notes || '',
-    createdAt: meeting.createdAt || ''
+    createdAt: meeting.createdAt || null
   }));
-  return formattedmeetings;
 };
 
-//create note service
+/**
+ * Create Note Service
+ */
 exports.createNoteService = async (userId, meetingId, body) => {
   const { notes } = body;
-
-  const meeting = await Meeting.findById(meetingId);
+  // Validate employee
+  await validateEmployee(userId);
+  // Validate meeting ID
+  const meetingObjectId = validateObjectId(meetingId, 'Meeting ID');
+  // Check meeting exists
+  const meeting = await Meeting.findById(meetingObjectId);
   if (!meeting) {
     throw new AppError('Meeting not found', 404);
   }
-
-  const updateNote = await Meeting.findByIdAndUpdate(
-    meetingId,
+  // Update note
+  const updatedNote = await Meeting.findByIdAndUpdate(
+    meetingObjectId,
     {
       notes
     },
-    { new: true }
+    {
+      new: true
+    }
   );
-
-  const formattednote = {
-    id: updateNote._id,
-    notes: updateNote.notes || '',
-    businessOwnerId: updateNote.businessOwnerId || '',
-    createdByUserId: updateNote.createdByUserId || '',
-    createdAt: updateNote.createdAt || ''
+  return {
+    id: updatedNote._id,
+    notes: updatedNote.notes || '',
+    businessOwnerId: updatedNote.businessOwnerId || '',
+    createdByUserId: updatedNote.createdByUserId || '',
+    createdAt: updatedNote.createdAt || null
   };
-  return formattednote;
 };

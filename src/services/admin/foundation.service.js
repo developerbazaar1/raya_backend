@@ -1,54 +1,114 @@
+const mongoose = require('mongoose');
 const BusinessFoundationModel = require('../../models/businessOwner/businessFoundation.model');
 const AppError = require('../../utils/appError');
-
+/**
+ * Validate MongoDB ObjectId
+ */
+const validateObjectId = (id, fieldName = 'Id') => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError(`Invalid ${fieldName}`, 400);
+  }
+  return new mongoose.Types.ObjectId(id);
+};
+/**
+ * Create Business Foundation
+ */
 exports.createBusinessFoundationService = async (data, adminId) => {
   const { mission, vision, values } = data;
-  const existingFoundation = await BusinessFoundationModel.findOne({ userId: adminId });
+  // Validate admin ID
+  const adminObjectId = validateObjectId(adminId, 'Admin ID');
+  // Check existing foundation
+  const existingFoundation = await BusinessFoundationModel.findOne({
+    userId: adminObjectId
+  });
+
   if (existingFoundation) {
     throw new AppError('Foundation information already exists', 400);
   }
+
+  // Create foundation
   const newFoundation = await BusinessFoundationModel.create({
     mission,
     vision,
     values,
-    userId: adminId
+    userId: adminObjectId
   });
-  return newFoundation;
+
+  return {
+    id: newFoundation._id,
+    mission: newFoundation.mission || '',
+    vision: newFoundation.vision || '',
+    values: newFoundation.values || []
+  };
 };
 
+/**
+ * Get Business Foundation
+ */
 exports.getBusinessFoundationService = async (adminId) => {
-  const existingFoundation = await BusinessFoundationModel.findOne({ userId: adminId });
+  // Validate admin ID
+  const adminObjectId = validateObjectId(adminId, 'Admin ID');
+
+  // Find foundation
+  const existingFoundation = await BusinessFoundationModel.findOne({
+    userId: adminObjectId
+  });
+
   if (!existingFoundation) {
     throw new AppError('Foundation information not found', 404);
   }
-  const formattedData = {
+
+  return {
     id: existingFoundation._id,
     mission: existingFoundation.mission || '',
     vision: existingFoundation.vision || '',
     values: existingFoundation.values || []
   };
-  return formattedData;
 };
 
+/**
+ * Update Business Foundation
+ */
 exports.updateBusinessFoundationService = async (foundationId, data, adminId) => {
-  const existingFoundation = await BusinessFoundationModel.findById(foundationId);
+  const { mission, vision, values } = data;
+
+  // Validate IDs
+  const foundationObjectId = validateObjectId(foundationId, 'Foundation ID');
+
+  const adminObjectId = validateObjectId(adminId, 'Admin ID');
+
+  // Find foundation
+  const existingFoundation = await BusinessFoundationModel.findById(foundationObjectId);
+
   if (!existingFoundation) {
     throw new AppError('Foundation information not found', 404);
   }
-  if (existingFoundation.userId.toString() !== adminId.toString()) {
+
+  // Authorization check
+  if (existingFoundation.userId.toString() !== adminObjectId.toString()) {
     throw new AppError('You are not authorized to update this foundation', 403);
   }
-  const { mission, vision, values } = data;
+
+  // Update foundation
   const updatedFoundation = await BusinessFoundationModel.findByIdAndUpdate(
-    foundationId,
-    { mission, vision, values },
-    { new: true }
+    foundationObjectId,
+    {
+      mission,
+      vision,
+      values
+    },
+    {
+      new: true
+    }
   );
-  const formattedData = {
+
+  return {
     id: updatedFoundation._id,
+
     mission: updatedFoundation.mission || '',
+
     vision: updatedFoundation.vision || '',
+
     values: updatedFoundation.values || []
   };
-  return formattedData;
 };

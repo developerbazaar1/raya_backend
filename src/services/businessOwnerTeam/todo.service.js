@@ -1,195 +1,274 @@
+const mongoose = require('mongoose');
+
 const TodoAssignment = require('../../models/businessOwnerTeam/todoAssignment.model');
 const TodoHistory = require('../../models/businessOwnerTeam/todoHistory.model');
-const Todo = require('../../models/businessOwner/todo.model');
 
-exports.getAllTodo = async (userId, query) => {
-  const { page = 1, limit = 10 } = query;
-  const pageNo = Math.max(1, parseInt(page));
-  const limitNo = Math.max(1, parseInt(limit));
-  const skip = (pageNo - 1) * limitNo;
+const AppError = require('../../utils/appError');
+
+/**
+ * Validate Mongo ObjectId
+ */
+const validateObjectId = (id, fieldName = 'Id') => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError(`Invalid ${fieldName}`, 400);
+  }
+
+  return new mongoose.Types.ObjectId(id);
+};
+
+/**
+ * Get All Todos
+ */
+exports.getAllTodo = async (userId, query = {}) => {
+  const userObjectId = validateObjectId(userId, 'User ID');
+
+  let { page = 1, limit = 10 } = query;
+
+  page = Math.max(1, parseInt(page, 10));
+  limit = Math.max(1, parseInt(limit, 10));
+
+  const skip = (page - 1) * limit;
 
   const filter = {
-    userId: userId,
-    status: { $nin: ['completed', 'overdue'] }
+    userId: userObjectId,
+    status: {
+      $nin: ['completed', 'overdue']
+    }
   };
 
   const [todoAssignments, total] = await Promise.all([
     TodoAssignment.find(filter)
-      .populate('todoId', 'name dueDate repetition ')
+      .populate('todoId', 'name dueDate repetition')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limitNo),
+      .limit(limit),
+
     TodoAssignment.countDocuments(filter)
   ]);
 
-  const now = new Date();
-  const todayStr = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toDateString();
+  const today = new Date();
+  const todayStr = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toDateString();
 
-  const formattedTodos = todoAssignments.map((todoAssignment) => {
+  const items = todoAssignments.map((todoAssignment) => {
     const instanceDate = new Date(todoAssignment.instanceDueDate || todoAssignment.todoId?.dueDate);
-    const isToday = instanceDate.toDateString() === todayStr;
 
     return {
       id: todoAssignment._id,
       status: todoAssignment.status || 'not_started',
       name: todoAssignment.todoId?.name || '',
       dueDate: instanceDate,
+
       repetition: todoAssignment.todoId?.repetition || '',
-      isToday: isToday,
+
+      isToday: instanceDate.toDateString() === todayStr,
+
       createdAt: todoAssignment.createdAt || ''
     };
   });
+
   return {
-    items: formattedTodos,
+    items,
+
     pagination: {
       total,
-      page: pageNo,
-      limit: limitNo,
-      totalPages: Math.ceil(total / limitNo)
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
     }
   };
 };
 
+/**
+ * Update Todo Status
+ */
 exports.updateStatus = async (todoAssignmentId, body, userId) => {
   const { status } = body;
 
-  const todoAssignment = await TodoAssignment.findById(todoAssignmentId).populate('todoId');
+  const todoAssignmentObjectId = validateObjectId(todoAssignmentId, 'Todo Assignment ID');
+
+  const userObjectId = validateObjectId(userId, 'User ID');
+
+  const todoAssignment = await TodoAssignment.findById(todoAssignmentObjectId).populate('todoId');
+
   if (!todoAssignment) {
-    throw new Error('Todo assignment not found');
+    throw new AppError('Todo assignment not found', 404);
   }
-  if (todoAssignment.userId.toString() !== userId.toString()) {
-    throw new Error('You are not authorized to update this todo assignment');
+
+  if (todoAssignment.userId.toString() !== userObjectId.toString()) {
+    throw new AppError('You are not authorized to update this todo assignment', 403);
   }
 
   const now = new Date();
 
-  // Update timestamps based on status
+  /**
+   * Update timestamps
+   */
   if (status === 'in_progress' && !todoAssignment.startedAt) {
     todoAssignment.startedAt = now;
-  } else if (status === 'completed' && !todoAssignment.completedAt) {
+  }
+
+  if (status === 'completed' && !todoAssignment.completedAt) {
     todoAssignment.completedAt = now;
   }
 
   todoAssignment.status = status;
+
   await todoAssignment.save();
 
-  // Log to History if completed
+  /**
+   * Store History
+   */
   if (status === 'completed') {
     await TodoHistory.create({
       todoId: todoAssignment.todoId._id,
       userId: todoAssignment.userId,
       status: 'completed',
-      dueDate: todoAssignment.instanceDueDate || todoAssignment.todoId.dueDate,
+      dueDate: todoAssignment.instanceDueDate || todoAssignment.todoId?.dueDate,
       completedAt: now
     });
   }
 
-  // Check if task was overdue at the time of update
   const isOverdue = todoAssignment.todoId?.dueDate && new Date(todoAssignment.todoId.dueDate) < now;
 
   return {
     ...todoAssignment.toObject(),
-    isOverdue: !!(isOverdue && status !== 'completed'),
+
+    isOverdue: Boolean(isOverdue && status !== 'completed'),
+
     todoId: {
       _id: todoAssignment.todoId?._id,
-      name: todoAssignment.todoId?.name,
-      dueDate: todoAssignment.todoId?.dueDate
+      name: todoAssignment.todoId?.name || '',
+      dueDate: todoAssignment.todoId?.dueDate || null
     }
   };
 };
 
-exports.getTodoHistory = async (userId, query) => {
-  const { page = 1, limit = 10 } = query;
-  const pageNo = Math.max(1, parseInt(page));
-  const limitNo = Math.max(1, parseInt(limit));
-  const skip = (pageNo - 1) * limitNo;
+/**
+ * Get Todo History
+ */
+exports.getTodoHistory = async (userId, query = {}) => {
+  const userObjectId = validateObjectId(userId, 'User ID');
 
-  const filter = { userId: userId };
+  let { page = 1, limit = 10 } = query;
+
+  page = Math.max(1, parseInt(page, 10));
+  limit = Math.max(1, parseInt(limit, 10));
+
+  const skip = (page - 1) * limit;
+
+  const filter = {
+    userId: userObjectId
+  };
 
   const [history, total] = await Promise.all([
     TodoHistory.find(filter)
       .populate('todoId', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limitNo),
+      .limit(limit),
+
     TodoHistory.countDocuments(filter)
   ]);
 
-  const formattedHistory = history.map((item) => ({
+  const items = history.map((item) => ({
     id: item._id,
     todoId: item.todoId?._id,
     name: item.todoId?.name || '',
-    status: item.status,
-    dueDate: item.dueDate,
-    completedAt: item.completedAt,
-    createdAt: item.createdAt
+    status: item.status || '',
+    dueDate: item.dueDate || '',
+    completedAt: item.completedAt || '',
+    createdAt: item.createdAt || ''
   }));
 
   return {
-    items: formattedHistory,
+    items,
+
     pagination: {
       total,
-      page: pageNo,
-      limit: limitNo,
-      totalPages: Math.ceil(total / limitNo)
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
     }
   };
 };
 
 /**
- * Background process logic (to be called by Cron)
- * Handles Overdue logging and Recurring Resets
+ * Process Todo Resets
+ * Cron Job Logic
  */
 exports.processTodoResets = async () => {
   const now = new Date();
 
-  // 1. Find all active assignments where instanceDueDate has passed
   const assignments = await TodoAssignment.find({
     instanceDueDate: { $lt: now },
-    status: { $in: ['not_started', 'in_progress'] }
+
+    status: {
+      $in: ['not_started', 'in_progress']
+    }
   }).populate('todoId');
 
   for (const assignment of assignments) {
-    // Log to History if not already logged as completed
+    /**
+     * Save Overdue History
+     */
     if (assignment.status !== 'completed') {
       await TodoHistory.create({
         todoId: assignment.todoId._id,
         userId: assignment.userId,
+
         status: 'overdue',
+
         dueDate: assignment.instanceDueDate
       });
     }
 
     const { repetition, dueDate: finalDueDate } = assignment.todoId;
 
-    // Check if we should reset for next cycle
     let nextDueDate = null;
 
-    // ONLY Weekly (and Monthly) tasks get extended.
-    // Daily and One-time tasks will NOT get a next due date and will be removed.
+    /**
+     * Weekly Reset
+     */
     if (repetition === 'weekly') {
       nextDueDate = new Date(assignment.instanceDueDate);
+
       nextDueDate.setDate(nextDueDate.getDate() + 7);
-    } else if (repetition === 'monthly') {
+    }
+
+    /**
+     * Monthly Reset
+     */
+    if (repetition === 'monthly') {
       nextDueDate = new Date(assignment.instanceDueDate);
+
       nextDueDate.setMonth(nextDueDate.getMonth() + 1);
     }
 
-    // If it's a valid recurring task and hasn't passed the final deadline, reset it
+    /**
+     * Reset Recurring Task
+     */
     if (nextDueDate && nextDueDate <= finalDueDate) {
       assignment.status = 'not_started';
+
       assignment.instanceDueDate = nextDueDate;
+
       assignment.startedAt = null;
       assignment.completedAt = null;
+
       await assignment.save();
     } else {
-      // Instead of deleting the assignment, keep it and update status to overdue
+      /**
+       * Mark as Overdue
+       */
       if (assignment.status !== 'completed') {
         assignment.status = 'overdue';
+
         await assignment.save();
       }
     }
   }
 
-  return { processedCount: assignments.length };
+  return {
+    processedCount: assignments.length
+  };
 };

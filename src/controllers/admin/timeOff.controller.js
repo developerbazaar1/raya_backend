@@ -20,7 +20,7 @@ exports.timeOffRequestEmployeeList = async (req, res) => {
   const data = await timeOffRequestEmployeeListService(req.params.employeeId, req.query);
   res.status(200).json({
     status: 'success',
-    message: 'Time off request list fetched successfully',
+    message: 'Time off  user request list fetched successfully',
     data
   });
 };

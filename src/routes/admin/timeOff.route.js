@@ -7,6 +7,6 @@ const {
 } = require('../../controllers/admin/timeOff.controller');
 
 router.get('/:businessOwnerId', adminAuth('admin'), asyncHandler(timeOffRequestList));
-router.get('/:employeeId', adminAuth('admin'), asyncHandler(timeOffRequestEmployeeList));
+router.get('/employee/:employeeId', adminAuth('admin'), asyncHandler(timeOffRequestEmployeeList));
 
 module.exports = router;
