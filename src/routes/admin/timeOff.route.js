@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const asyncHandler = require('../../utils/asyncHandler');
-const { validate, adminAuth } = require('../../middlewares');
+const { adminAuth } = require('../../middlewares');
 const {
   timeOffRequestList,
   timeOffRequestEmployeeList

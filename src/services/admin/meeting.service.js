@@ -76,3 +76,25 @@ exports.meetingListService = async (businessOwnerId, query) => {
     totalPages: Math.ceil(total / limit)
   };
 };
+
+
+exports.meetingListEmployeeService = async (employeeId, _query) => {
+  const meetings = await Meeting.find({ invitedMembers: employeeId })
+    .populate('businessOwnerId', 'name')
+    .populate('createdByUserId', 'name')
+    .sort({ date: 1 });
+
+  if (!meetings.length) {
+    throw new AppError('No meetings found for this employee', 404);
+  }
+
+  return meetings.map((meeting) => ({
+    id: meeting._id,
+    businessOwnerName: meeting.businessOwnerId ? meeting.businessOwnerId.name : '',
+    createdByName: meeting.createdByUserId ? meeting.createdByUserId.name : '',
+    title: meeting.title || '',
+    date: meeting.date || '',
+    startTime: meeting.startTime || '',
+    endTime: meeting.endTime || ''
+  }));
+};

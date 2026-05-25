@@ -1,5 +1,4 @@
 const TimeOffRequest = require('../../models/businessOwnerTeam/timeOffRequests.model');
-
 const EmployeeLeaveBalance = require('../../models/businessOwnerTeam/employeeLeaveBalances.model');
 const { DEFAULT_PROFILE_IMAGE } = require('../../config/constant');
 const AppError = require('../../utils/appError');
@@ -56,11 +55,15 @@ exports.timeOffRequestListService = async (businessOwnerId, query) => {
   };
 };
 
-exports.timeOffRequestEmployeeListService = async (employeeId, query) => {
+exports.timeOffRequestEmployeeListService = async (employeeId, _query) => {
   const timeOffRequests = await TimeOffRequest.find({ employeeId: employeeId })
     .select('reason startDate endDate totalDays status suggestedDate ownerComment businessOwnerId')
     .populate('businessOwnerId', 'name')
     .sort({ createdAt: -1 });
+
+  if (!timeOffRequests.length) {
+    throw new AppError('Time off requests not found', 404);
+  }
 
   // Fetch leave balance summary
   const leaveBalance = await EmployeeLeaveBalance.findOne({ employeeId: employeeId });
