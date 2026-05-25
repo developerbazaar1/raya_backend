@@ -63,4 +63,3 @@ router.use('/api/v1/admin/meeting', require('./admin/meeting.route'));
 router.use('/api/v1/admin/foundation', require('./admin/foundation.route'));
 
 module.exports = router;
-
