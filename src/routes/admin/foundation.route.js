@@ -5,8 +5,11 @@ const {
   createBusinessFoundationValidation,
   updateBusinessFoundationValidation
 } = require('../../validations/businessFoundation.validator');
-const { createBusinessFoundation,updateBusinessFoundation,getBusinessFoundation } = require('../../controllers/admin/foundation.controller');
-
+const {
+  createBusinessFoundation,
+  updateBusinessFoundation,
+  getBusinessFoundation
+} = require('../../controllers/admin/foundation.controller');
 
 router.post(
   '/',
@@ -24,4 +27,3 @@ router.put(
 );
 
 module.exports = router;
-

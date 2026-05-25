@@ -9,7 +9,7 @@ exports.foundationService = async (userId, query) => {
   if (!user.owner) {
     throw new AppError('Owner not found for this user', 404);
   }
-  
+
   const ownerId = user.owner;
 
   // Fetch foundations

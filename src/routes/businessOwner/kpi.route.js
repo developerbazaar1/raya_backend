@@ -5,7 +5,8 @@ const {
   kpiCategoryCreateValidation,
   kpiCategoryUpdateValidation,
   kpiCreateValidation,
-  kpiUpdateValidation
+  kpiUpdateValidation,
+  kpiAssignValidation
 } = require('../../validations/kpi.validator');
 const {
   createKpiCategory,
@@ -15,7 +16,8 @@ const {
   createKpi,
   getKpis,
   updateKpi,
-  deleteKpi
+  deleteKpi,
+  assignKpi
 } = require('../../controllers/businessOwner/kpi.controller');
 
 router.post(
@@ -54,6 +56,13 @@ router.put(
   authenticate('business_owner'),
   validate(kpiUpdateValidation),
   asyncHandler(updateKpi)
+);
+
+router.post(
+  '/assign',
+  authenticate('business_owner'),
+  validate(kpiAssignValidation),
+  asyncHandler(assignKpi)
 );
 
 router.delete('/:kpiId', authenticate('business_owner'), asyncHandler(deleteKpi));

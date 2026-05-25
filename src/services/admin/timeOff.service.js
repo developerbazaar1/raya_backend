@@ -57,27 +57,27 @@ exports.timeOffRequestListService = async (businessOwnerId, query) => {
 };
 
 exports.timeOffRequestEmployeeListService = async (employeeId, query) => {
-    const timeOffRequests = await TimeOffRequest.find({ employeeId: employeeId })
-      .select('reason startDate endDate totalDays status suggestedDate ownerComment businessOwnerId')
-      .populate('businessOwnerId', 'name')
-      .sort({ createdAt: -1 });
-  
-    // Fetch leave balance summary
-    const leaveBalance = await EmployeeLeaveBalance.findOne({ employeeId: employeeId });
-  
-    // Calculate total availed (Only Approved)
-    const leaveAvailed = timeOffRequests
-      .filter((req) => req.status === 'approved')
-      .reduce((sum, req) => sum + (req.totalDays || 0), 0);
-  
-    const summary = {
-      totalAllotted: leaveBalance ? leaveBalance.totalAllocated : 0,
-      leaveAvailed: leaveAvailed,
-      remainingDays: leaveBalance ? leaveBalance.totalAllocated - leaveAvailed : 0
-    };
-  
-    return {
-      summary,
-      requests: timeOffRequests
-    };
-}
+  const timeOffRequests = await TimeOffRequest.find({ employeeId: employeeId })
+    .select('reason startDate endDate totalDays status suggestedDate ownerComment businessOwnerId')
+    .populate('businessOwnerId', 'name')
+    .sort({ createdAt: -1 });
+
+  // Fetch leave balance summary
+  const leaveBalance = await EmployeeLeaveBalance.findOne({ employeeId: employeeId });
+
+  // Calculate total availed (Only Approved)
+  const leaveAvailed = timeOffRequests
+    .filter((req) => req.status === 'approved')
+    .reduce((sum, req) => sum + (req.totalDays || 0), 0);
+
+  const summary = {
+    totalAllotted: leaveBalance ? leaveBalance.totalAllocated : 0,
+    leaveAvailed: leaveAvailed,
+    remainingDays: leaveBalance ? leaveBalance.totalAllocated - leaveAvailed : 0
+  };
+
+  return {
+    summary,
+    requests: timeOffRequests
+  };
+};

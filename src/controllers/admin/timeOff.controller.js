@@ -1,6 +1,7 @@
-const { timeOffRequestListService,
+const {
+  timeOffRequestListService,
   timeOffRequestEmployeeListService
- } = require('../../services/admin/timeOff.service');
+} = require('../../services/admin/timeOff.service');
 
 exports.timeOffRequestList = async (req, res) => {
   const data = await timeOffRequestListService(req.params.businessOwnerId, req.query);
@@ -18,4 +19,4 @@ exports.timeOffRequestEmployeeList = async (req, res) => {
     message: 'Time off request list fetched successfully',
     data
   });
-}
+};
