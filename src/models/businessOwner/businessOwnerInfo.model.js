@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { FileReferenceSchema } = require('../shared/file.schema');
+const { BUSINESS_OWNER_APPROVAL_STATUS } = require('../../config/constant');
 
 const registrationStateSchema = new mongoose.Schema(
   {
@@ -65,7 +66,7 @@ const businessOwnerInfoSchema = new mongoose.Schema(
     },
     approvalStatus: {
       type: String,
-      enum: ['pending_approval', 'approved', 'rejected'],
+      enum: BUSINESS_OWNER_APPROVAL_STATUS,
       default: 'pending_approval'
     },
     accountStatus: {

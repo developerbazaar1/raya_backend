@@ -10,7 +10,7 @@ const {
   createOtp,
   createAuthToken
 } = require('../helper/auth.helper');
-const { uploadFileToSpaces } = require('../helper/fileUpload.helper');
+const { uploadFileToSpaces, cleanupFileFromSpacesQuietly } = require('../helper/fileUpload.helper');
 
 const REGISTRATION_ROLE = 'business_owner';
 const EMAIL_VERIFICATION_OTP_PURPOSE = 'email_verification';
@@ -626,6 +626,7 @@ const saveEmployeeProfileStep1 = async ({
   ensureEmployeeStepAccess(employeeInfo, 1);
 
   const profilePhotoFile = files.profilePhoto?.[0];
+  const oldProfilePhoto = user.userProfile?.toObject?.() || user.userProfile;
   const profilePhotoMetadata = await uploadFileToSpaces(
     profilePhotoFile,
     `employees/${user._id}/profile-photo`
@@ -651,6 +652,10 @@ const saveEmployeeProfileStep1 = async ({
   employeeInfo.zipCode = zipCode;
   markEmployeeStepCompleted(employeeInfo, 1, 2);
   await employeeInfo.save();
+
+  if (profilePhotoMetadata) {
+    await cleanupFileFromSpacesQuietly(oldProfilePhoto);
+  }
 
   return buildEmployeeProfileResponse(user, employeeInfo);
 };

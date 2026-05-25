@@ -1,6 +1,11 @@
 const crypto = require('crypto');
 const path = require('path');
-const { s3Client, spacesBucket, PutObjectCommand } = require('../config/s3Config');
+const {
+  s3Client,
+  spacesBucket,
+  PutObjectCommand,
+  DeleteObjectCommand
+} = require('../config/s3Config');
 const { FILE_SIZE, FILE_TYPES, DO_SPACES_BUCKET, DO_SPACES_REGION } = require('../config/constant');
 const AppError = require('../utils/appError');
 
@@ -30,7 +35,7 @@ const validateUploadFile = (file) => {
 };
 
 const buildFileMetadata = (file, key) => ({
-  url: `https://${DO_SPACES_BUCKET}.${DO_SPACES_REGION}.digitaloceanspaces.com/${key}`,
+  url: `https://swannavespace.sfo3.cdn.digitaloceanspaces.com/${DO_SPACES_BUCKET}/${key}`,
   key,
   fileName: file.originalname,
   mimeType: file.mimetype,
@@ -65,6 +70,46 @@ const uploadFileToSpaces = async (file, folder) => {
   return buildFileMetadata(file, key);
 };
 
+const getFileKey = (fileReference) => {
+  if (!fileReference) {
+    return null;
+  }
+
+  if (typeof fileReference === 'string') {
+    return fileReference;
+  }
+
+  return fileReference.key || null;
+};
+
+const cleanupFileFromSpaces = async (fileReference) => {
+  const key = getFileKey(fileReference);
+
+  if (!key) {
+    return false;
+  }
+
+  await s3Client.send(
+    new DeleteObjectCommand({
+      Bucket: spacesBucket,
+      Key: key
+    })
+  );
+
+  return true;
+};
+
+const cleanupFileFromSpacesQuietly = async (fileReference) => {
+  try {
+    return await cleanupFileFromSpaces(fileReference);
+  } catch (error) {
+    console.error('Error cleaning up file from Spaces:', error);
+    return false;
+  }
+};
+
 module.exports = {
-  uploadFileToSpaces
+  uploadFileToSpaces,
+  cleanupFileFromSpaces,
+  cleanupFileFromSpacesQuietly
 };
