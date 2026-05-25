@@ -13,7 +13,7 @@ const spacesRegion = DO_SPACES_REGION;
 
 const s3Client = new S3Client({
   region: spacesRegion,
-  endpoint: 'https://sriapp.sgp1.digitaloceanspaces.com',
+  endpoint: 'https://swannavespace.sfo3.digitaloceanspaces.com',
   // Path-style avoids SSL hostname mismatches when endpoint already includes bucket
   forcePathStyle: true,
   credentials: {

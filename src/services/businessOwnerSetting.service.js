@@ -3,7 +3,7 @@ const BusinessFoundation = require('../models/businessOwner/businessFoundation.m
 const User = require('../models/shared/users.model');
 const AppError = require('../utils/appError');
 const { comparePassword, hashPassword } = require('../helper/auth.helper');
-const { uploadFileToSpaces } = require('../helper/fileUpload.helper');
+const { uploadFileToSpaces, cleanupFileFromSpacesQuietly } = require('../helper/fileUpload.helper');
 
 const ensureBusinessOwner = async (userId) => {
   const user = await User.findById(userId);
@@ -87,13 +87,15 @@ const updateBusinessOwnerSettings = async (userId, payload) => {
   const files = payload.files || {};
   const profilePictureFile = files.profilePicture?.[0];
   const logoFile = files.logo?.[0];
+  const oldProfilePicture = user.userProfile?.toObject?.() || user.userProfile;
+  const oldLogo = businessOwnerInfo.companyLogo?.toObject?.() || businessOwnerInfo.companyLogo;
   const profilePictureMetadata = await uploadFileToSpaces(
     profilePictureFile,
-    `business-owners/${user._id}/settings/profile-picture`
+    `business-owners/${user._id}/profile-picture`
   );
   const logoMetadata = await uploadFileToSpaces(
     logoFile,
-    `business-owners/${user._id}/settings/logo`
+    `business-owners/${user._id}/logo`
   );
 
   if (payload.name !== undefined) {
@@ -165,6 +167,13 @@ const updateBusinessOwnerSettings = async (userId, payload) => {
 
   await user.save();
   await businessOwnerInfo.save();
+
+  await Promise.all([
+    profilePictureMetadata
+      ? cleanupFileFromSpacesQuietly(oldProfilePicture)
+      : Promise.resolve(false),
+    logoMetadata ? cleanupFileFromSpacesQuietly(oldLogo) : Promise.resolve(false)
+  ]);
 
   return buildSettingsResponse(user, businessOwnerInfo);
 };
