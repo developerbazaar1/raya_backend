@@ -26,8 +26,13 @@ router.use(
   '/api/v1/business-owner/measurement-type',
   require('./businessOwner/measurementType.route')
 );
+router.use(
+  '/api/v1/business-owner/kpi-reset-frequency',
+  require('./businessOwner/kpiResetFrequency.route')
+);
 // router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
 router.use('/api/v1/business-owner/kpi-categories', require('./businessOwner/kpiCategory.route'));
+
 //All Business Owner Team routes
 router.use('/api/v1/business-owner-team/time-off', require('./businessOwnerTeam/timeOff.route'));
 router.use('/api/v1/business-owner-team/event', require('./businessOwnerTeam/event.route'));
@@ -51,6 +56,9 @@ router.use('/api/v1/chat', require('./shared/chat.route'));
 router.use('/api/v1/admin/auth', require('./admin/adminauth'));
 router.use('/api/v1/admin/businesses', require('./admin/businesstype'));
 router.use('/api/v1/admin/cms', require('./admin/cms'));
+
 router.use('/api/v1/admin/user', require('./admin/user.route'));
+router.use('/api/v1/admin/time-off', require('./admin/timeOff.route'));
+router.use('/api/v1/admin/meeting', require('./admin/meeting.route'));
 
 module.exports = router;

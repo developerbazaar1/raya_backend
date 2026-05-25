@@ -2,6 +2,7 @@ const {
   getAllTimeOffsService,
   updateTimeOffRequestService
 } = require('../../services/timeOff.service');
+
 exports.getAllTimeOffs = async (req, res) => {
   const result = await getAllTimeOffsService(req.query, req.user.userId);
   return res.status(200).json({

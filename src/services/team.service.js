@@ -202,11 +202,11 @@ const getRolesService = async (businessOwnerId, query) => {
     items: formattedRoles,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
   };
 };
@@ -438,6 +438,7 @@ const createMemberService = async (businessOwnerId, payload) => {
  * @param {*} query
  * @returns
  */
+
 const getMembersByRolesService = async (businessOwnerId, query) => {
   const { search = '', page, limit } = query;
   const ownerObjectId = toObjectId(businessOwnerId);
@@ -553,11 +554,11 @@ const getMembersByRolesService = async (businessOwnerId, query) => {
     items: data,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
   };
 };
@@ -639,7 +640,7 @@ const deleteMemberService = async (businessOwnerId, memberId) => {
 };
 
 const getMemberService = async (businessOwnerId, query) => {
-  const { search = '', page, limit } = query;
+  const { search = '', employeeRoleId, page, limit } = query;
 
   const pageNo = Number.parseInt(page, 10);
   const limitNo = Number.parseInt(limit, 10);
@@ -650,7 +651,8 @@ const getMemberService = async (businessOwnerId, query) => {
     {
       $match: {
         businessOwnerId,
-        isDeleted: false
+        isDeleted: false,
+        ...(employeeRoleId && { employeeRoleId: new mongoose.Types.ObjectId(employeeRoleId) })
       }
     },
     {
@@ -698,11 +700,11 @@ const getMemberService = async (businessOwnerId, query) => {
     items: members,
     pagination: shouldPaginate
       ? {
-          page: pageNo,
-          limit: limitNo,
-          total,
-          totalPages: Math.ceil(total / limitNo)
-        }
+        page: pageNo,
+        limit: limitNo,
+        total,
+        totalPages: Math.ceil(total / limitNo)
+      }
       : null
   };
 };
