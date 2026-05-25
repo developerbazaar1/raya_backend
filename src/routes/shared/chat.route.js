@@ -27,9 +27,19 @@ const {
 } = require('../../controllers/shared/chat.controller');
 
 router.get('/teams', authenticate(), validate(getTeamsValidation), asyncHandler(getTeams));
-router.get('/team/:chatId', authenticate(), validate(getTeamDetailsValidation), asyncHandler(getTeamDetails));
+router.get(
+  '/team/:chatId',
+  authenticate(),
+  validate(getTeamDetailsValidation),
+  asyncHandler(getTeamDetails)
+);
 router.get('/rooms', authenticate(), validate(getRoomsValidation), asyncHandler(getRooms));
-router.get('/room/:roomId', authenticate(), validate(getRoomDetailsValidation), asyncHandler(getRoomDetails));
+router.get(
+  '/room/:roomId',
+  authenticate(),
+  validate(getRoomDetailsValidation),
+  asyncHandler(getRoomDetails)
+);
 router.patch(
   '/rooms/:roomId/read-status',
   authenticate(),
@@ -44,8 +54,18 @@ router.post(
   validate(createChatRoomValidation),
   asyncHandler(createChatRoom)
 );
-router.get('/rooms/list', authenticate(), validate(getChatRoomsValidation), asyncHandler(getChatRooms));
-router.get('/rooms/:chatRoomId', authenticate(), validate(getChatRoomValidation), asyncHandler(getChatRoom));
+router.get(
+  '/rooms/list',
+  authenticate(),
+  validate(getChatRoomsValidation),
+  asyncHandler(getChatRooms)
+);
+router.get(
+  '/rooms/:chatRoomId',
+  authenticate(),
+  validate(getChatRoomValidation),
+  asyncHandler(getChatRoom)
+);
 router.patch(
   '/rooms/:chatRoomId',
   authenticate(),

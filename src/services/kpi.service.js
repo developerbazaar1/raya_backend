@@ -164,7 +164,10 @@ exports.kpiCategoryDeleteService = async (categoryId, userId) => {
   // Referential Integrity check: ensure no KPIs are orphaned
   const linkedKpisCount = await Kpi.countDocuments({ categoryId: categoryId });
   if (linkedKpisCount > 0) {
-    throw new AppError(`Cannot delete category. It currently has ${linkedKpisCount} associated KPI(s). Please delete or reassign them first.`, 400);
+    throw new AppError(
+      `Cannot delete category. It currently has ${linkedKpisCount} associated KPI(s). Please delete or reassign them first.`,
+      400
+    );
   }
 
   await KpiCategory.findByIdAndDelete(categoryId);
@@ -286,7 +289,7 @@ exports.kpiGetService = async (userId) => {
 
   const categoriesWithKpis = await KpiCategory.aggregate(pipeline);
 
-  const formattedData = categoriesWithKpis.map(cat => ({
+  const formattedData = categoriesWithKpis.map((cat) => ({
     id: cat._id,
     kpiCategoryName: cat.categoryName,
     KPIs: cat.kpis || []
@@ -363,7 +366,10 @@ exports.kpiDeleteService = async (kpiId, userId) => {
   // Referential Integrity check: ensure no KPI Assignments are orphaned
   const linkedAssignmentsCount = await KpiAssignment.countDocuments({ kpiId: kpiId });
   if (linkedAssignmentsCount > 0) {
-    throw new AppError(`Cannot delete KPI. It is currently assigned to ${linkedAssignmentsCount} record(s). Please remove these assignments first.`, 400);
+    throw new AppError(
+      `Cannot delete KPI. It is currently assigned to ${linkedAssignmentsCount} record(s). Please remove these assignments first.`,
+      400
+    );
   }
 
   await Kpi.findByIdAndDelete(kpiId);

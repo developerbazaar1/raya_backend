@@ -123,10 +123,7 @@ exports.ownerEmployeeListService = async (businessOwnerId, query) => {
           {
             $match: {
               $expr: {
-                $and: [
-                  { $in: ['$_id', '$$userIds'] },
-                  { $eq: ['$isDeleted', false] }
-                ]
+                $and: [{ $in: ['$_id', '$$userIds'] }, { $eq: ['$isDeleted', false] }]
               }
             }
           }
@@ -173,10 +170,7 @@ exports.ownerEmployeeListService = async (businessOwnerId, query) => {
                           { $eq: ['$$member.mentalHealthScore', null] },
                           '',
                           {
-                            $concat: [
-                              { $toString: '$$member.mentalHealthScore' },
-                              '/5'
-                            ]
+                            $concat: [{ $toString: '$$member.mentalHealthScore' }, '/5']
                           }
                         ]
                       }
@@ -257,7 +251,7 @@ exports.ownerEmployeeListByIdService = async (employeeId) => {
   };
 };
 
-exports.rolesListByBusinessOwnerIdService = async (businessOwnerId,query) => {
+exports.rolesListByBusinessOwnerIdService = async (businessOwnerId, query) => {
   const { search = '', page, limit, fields } = query;
 
   const ownerObjectId = toObjectId(businessOwnerId);
@@ -271,7 +265,7 @@ exports.rolesListByBusinessOwnerIdService = async (businessOwnerId,query) => {
   const pageNo = Number.parseInt(page, 10);
   const limitNo = Number.parseInt(limit, 10);
   const shouldPaginate =
-      Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
+    Number.isInteger(pageNo) && pageNo > 0 && Number.isInteger(limitNo) && limitNo > 0;
 
   const rolePipeline = [{ $match: matchStage }, { $sort: { createdAt: -1 } }];
 

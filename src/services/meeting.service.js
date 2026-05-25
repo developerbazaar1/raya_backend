@@ -1,7 +1,5 @@
 const Meeting = require('../models/businessOwner/meeting.model');
-const User = require('../models/shared/users.model');
 const { DEFAULT_PROFILE_IMAGE } = require('../config/constant');
-const AppError = require('../utils/appError');
 
 exports.createMeetingService = async (data, userId) => {
   const { title, date, startTime, endTime, invitedMembers } = data;

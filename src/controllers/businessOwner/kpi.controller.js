@@ -1,4 +1,13 @@
-const { kpiCategoryCreateService, kpiCategoryGetService, kpiCategoryUpdateService, kpiCategoryDeleteService, kpiCreateService, kpiGetService, kpiUpdateService, kpiDeleteService } = require('../../services/kpi.service');
+const {
+  kpiCategoryCreateService,
+  kpiCategoryGetService,
+  kpiCategoryUpdateService,
+  kpiCategoryDeleteService,
+  kpiCreateService,
+  kpiGetService,
+  kpiUpdateService,
+  kpiDeleteService
+} = require('../../services/kpi.service');
 
 exports.createKpiCategory = async (req, res) => {
   const data = await kpiCategoryCreateService(req.body, req.user.userId);

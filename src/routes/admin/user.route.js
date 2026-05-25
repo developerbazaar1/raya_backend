@@ -11,7 +11,11 @@ const {
 
 router.get('/', adminAuth('admin'), asyncHandler(userList));
 router.get('/employee/:businessOwnerId', adminAuth('admin'), asyncHandler(ownerEmployeeList));
-router.get('/employee/:businessOwnerId/:employeeId', adminAuth('admin'), asyncHandler(ownerEmployeeById));
+router.get(
+  '/employee/:businessOwnerId/:employeeId',
+  adminAuth('admin'),
+  asyncHandler(ownerEmployeeById)
+);
 router.get('/:businessOwnerId', adminAuth('admin'), asyncHandler(rolesListByBusinessOwnerId));
 
 module.exports = router;

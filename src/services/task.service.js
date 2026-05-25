@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const Task = require('../models/businessOwner/task.model');
 const Project = require('../models/businessOwner/project.model');
 const projectTaskAssignment = require('../models/businessOwner/projectTaskAssignment.model');

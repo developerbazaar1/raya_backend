@@ -1,9 +1,9 @@
-const BusinessFoundationModel = require('../models/businessOwner/businessFoundation.model');
-const AppError = require('../utils/appError');
+const BusinessFoundationModel = require('../../models/businessOwner/businessFoundation.model');
+const AppError = require('../../utils/appError');
 
-exports.createBusinessFoundationService = async (data, userId) => {
+exports.createBusinessFoundationService = async (data, adminId) => {
   const { mission, vision, values } = data;
-  const existingFoundation = await BusinessFoundationModel.findOne({ userId: userId });
+  const existingFoundation = await BusinessFoundationModel.findOne({ userId: adminId });
   if (existingFoundation) {
     throw new AppError('Foundation information already exists', 400);
   }
@@ -11,13 +11,13 @@ exports.createBusinessFoundationService = async (data, userId) => {
     mission,
     vision,
     values,
-    userId: userId
+    userId: adminId
   });
   return newFoundation;
 };
 
-exports.getBusinessFoundationService = async (userId) => {
-  const existingFoundation = await BusinessFoundationModel.findOne({ userId: userId });
+exports.getBusinessFoundationService = async (adminId) => {
+  const existingFoundation = await BusinessFoundationModel.findOne({ userId: adminId });
   if (!existingFoundation) {
     throw new AppError('Foundation information not found', 404);
   }
@@ -30,12 +30,12 @@ exports.getBusinessFoundationService = async (userId) => {
   return formattedData;
 };
 
-exports.updateBusinessFoundationService = async (foundationId, data, userId) => {
+exports.updateBusinessFoundationService = async (foundationId, data, adminId) => {
   const existingFoundation = await BusinessFoundationModel.findById(foundationId);
   if (!existingFoundation) {
     throw new AppError('Foundation information not found', 404);
   }
-  if (existingFoundation.userId.toString() !== userId.toString()) {
+  if (existingFoundation.userId.toString() !== adminId.toString()) {
     throw new AppError('You are not authorized to update this foundation', 403);
   }
   const { mission, vision, values } = data;
