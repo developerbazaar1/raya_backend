@@ -93,10 +93,7 @@ const updateBusinessOwnerSettings = async (userId, payload) => {
     profilePictureFile,
     `business-owners/${user._id}/profile-picture`
   );
-  const logoMetadata = await uploadFileToSpaces(
-    logoFile,
-    `business-owners/${user._id}/logo`
-  );
+  const logoMetadata = await uploadFileToSpaces(logoFile, `business-owners/${user._id}/logo`);
 
   if (payload.name !== undefined) {
     user.name = payload.name;

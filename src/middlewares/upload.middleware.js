@@ -6,7 +6,9 @@ let fileTypeFromBufferPromise;
 
 const getFileTypeFromBuffer = async () => {
   if (!fileTypeFromBufferPromise) {
-    fileTypeFromBufferPromise = import('file-type').then(({ fileTypeFromBuffer }) => fileTypeFromBuffer);
+    fileTypeFromBufferPromise = import('file-type').then(
+      ({ fileTypeFromBuffer }) => fileTypeFromBuffer
+    );
   }
 
   return fileTypeFromBufferPromise;
@@ -86,14 +88,21 @@ const createSecureUploadMiddleware = (schemaKey) => {
 
         // Fail-safe: If file-type returns undefined, it's an unrecognized format/malicious binary
         if (!detectedType) {
-          return next(new AppError(`Invalid file format content detected in ${file.fieldname}.`, 400));
+          return next(
+            new AppError(`Invalid file format content detected in ${file.fieldname}.`, 400)
+          );
         }
 
         // Verify if the true MIME type matches our allowed criteria
         const isMimeValid = finalAllowedMimes.includes(detectedType.mime);
 
         if (!isMimeValid) {
-          return next(new AppError(`Unsupported file type (${detectedType.ext}) for ${schemaKey.toLowerCase().replace(/_/g, ' ')}.`, 400));
+          return next(
+            new AppError(
+              `Unsupported file type (${detectedType.ext}) for ${schemaKey.toLowerCase().replace(/_/g, ' ')}.`,
+              400
+            )
+          );
         }
 
         // Optional but secure: Mutate the file object to reflect its TRUE audited mime/extension
