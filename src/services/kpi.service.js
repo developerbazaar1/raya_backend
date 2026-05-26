@@ -2,10 +2,228 @@ const mongoose = require('mongoose');
 const KpiCategory = require('../models/businessOwner/kpiCategory.model');
 const Kpi = require('../models/businessOwner/kpis.model');
 const KpiAssignment = require('../models/businessOwner/kpiAssignment.model');
+const KpiHistory = require('../models/businessOwner/kpiHistory.model');
+const BusinessOwnerInfo = require('../models/businessOwner/businessOwnerInfo.model');
 const AppError = require('../utils/appError');
 const EmployeeInfo = require('../models/businessOwnerTeam/employeesInfo.model');
 const EmployeeRole = require('../models/businessOwner/employeeRoles.model');
 const KpiResetFrequency = require('../models/shared/kpiResetFrequency.model');
+
+/**
+ * Resolves specific calendar components for a Date object under a target timezone.
+ */
+function getTzParts(timeZone, date = new Date()) {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+    hour12: false
+  });
+  const parts = formatter.formatToParts(date);
+  const map = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') {
+      map[part.type] = parseInt(part.value, 10);
+    }
+  }
+  return map;
+}
+
+/**
+ * Computes exact UTC Date object corresponding to a calendar date/time in the target timezone.
+ */
+function localToUtc(year, month, day, hour, minute, second, millisecond, timeZone) {
+  const t_approx = Date.UTC(year, month - 1, day, hour, minute, second);
+  const parts = getTzParts(timeZone, new Date(t_approx));
+  const t_parts = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute, parts.second);
+  const offset = t_parts - t_approx;
+
+  const t_exact_approx = t_approx - offset;
+  const parts2 = getTzParts(timeZone, new Date(t_exact_approx));
+  const t_parts2 = Date.UTC(parts2.year, parts2.month - 1, parts2.day, parts2.hour, parts2.minute, parts2.second);
+  const offset2 = t_parts2 - t_exact_approx;
+
+  return new Date(t_exact_approx - (offset2 - offset) + millisecond);
+}
+
+/**
+ * Resolves ISO week number and year from calendar parts.
+ */
+function getISOWeekAndYear(year, month, day) {
+  const d = new Date(Date.UTC(year, month - 1, day));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return { week: weekNo, year: d.getUTCFullYear() };
+}
+
+/**
+ * Calculates localized period start and end boundary dates converted to UTC objects.
+ */
+function getPeriodBoundsAndIdentifier(periodType, periodIdentifier, timeZone) {
+  let periodStartDate, periodEndDate;
+
+  if (periodType === 'monthly') {
+    if (!/^\d{4}-\d{2}$/.test(periodIdentifier)) {
+      throw new AppError('periodIdentifier must be in YYYY-MM format for monthly type.', 400);
+    }
+    const [yearStr, monthStr] = periodIdentifier.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+
+    if (month < 1 || month > 12) {
+      throw new AppError('Invalid month value in periodIdentifier.', 400);
+    }
+
+    periodStartDate = localToUtc(year, month, 1, 0, 0, 0, 0, timeZone);
+    const nextMonth = new Date(Date.UTC(year, month, 0));
+    const lastDay = nextMonth.getUTCDate();
+    periodEndDate = localToUtc(year, month, lastDay, 23, 59, 59, 999, timeZone);
+
+  } else if (periodType === 'weekly') {
+    if (!/^\d{4}-W\d{2}$/.test(periodIdentifier)) {
+      throw new AppError('periodIdentifier must be in YYYY-WXX format for weekly type.', 400);
+    }
+    const [yearStr, weekStr] = periodIdentifier.split('-W');
+    const year = parseInt(yearStr, 10);
+    const week = parseInt(weekStr, 10);
+
+    if (week < 1 || week > 53) {
+      throw new AppError('Invalid week number in periodIdentifier.', 400);
+    }
+
+    const simple = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7));
+    const dow = simple.getUTCDay();
+    const ISOweekStart = new Date(simple);
+    if (dow <= 4) {
+      ISOweekStart.setUTCDate(simple.getUTCDate() - simple.getUTCDay() + 1);
+    } else {
+      ISOweekStart.setUTCDate(simple.getUTCDate() + 8 - simple.getUTCDay());
+    }
+
+    const startYear = ISOweekStart.getUTCFullYear();
+    const startMonth = ISOweekStart.getUTCMonth() + 1;
+    const startDay = ISOweekStart.getUTCDate();
+
+    const ISOweekEnd = new Date(ISOweekStart);
+    ISOweekEnd.setUTCDate(ISOweekStart.getUTCDate() + 6);
+    const endYear = ISOweekEnd.getUTCFullYear();
+    const endMonth = ISOweekEnd.getUTCMonth() + 1;
+    const endDay = ISOweekEnd.getUTCDate();
+
+    periodStartDate = localToUtc(startYear, startMonth, startDay, 0, 0, 0, 0, timeZone);
+    periodEndDate = localToUtc(endYear, endMonth, endDay, 23, 59, 59, 999, timeZone);
+
+  } else if (periodType === 'yearly') {
+    if (!/^\d{4}$/.test(periodIdentifier)) {
+      throw new AppError('periodIdentifier must be in YYYY format for yearly type.', 400);
+    }
+    const year = parseInt(periodIdentifier, 10);
+
+    periodStartDate = localToUtc(year, 1, 1, 0, 0, 0, 0, timeZone);
+    periodEndDate = localToUtc(year, 12, 31, 23, 59, 59, 999, timeZone);
+
+  } else if (periodType === 'daily') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(periodIdentifier)) {
+      throw new AppError('periodIdentifier must be in YYYY-MM-DD format for daily type.', 400);
+    }
+    const [yearStr, monthStr, dayStr] = periodIdentifier.split('-');
+    const year = parseInt(yearStr, 10);
+    const month = parseInt(monthStr, 10);
+    const day = parseInt(dayStr, 10);
+
+    periodStartDate = localToUtc(year, month, day, 0, 0, 0, 0, timeZone);
+    periodEndDate = localToUtc(year, month, day, 23, 59, 59, 999, timeZone);
+  } else {
+    throw new AppError('Unsupported periodType.', 400);
+  }
+
+  return { periodStartDate, periodEndDate, periodIdentifier };
+}
+
+/**
+ * Resolves start/end boundaries and string identifier for the current time instant in the target timezone.
+ */
+function getCurrentPeriodBoundsAndIdentifier(periodType, timeZone) {
+  const now = new Date();
+  const parts = getTzParts(timeZone, now);
+
+  let periodIdentifier;
+  if (periodType === 'monthly') {
+    const yearStr = String(parts.year);
+    const monthStr = String(parts.month).padStart(2, '0');
+    periodIdentifier = `${yearStr}-${monthStr}`;
+  } else if (periodType === 'weekly') {
+    const iso = getISOWeekAndYear(parts.year, parts.month, parts.day);
+    const yearStr = String(iso.year);
+    const weekStr = String(iso.week).padStart(2, '0');
+    periodIdentifier = `${yearStr}-W${weekStr}`;
+  } else if (periodType === 'yearly') {
+    periodIdentifier = String(parts.year);
+  } else if (periodType === 'daily') {
+    const yearStr = String(parts.year);
+    const monthStr = String(parts.month).padStart(2, '0');
+    const dayStr = String(parts.day).padStart(2, '0');
+    periodIdentifier = `${yearStr}-${monthStr}-${dayStr}`;
+  } else {
+    throw new AppError('Unsupported periodType.', 400);
+  }
+
+  return getPeriodBoundsAndIdentifier(periodType, periodIdentifier, timeZone);
+}
+
+/**
+ * Resolves custom user inputs (week numbers, MM/YYYY, YYYY, or ISO dates) into standard period identifier strings (e.g., YYYY-WXX, YYYY-MM, YYYY).
+ */
+function resolvePeriodIdentifierFromInput(input, periodType, timeZone) {
+  if (!input) return null;
+  const str = String(input).trim();
+
+  if (periodType === 'weekly') {
+    if (/^\d{1,2}$/.test(str)) {
+      const weekNum = parseInt(str, 10);
+      const now = new Date();
+      const parts = getTzParts(timeZone, now);
+      const year = parts.year;
+      return `${year}-W${String(weekNum).padStart(2, '0')}`;
+    }
+    if (/^\d{4}-W\d{2}$/.test(str)) {
+      return str;
+    }
+  } else if (periodType === 'monthly') {
+    if (/^\d{2}\/\d{4}$/.test(str)) {
+      const [monthStr, yearStr] = str.split('/');
+      return `${yearStr}-${monthStr.padStart(2, '0')}`;
+    }
+    if (/^\d{4}-\d{2}$/.test(str)) {
+      return str;
+    }
+  } else if (periodType === 'yearly') {
+    if (/^\d{4}$/.test(str)) {
+      return str;
+    }
+  }
+
+  const date = new Date(str);
+  if (!isNaN(date.getTime())) {
+    const parts = getTzParts(timeZone, date);
+    if (periodType === 'monthly') {
+      return `${parts.year}-${String(parts.month).padStart(2, '0')}`;
+    } else if (periodType === 'weekly') {
+      const iso = getISOWeekAndYear(parts.year, parts.month, parts.day);
+      return `${iso.year}-W${String(iso.week).padStart(2, '0')}`;
+    } else if (periodType === 'yearly') {
+      return String(parts.year);
+    }
+  }
+
+  return null;
+}
 
 exports.kpiCategoryCreateService = async (body, userId) => {
   const { categoryName } = body;
@@ -982,4 +1200,355 @@ exports.getSpecificKpiLeaderboardService = async (
   }
 
   return rankedLeaderboard;
+};
+
+/**
+ * Service to post or log a new KPI History record.
+ * Generates timezone-safe period boundaries automatically based on the period type and identifier.
+ * Synchronizes the active KpiAssignment record if the posted period is currently active.
+ */
+exports.kpiHistoryPostService = async (businessOwnerId, payload) => {
+  const { kpiId, assignedUserId, periodType, periodIdentifier, actualValue, goalValue } = payload;
+
+  if (!mongoose.Types.ObjectId.isValid(kpiId) || !mongoose.Types.ObjectId.isValid(assignedUserId)) {
+    throw new AppError('Invalid KPI ID or Employee ID format.', 400);
+  }
+
+  const kpiExists = await Kpi.findOne({ _id: kpiId, businessOwnerId });
+  if (!kpiExists) {
+    throw new AppError('KPI not found or unauthorized access.', 404);
+  }
+
+  const employeeInfo = await EmployeeInfo.findOne({ userId: assignedUserId, businessOwnerId, isDeleted: false });
+  if (!employeeInfo) {
+    throw new AppError('Employee not found or does not belong to this business.', 404);
+  }
+
+  const ownerInfo = await BusinessOwnerInfo.findOne({ userId: businessOwnerId });
+  const timeZone = ownerInfo?.timeZone || 'America/New_York';
+
+  const { periodStartDate, periodEndDate } = getPeriodBoundsAndIdentifier(periodType, periodIdentifier, timeZone);
+
+  const progressPercent = goalValue > 0 ? Math.min(Math.round((actualValue / goalValue) * 100), 100) : 0;
+
+  let status = 'on_track';
+  if (progressPercent < 50) {
+    status = 'at_risk';
+  } else if (progressPercent < 80) {
+    status = 'need_attention';
+  }
+
+  const historyRecord = await KpiHistory.findOneAndUpdate(
+    {
+      kpiId,
+      assignedUserId,
+      periodIdentifier
+    },
+    {
+      businessOwnerId,
+      categoryId: kpiExists.categoryId,
+      roleId: employeeInfo.employeeRoleId || null,
+      goalValue,
+      actualValue,
+      progressPercent,
+      periodType,
+      periodStartDate,
+      periodEndDate,
+      status
+    },
+    { upsert: true, new: true }
+  );
+
+  const now = new Date();
+  if (now >= periodStartDate && now <= periodEndDate) {
+    await KpiAssignment.findOneAndUpdate(
+      {
+        businessOwnerId,
+        kpiId,
+        assignedUserId
+      },
+      {
+        categoryId: kpiExists.categoryId,
+        roleId: employeeInfo.employeeRoleId || null,
+        goalValue,
+        progress: actualValue,
+        status,
+        resetFrequency: periodType
+      },
+      { upsert: true }
+    );
+  }
+
+  return historyRecord;
+};
+
+/**
+ * Service to retrieve the hierarchical performance trends grouped by KPI, sorted chronologically.
+ * Supports timezone-safe period formats, optional date boundaries, and regex KPI search filtering.
+ */
+exports.kpiHistoryGetService = async (businessOwnerId, query = {}) => {
+  const { periodType, search } = query;
+
+  if (!periodType) {
+    throw new AppError('periodType is a required query parameter.', 400);
+  }
+
+  const matchStage = {
+    businessOwnerId: new mongoose.Types.ObjectId(businessOwnerId),
+    resetFrequency: periodType
+  };
+
+  const pipeline = [
+    { $match: matchStage },
+    {
+      $lookup: {
+        from: 'kpis',
+        localField: 'kpiId',
+        foreignField: '_id',
+        as: 'kpiDetails'
+      }
+    },
+    { $unwind: '$kpiDetails' }
+  ];
+
+  if (search?.trim()) {
+    pipeline.push({
+      $match: {
+        'kpiDetails.kpiName': { $regex: search.trim(), $options: 'i' }
+      }
+    });
+  }
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'measurementtypes',
+        localField: 'kpiDetails.measurementType',
+        foreignField: '_id',
+        as: 'measurementTypeData'
+      }
+    },
+    { $unwind: { path: '$measurementTypeData', preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: 'users',
+        localField: 'assignedUserId',
+        foreignField: '_id',
+        as: 'userDetails'
+      }
+    },
+    { $unwind: '$userDetails' },
+    // Group active assignments by KPI to isolate distinct chart objects
+    {
+      $group: {
+        _id: '$kpiId',
+        kpiName: { $first: '$kpiDetails.kpiName' },
+        measurementType: { $first: '$measurementTypeData.name' },
+        measurementSymbol: { $first: '$measurementTypeData.symbol' },
+        metrics: {
+          $push: {
+            employeeId: '$assignedUserId',
+            employeeName: '$userDetails.name',
+            profileImage: { $ifNull: ['$userDetails.userProfile.url', ''] },
+            actual: '$progress',
+            goal: '$goalValue',
+            progressPercent: {
+              $cond: {
+                if: { $gt: ['$goalValue', 0] },
+                then: { $min: [{ $round: [{ $multiply: [{ $divide: ['$progress', '$goalValue'] }, 100] }, 0] }, 100] },
+                else: 0
+              }
+            },
+            status: '$status'
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        kpiId: '$_id',
+        kpiName: 1,
+        measurementType: 1,
+        measurementSymbol: 1,
+        metrics: 1
+      }
+    },
+    { $sort: { kpiName: 1 } }
+  );
+
+  const result = await KpiAssignment.aggregate(pipeline);
+
+  const ownerInfo = await BusinessOwnerInfo.findOne({ userId: businessOwnerId });
+  const timeZone = ownerInfo?.timeZone || 'America/New_York';
+  const bounds = getCurrentPeriodBoundsAndIdentifier(periodType, timeZone);
+
+  return result.map((kpi) => {
+    let periodName = bounds.periodIdentifier;
+
+    if (periodType === 'monthly') {
+      const [yearStr, monthStr] = bounds.periodIdentifier.split('-');
+      const date = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, 1));
+      periodName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+    } else if (periodType === 'weekly') {
+      const weekStr = bounds.periodIdentifier.split('-W')[1];
+      const startParts = getTzParts(timeZone, bounds.periodStartDate);
+      const dateStr = new Date(Date.UTC(startParts.year, startParts.month - 1, startParts.day)).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        timeZone: 'UTC'
+      });
+      periodName = `Week ${parseInt(weekStr, 10)} (${dateStr})`;
+    } else if (periodType === 'yearly') {
+      periodName = bounds.periodIdentifier;
+    } else if (periodType === 'daily') {
+      const [yearStr, monthStr, dayStr] = bounds.periodIdentifier.split('-');
+      const date = new Date(Date.UTC(parseInt(yearStr, 10), parseInt(monthStr, 10) - 1, parseInt(dayStr, 10)));
+      periodName = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+    }
+
+    return {
+      kpiId: kpi.kpiId,
+      kpiName: kpi.kpiName,
+      measurementType: kpi.measurementType,
+      measurementSymbol: kpi.measurementSymbol,
+      history: [
+        {
+          periodIdentifier: bounds.periodIdentifier,
+          periodName,
+          startDate: bounds.periodStartDate,
+          endDate: bounds.periodEndDate,
+          metrics: kpi.metrics
+        }
+      ]
+    };
+  });
+};
+
+exports.employeeKpiHistoryGetService = async (assignedUserId, businessOwnerId, query = {}) => {
+  const { periodType, startDate, endDate, search } = query;
+
+  if (!periodType) {
+    throw new AppError('periodType is a required query parameter.', 400);
+  }
+
+  const employeeInfo = await EmployeeInfo.findOne({ userId: assignedUserId });
+  const timeZone = employeeInfo?.timeZone || 'America/New_York';
+
+  const matchStage = {
+    assignedUserId: new mongoose.Types.ObjectId(assignedUserId),
+    businessOwnerId: new mongoose.Types.ObjectId(businessOwnerId),
+    periodType: periodType
+  };
+
+  const startPeriod = resolvePeriodIdentifierFromInput(startDate, periodType, timeZone);
+  const endPeriod = resolvePeriodIdentifierFromInput(endDate, periodType, timeZone);
+
+  if (startPeriod || endPeriod) {
+    const conditions = [];
+    if (startPeriod) {
+      conditions.push({ periodIdentifier: { $gte: startPeriod } });
+    }
+    if (endPeriod) {
+      conditions.push({ periodIdentifier: { $lte: endPeriod } });
+    }
+    matchStage.$and = conditions;
+  }
+
+  const pipeline = [
+    { $match: matchStage },
+    {
+      $lookup: {
+        from: 'kpis',
+        localField: 'kpiId',
+        foreignField: '_id',
+        as: 'kpiDetails'
+      }
+    },
+    { $unwind: '$kpiDetails' }
+  ];
+
+  if (search?.trim()) {
+    pipeline.push({
+      $match: {
+        'kpiDetails.kpiName': { $regex: search.trim(), $options: 'i' }
+      }
+    });
+  }
+
+  pipeline.push(
+    {
+      $lookup: {
+        from: 'measurementtypes',
+        localField: 'kpiDetails.measurementType',
+        foreignField: '_id',
+        as: 'measurementTypeData'
+      }
+    },
+    { $unwind: { path: '$measurementTypeData', preserveNullAndEmptyArrays: true } },
+    {
+      $group: {
+        _id: '$kpiId',
+        kpiName: { $first: '$kpiDetails.kpiName' },
+        measurementType: { $first: '$measurementTypeData.name' },
+        measurementSymbol: { $first: '$measurementTypeData.symbol' },
+        history: {
+          $push: {
+            periodIdentifier: '$periodIdentifier',
+            startDate: '$periodStartDate',
+            endDate: '$periodEndDate',
+            actual: '$actualValue',
+            goal: '$goalValue',
+            progressPercent: '$progressPercent',
+            status: '$status'
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        _id: 0,
+        kpiId: '$_id',
+        kpiName: 1,
+        measurementType: 1,
+        measurementSymbol: 1,
+        history: 1
+      }
+    },
+    { $sort: { kpiName: 1 } }
+  );
+
+  const result = await KpiHistory.aggregate(pipeline);
+
+  return result.map((kpi) => {
+    kpi.history.sort((a, b) => a.periodIdentifier.localeCompare(b.periodIdentifier));
+    kpi.history = kpi.history.map((hist) => {
+      let periodName = hist.periodIdentifier;
+      if (periodType === 'monthly') {
+        const [year, month] = hist.periodIdentifier.split('-');
+        const date = new Date(Date.UTC(parseInt(year, 10), parseInt(month, 10) - 1, 1));
+        periodName = date.toLocaleDateString('en-US', {
+          month: 'short',
+          year: 'numeric',
+          timeZone: 'UTC'
+        });
+      } else if (periodType === 'weekly') {
+        const weekNum = hist.periodIdentifier.split('-W')[1];
+        const startParts = getTzParts(timeZone, hist.startDate);
+        const dateStr = new Date(Date.UTC(startParts.year, startParts.month - 1, startParts.day)).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          timeZone: 'UTC'
+        });
+        periodName = `Week ${parseInt(weekNum, 10)} (${dateStr})`;
+      } else if (periodType === 'yearly') {
+        periodName = hist.periodIdentifier;
+      }
+      return {
+        ...hist,
+        periodName
+      };
+    });
+    return kpi;
+  });
 };

@@ -11,6 +11,7 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
+    "seed:kpi-history": "node scripts/seedKpiHistory.js",
     "prepare": "husky install"
   },
   "repository": {

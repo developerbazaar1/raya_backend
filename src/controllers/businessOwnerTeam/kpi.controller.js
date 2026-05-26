@@ -1,6 +1,7 @@
 const {
   getSpecificKpiLeaderboardService,
-  getKpisByCategoryService
+  getKpisByCategoryService,
+  employeeKpiHistoryGetService
 } = require('../../services/kpi.service');
 
 /**
@@ -38,5 +39,27 @@ exports.getAssignedKpis = async (req, res) => {
     status: 'success',
     message: 'Assigned KPIs fetched successfully.',
     ...result
+  });
+};
+
+/**
+ * Controller to fetch proper chronological KPI performance history for the logged-in employee.
+ */
+exports.getKpiHistory = async (req, res) => {
+  const businessOwnerId = req.authUser.owner;
+  const data = await employeeKpiHistoryGetService(
+    req.user.userId,
+    businessOwnerId,
+    req.query
+  );
+
+  const message = data.length === 0
+    ? `No historical data found for the selected ${req.query.periodType} cycle.`
+    : 'Assigned KPI history retrieved successfully.';
+
+  res.status(200).json({
+    status: 'success',
+    message,
+    data
   });
 };

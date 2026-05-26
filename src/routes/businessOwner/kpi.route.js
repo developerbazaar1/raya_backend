@@ -10,7 +10,9 @@ const {
   kpiAssignmentUpdateValidation,
   getKpisByCategoryValidation,
   getAssignedKpisValidation,
-  getKpiLeaderboardValidation
+  getKpiLeaderboardValidation,
+  kpiHistoryPostValidation,
+  kpiHistoryGetValidation
 } = require('../../validations/kpi.validator');
 const {
   createKpiCategory,
@@ -26,7 +28,9 @@ const {
   getKpiLeaderboard,
   getKpisByCategory,
   getAssignedKpis,
-  getSpecificKpiLeaderboard
+  getSpecificKpiLeaderboard,
+  postKpiHistory,
+  getKpiHistory
 } = require('../../controllers/businessOwner/kpi.controller');
 
 router.post(
@@ -102,6 +106,21 @@ router.get(
   authenticate('business_owner'),
   validate(getKpiLeaderboardValidation),
   asyncHandler(getSpecificKpiLeaderboard)
+);
+
+// KPI History Routing
+router.post(
+  '/history',
+  authenticate('business_owner'),
+  validate(kpiHistoryPostValidation),
+  asyncHandler(postKpiHistory)
+);
+
+router.get(
+  '/history',
+  authenticate('business_owner'),
+  validate(kpiHistoryGetValidation),
+  asyncHandler(getKpiHistory)
 );
 
 router.delete('/:kpiId', authenticate('business_owner'), asyncHandler(deleteKpi));

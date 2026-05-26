@@ -3,11 +3,13 @@ const { authenticate, validate } = require('../../middlewares');
 const asyncHandler = require('../../utils/asyncHandler');
 const {
   getSpecificKpiLeaderboard,
-  getAssignedKpis
+  getAssignedKpis,
+  getKpiHistory
 } = require('../../controllers/businessOwnerTeam/kpi.controller');
 const {
   getKpiLeaderboardValidation,
-  getEmployeeAssignedKpisValidation
+  getEmployeeAssignedKpisValidation,
+  kpiHistoryGetValidation
 } = require('../../validations/kpi.validator');
 
 router.get(
@@ -22,6 +24,13 @@ router.get(
   authenticate('employee'),
   validate(getKpiLeaderboardValidation),
   asyncHandler(getSpecificKpiLeaderboard)
+);
+
+router.get(
+  '/history',
+  authenticate('employee'),
+  validate(kpiHistoryGetValidation),
+  asyncHandler(getKpiHistory)
 );
 
 module.exports = router;

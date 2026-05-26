@@ -168,3 +168,44 @@ exports.getEmployeeAssignedKpisValidation = [
 exports.getKpiLeaderboardValidation = [
   param('kpiId').isMongoId().withMessage('Invalid KPI ID format')
 ];
+
+exports.kpiHistoryPostValidation = [
+  body('kpiId').isMongoId().withMessage('Invalid KPI ID format'),
+  body('assignedUserId').isMongoId().withMessage('Invalid Assigned User ID format'),
+  body('periodType')
+    .notEmpty()
+    .withMessage('periodType is required')
+    .isIn(['daily', 'weekly', 'monthly', 'yearly'])
+    .withMessage('periodType must be one of: daily, weekly, monthly, yearly'),
+  body('periodIdentifier')
+    .trim()
+    .notEmpty()
+    .withMessage('periodIdentifier is required'),
+  body('actualValue')
+    .isFloat({ min: 0 })
+    .withMessage('actualValue must be a number greater than or equal to zero'),
+  body('goalValue')
+    .isFloat({ min: 0.01 })
+    .withMessage('goalValue must be a number greater than zero')
+];
+
+exports.kpiHistoryGetValidation = [
+  query('periodType')
+    .notEmpty()
+    .withMessage('periodType is required')
+    .isIn(['daily', 'weekly', 'monthly', 'yearly'])
+    .withMessage('periodType must be one of: daily, weekly, monthly, yearly'),
+  query('startDate')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('startDate cannot be empty'),
+  query('endDate')
+    .optional()
+    .trim()
+    .notEmpty()
+    .withMessage('endDate cannot be empty'),
+  query('search')
+    .optional()
+    .trim()
+];
