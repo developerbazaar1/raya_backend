@@ -7,7 +7,11 @@ const {
   kpiGetService,
   kpiUpdateService,
   kpiDeleteService,
-  kpiAssignService
+  kpiAssignService,
+  kpiAssignmentUpdateService,
+  kpiLeaderboardService,
+  getKpisByCategoryService,
+  getSpecificKpiLeaderboardService
 } = require('../../services/kpi.service');
 
 exports.createKpiCategory = async (req, res) => {
@@ -128,6 +132,63 @@ exports.assignKpi = async (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'KPI successfully assigned to target employees.',
+    data
+  });
+};
+
+exports.updateKpiAssignment = async (req, res) => {
+  const data = await kpiAssignmentUpdateService(req.params.kpiId, req.user.userId, req.body);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI assignment updated successfully.',
+    data
+  });
+};
+
+exports.getKpiLeaderboard = async (req, res) => {
+  const data = await kpiLeaderboardService(req.user.userId);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI Leaderboard fetched successfully.',
+    data
+  });
+};
+
+exports.getKpisByCategory = async (req, res) => {
+  const result = await getKpisByCategoryService(req.params.categoryId, req.user.userId, req.query);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPIs fetched successfully.',
+    ...result
+  });
+};
+
+/**
+ * Controller to fetch all assigned KPIs for an employee across all categories.
+ *
+ * Query Parameters (req.query):
+ * - assignedUserId: String (Valid MongoDB ObjectId) - Target employee User ID.
+ */
+exports.getAssignedKpis = async (req, res) => {
+  const result = await getKpisByCategoryService(null, req.user.userId, req.query);
+  res.status(200).json({
+    status: 'success',
+    message: 'Assigned KPIs fetched successfully.',
+    ...result
+  });
+};
+
+/**
+ * Controller to fetch the leaderboard (employee rankings) for a specific KPI.
+ *
+ * Path Parameters (req.params):
+ * - kpiId: String (Valid MongoDB ObjectId) - Target KPI ID.
+ */
+exports.getSpecificKpiLeaderboard = async (req, res) => {
+  const data = await getSpecificKpiLeaderboardService(req.params.kpiId, req.user.userId);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI leaderboard fetched successfully.',
     data
   });
 };

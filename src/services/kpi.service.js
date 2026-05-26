@@ -406,13 +406,11 @@ exports.kpiAssignService = async (businessOwnerId, payload) => {
     assignedUserIds
   } = payload;
 
-  // 1. Verify Category exists and belongs to the business owner
   const categoryExists = await KpiCategory.findOne({ _id: categoryId, businessOwnerId });
   if (!categoryExists) {
     throw new AppError('KPI Category not found or unauthorized access.', 404);
   }
 
-  // 2. Verify KPI exists, belongs to the business owner and matches the category
   const kpiExists = await Kpi.findOne({ _id: kpiId, categoryId, businessOwnerId });
   if (!kpiExists) {
     throw new AppError(
@@ -421,38 +419,32 @@ exports.kpiAssignService = async (businessOwnerId, payload) => {
     );
   }
 
-  // 3. Resolve the Reset Frequency display name (e.g. 'Weekly') to lowercased enum values (e.g. 'weekly')
   const freqDoc = await KpiResetFrequency.findById(resetFrequency);
   if (!freqDoc) {
     throw new AppError('The selected reset frequency reference was not found.', 404);
   }
   const frequencyCode = freqDoc.name.toLowerCase();
 
-  // 4. Resolve the target employee users based on the assignment scenarios
   let targetEmployees;
 
   if (roleId === 'all') {
-    // Scenario 3: All roles and all users in the company
     targetEmployees = await EmployeeInfo.find({
       businessOwnerId,
       isDeleted: false
     }).select('userId employeeRoleId');
   } else {
-    // Check if the specified role exists
     const roleExists = await EmployeeRole.findOne({ _id: roleId, businessOwnerId });
     if (!roleExists) {
       throw new AppError('The specified employee role was not found.', 404);
     }
 
     if (assignedUserIds.includes('all')) {
-      // Scenario 2: Specific role, all users in that role
       targetEmployees = await EmployeeInfo.find({
         businessOwnerId,
         employeeRoleId: roleId,
         isDeleted: false
       }).select('userId employeeRoleId');
     } else {
-      // Scenario 1: Specific role, specific subset of users in that role
       targetEmployees = await EmployeeInfo.find({
         businessOwnerId,
         employeeRoleId: roleId,
@@ -466,8 +458,26 @@ exports.kpiAssignService = async (businessOwnerId, payload) => {
     throw new AppError('No active employees matching the assignment criteria were found.', 404);
   }
 
-  // 5. Build bulk upsert operations to assign/update KPIs efficiently
-  const bulkOps = targetEmployees.map((emp) => ({
+  const targetUserIds = targetEmployees.map((emp) => emp.userId);
+  const existingAssignments = await KpiAssignment.find({
+    businessOwnerId,
+    kpiId,
+    assignedUserId: { $in: targetUserIds }
+  }).select('assignedUserId');
+
+  const alreadyAssignedUserIds = new Set(
+    existingAssignments.map((a) => a.assignedUserId.toString())
+  );
+
+  const newEmployeesToAssign = targetEmployees.filter(
+    (emp) => !alreadyAssignedUserIds.has(emp.userId.toString())
+  );
+
+  if (newEmployeesToAssign.length === 0) {
+    throw new AppError('All selected employees have already been assigned this KPI.', 400);
+  }
+
+  const bulkOps = newEmployeesToAssign.map((emp) => ({
     updateOne: {
       filter: {
         businessOwnerId,
@@ -497,6 +507,479 @@ exports.kpiAssignService = async (businessOwnerId, payload) => {
     matchedCount: result.matchedCount,
     modifiedCount: result.modifiedCount,
     upsertedCount: result.upsertedCount,
+    newlyAssignedCount: newEmployeesToAssign.length,
+    skippedCount: alreadyAssignedUserIds.size,
     totalAssignments: targetEmployees.length
   };
+};
+
+exports.kpiAssignmentUpdateService = async (kpiId, businessOwnerId, payload) => {
+  const { assignedUserId, goalValue, resetFrequency, isRepeat, progress } = payload;
+
+  if (!mongoose.Types.ObjectId.isValid(kpiId) || !mongoose.Types.ObjectId.isValid(assignedUserId)) {
+    throw new AppError('Invalid ID format.', 400);
+  }
+
+  const assignment = await KpiAssignment.findOne({
+    businessOwnerId,
+    kpiId,
+    assignedUserId
+  });
+
+  if (!assignment) {
+    throw new AppError('KPI assignment not found.', 404);
+  }
+
+  if (goalValue !== undefined) {
+    assignment.goalValue = goalValue;
+  }
+
+  if (progress !== undefined) {
+    assignment.progress = Number(progress);
+  }
+
+  if (isRepeat !== undefined) {
+    assignment.isRepeat = isRepeat === true || isRepeat === 'true';
+  }
+
+  if (resetFrequency) {
+    const freqDoc = await KpiResetFrequency.findById(resetFrequency);
+    if (!freqDoc) {
+      throw new AppError('The selected reset frequency reference was not found.', 404);
+    }
+    assignment.resetFrequency = freqDoc.name.toLowerCase();
+  }
+
+  await assignment.save();
+
+  const assignmentObj = assignment.toObject();
+
+  let percent = 0;
+  if (assignmentObj.goalValue > 0) {
+    percent = Math.round((assignmentObj.progress / assignmentObj.goalValue) * 100);
+    percent = Math.min(percent, 100);
+  }
+
+  assignmentObj.progressPercent = percent;
+
+  return assignmentObj;
+};
+
+exports.kpiLeaderboardService = async (userId) => {
+  const pipeline = [
+    {
+      $match: {
+        businessOwnerId: new mongoose.Types.ObjectId(userId)
+      }
+    },
+    {
+      $lookup: {
+        from: Kpi.collection.name,
+        localField: '_id',
+        foreignField: 'categoryId',
+        as: 'kpiDefinitions'
+      }
+    },
+    {
+      $lookup: {
+        from: KpiAssignment.collection.name,
+        localField: '_id',
+        foreignField: 'categoryId',
+        as: 'assignments'
+      }
+    },
+    {
+      $project: {
+        categoryName: 1,
+        createdAt: 1,
+        kpisCount: { $size: '$kpiDefinitions' },
+        lastUpdated: { $max: '$assignments.updatedAt' },
+        kpiProgresses: {
+          $map: {
+            input: '$kpiDefinitions',
+            as: 'k',
+            in: {
+              $let: {
+                vars: {
+                  kpiAssignments: {
+                    $filter: {
+                      input: '$assignments',
+                      as: 'a',
+                      cond: { $eq: ['$$a.kpiId', '$$k._id'] }
+                    }
+                  }
+                },
+                in: {
+                  $cond: {
+                    if: { $gt: [{ $size: '$$kpiAssignments' }, 0] },
+                    then: {
+                      $avg: {
+                        $map: {
+                          input: '$$kpiAssignments',
+                          as: 'ka',
+                          in: {
+                            $min: [
+                              {
+                                $cond: {
+                                  if: { $gt: ['$$ka.goalValue', 0] },
+                                  then: {
+                                    $multiply: [
+                                      { $divide: ['$$ka.progress', '$$ka.goalValue'] },
+                                      100
+                                    ]
+                                  },
+                                  else: 0
+                                }
+                              },
+                              100
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    else: 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      $project: {
+        id: '$_id',
+        _id: 0,
+        categoryName: 1,
+        kpisCount: 1,
+        lastUpdated: 1,
+        createdAt: 1,
+        progress: {
+          $cond: {
+            if: { $gt: [{ $size: '$kpiProgresses' }, 0] },
+            then: { $round: [{ $avg: '$kpiProgresses' }, 0] },
+            else: 0
+          }
+        }
+      }
+    },
+    {
+      $sort: { categoryName: 1 }
+    }
+  ];
+
+  const categories = await KpiCategory.aggregate(pipeline);
+
+  return categories.map((cat) => {
+    let formattedDate = '';
+    const dateToUse = cat.lastUpdated || cat.createdAt;
+    if (dateToUse) {
+      const d = new Date(dateToUse);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      formattedDate = `${mm}/${dd}/${yyyy}`;
+    }
+
+    return {
+      id: cat.id,
+      categoryName: cat.categoryName,
+      kpisCount: cat.kpisCount || 0,
+      progress: cat.progress || 0,
+      trend: cat.progress >= 50 ? 'up' : 'down',
+      lastUpdated: formattedDate
+    };
+  });
+};
+/**
+ * Unified service to retrieve KPIs.
+ * - If categoryId is provided: Returns KPIs under that specific category.
+ * - If categoryId is omitted/null: Returns all KPIs across all categories (flat list).
+ * - If assignedUserId is provided: Returns only KPIs assigned to that specific user, with raw progress/goal values.
+ *
+ * Parameters:
+ * - categoryId: String (Optional, Valid MongoDB ObjectId) - Filter by category.
+ * - userId: String (Valid MongoDB ObjectId) - Authenticated business owner's ID.
+ * - query: Object (Optional) - Query parameters, containing optional assignedUserId.
+ *
+ * Returns:
+ * - Array of objects containing: id, kpiName, measurementType, measurementSymbol, progressPercent, progressValue, goalValue, lastUpdated
+ */
+exports.getKpisByCategoryService = async (categoryId, userId, query = {}) => {
+  const { assignedUserId, page, limit } = query;
+
+  // Build match stage dynamically
+  const matchStage = {
+    businessOwnerId: new mongoose.Types.ObjectId(userId)
+  };
+
+  // Filter by category only if a categoryId is passed
+  if (categoryId) {
+    matchStage.categoryId = new mongoose.Types.ObjectId(categoryId);
+  }
+
+  const pipeline = [
+    {
+      $match: matchStage
+    },
+    {
+      $lookup: {
+        from: 'measurementtypes',
+        localField: 'measurementType',
+        foreignField: '_id',
+        as: 'measurementTypeData'
+      }
+    },
+    {
+      $unwind: {
+        path: '$measurementTypeData',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      // Dynamic lookup: filter joined assignments by assignedUserId if provided
+      $lookup: {
+        from: KpiAssignment.collection.name,
+        let: { kpi_id: '$_id' },
+        pipeline: [
+          {
+            $match: {
+              $expr: {
+                $and: [
+                  { $eq: ['$kpiId', '$$kpi_id'] },
+                  ...(assignedUserId
+                    ? [{ $eq: ['$assignedUserId', new mongoose.Types.ObjectId(assignedUserId)] }]
+                    : [])
+                ]
+              }
+            }
+          }
+        ],
+        as: 'assignments'
+      }
+    },
+    // Dynamic filter: if assignedUserId is provided, return ONLY KPIs assigned to that user
+    ...(assignedUserId ? [{ $match: { 'assignments.0': { $exists: true } } }] : []),
+    {
+      $project: {
+        kpiName: 1,
+        measurementType: '$measurementTypeData.name',
+        measurementSymbol: '$measurementTypeData.symbol',
+        lastUpdated: { $max: '$assignments.updatedAt' },
+        progressValue: {
+          $cond: {
+            if: assignedUserId ? true : false,
+            then: { $first: '$assignments.progress' },
+            else: null
+          }
+        },
+        goalValue: {
+          $cond: {
+            if: assignedUserId ? true : false,
+            then: { $first: '$assignments.goalValue' },
+            else: null
+          }
+        },
+        progressPercent: {
+          $cond: {
+            if: { $gt: [{ $size: '$assignments' }, 0] },
+            then: {
+              $round: [
+                {
+                  $avg: {
+                    $map: {
+                      input: '$assignments',
+                      as: 'ka',
+                      in: {
+                        $min: [
+                          {
+                            $cond: {
+                              if: { $gt: ['$$ka.goalValue', 0] },
+                              then: {
+                                $multiply: [{ $divide: ['$$ka.progress', '$$ka.goalValue'] }, 100]
+                              },
+                              else: 0
+                            }
+                          },
+                          100
+                        ]
+                      }
+                    }
+                  }
+                },
+                0
+              ]
+            },
+            else: 0
+          }
+        }
+      }
+    },
+    {
+      $sort: { kpiName: 1 }
+    }
+  ];
+
+  if (page || limit) {
+    let parsedPage = parseInt(page) || 1;
+    let parsedLimit = parseInt(limit) || 10;
+
+    if (parsedPage < 1) parsedPage = 1;
+    if (parsedLimit < 1) parsedLimit = 10;
+
+    const skip = (parsedPage - 1) * parsedLimit;
+
+    // Fetch the total count dynamically matching all filters in the pipeline
+    const countResult = await Kpi.aggregate([...pipeline, { $count: 'count' }]);
+    const total = countResult[0]?.count || 0;
+
+    const kpis = await Kpi.aggregate([...pipeline, { $skip: skip }, { $limit: parsedLimit }]);
+
+    const formattedKpis = kpis.map((kpi) => {
+      let formattedDate = '';
+      if (kpi.lastUpdated) {
+        const d = new Date(kpi.lastUpdated);
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const yyyy = d.getFullYear();
+        formattedDate = `${mm}/${dd}/${yyyy}`;
+      }
+
+      return {
+        id: kpi._id,
+        kpiName: kpi.kpiName || '',
+        measurementType: kpi.measurementType || '',
+        measurementSymbol: kpi.measurementSymbol || '',
+        progressPercent: kpi.progressPercent || 0,
+        progressValue: kpi.progressValue !== undefined ? kpi.progressValue : null,
+        goalValue: kpi.goalValue !== undefined ? kpi.goalValue : null,
+        lastUpdated: formattedDate
+      };
+    });
+
+    return {
+      data: formattedKpis,
+      page: parsedPage,
+      limit: parsedLimit,
+      total,
+      totalPages: Math.ceil(total / parsedLimit)
+    };
+  }
+
+  const kpis = await Kpi.aggregate(pipeline);
+
+  const formattedKpis = kpis.map((kpi) => {
+    let formattedDate = '';
+    if (kpi.lastUpdated) {
+      const d = new Date(kpi.lastUpdated);
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      formattedDate = `${mm}/${dd}/${yyyy}`;
+    }
+
+    return {
+      id: kpi._id,
+      kpiName: kpi.kpiName || '',
+      measurementType: kpi.measurementType || '',
+      measurementSymbol: kpi.measurementSymbol || '',
+      progressPercent: kpi.progressPercent || 0,
+      progressValue: kpi.progressValue !== undefined ? kpi.progressValue : null,
+      goalValue: kpi.goalValue !== undefined ? kpi.goalValue : null,
+      lastUpdated: formattedDate
+    };
+  });
+
+  return {
+    data: formattedKpis
+  };
+};
+
+/**
+ * Service to retrieve the leaderboard (ranked list of employee progress) for a specific KPI.
+ *
+ * Parameters:
+ * - kpiId: String (Valid MongoDB ObjectId) - Specific KPI ID to query.
+ * - businessOwnerId: String (Valid MongoDB ObjectId) - Authenticated business owner ID.
+ *
+ * Returns:
+ * - Array of objects containing: rank, userId, employeeName, profileImage, progressPercent, progressValue, goalValue, trend, lastUpdated
+ */
+exports.getSpecificKpiLeaderboardService = async (
+  kpiId,
+  businessOwnerId,
+  loggedInUserId = null
+) => {
+  if (!mongoose.Types.ObjectId.isValid(kpiId)) {
+    throw new AppError('Invalid KPI ID format.', 400);
+  }
+
+  const kpiExists = await Kpi.findOne({ _id: kpiId, businessOwnerId });
+  if (!kpiExists) {
+    throw new AppError('KPI definition not found or unauthorized access.', 404);
+  }
+
+  const assignments = await KpiAssignment.find({
+    businessOwnerId,
+    kpiId
+  }).populate({
+    path: 'assignedUserId',
+    select: 'name userProfile'
+  });
+
+  const leaderboard = assignments.map((assignment) => {
+    const userObj = assignment.assignedUserId || {};
+    const employeeName = userObj.name;
+    const profileImage = userObj.userProfile?.url || '';
+
+    let progressPercent = 0;
+    if (assignment.goalValue > 0) {
+      progressPercent = Math.round((assignment.progress / assignment.goalValue) * 100);
+      progressPercent = Math.min(progressPercent, 100);
+    }
+
+    const d = new Date(assignment.updatedAt);
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const formattedDate = `${mm}/${dd}/${yyyy}`;
+
+    return {
+      userId: assignment.assignedUserId?._id || null,
+      employeeName,
+      profileImage,
+      progressPercent,
+      progressValue: assignment.progress || 0,
+      goalValue: assignment.goalValue || 0,
+      trend: progressPercent >= 50 ? 'up' : 'down',
+      lastUpdated: formattedDate
+    };
+  });
+
+  leaderboard.sort((a, b) => b.progressPercent - a.progressPercent);
+
+  const rankedLeaderboard = leaderboard.map((item, idx) => ({
+    rank: idx + 1,
+    ...item
+  }));
+
+  if (loggedInUserId) {
+    const currentUserIdStr = loggedInUserId.toString();
+    const currentUserIdx = rankedLeaderboard.findIndex(
+      (item) => item.userId && item.userId.toString() === currentUserIdStr
+    );
+
+    if (currentUserIdx !== -1) {
+      const currentUserItem = {
+        ...rankedLeaderboard[currentUserIdx],
+        isCurrentUser: true,
+        employeeName: 'You'
+      };
+      // Remove from its original position and prepend to the top of the array
+      rankedLeaderboard.splice(currentUserIdx, 1);
+      rankedLeaderboard.unshift(currentUserItem);
+    }
+  }
+
+  return rankedLeaderboard;
 };

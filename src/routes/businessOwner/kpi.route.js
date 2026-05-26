@@ -6,7 +6,11 @@ const {
   kpiCategoryUpdateValidation,
   kpiCreateValidation,
   kpiUpdateValidation,
-  kpiAssignValidation
+  kpiAssignValidation,
+  kpiAssignmentUpdateValidation,
+  getKpisByCategoryValidation,
+  getAssignedKpisValidation,
+  getKpiLeaderboardValidation
 } = require('../../validations/kpi.validator');
 const {
   createKpiCategory,
@@ -17,7 +21,12 @@ const {
   getKpis,
   updateKpi,
   deleteKpi,
-  assignKpi
+  assignKpi,
+  updateKpiAssignment,
+  getKpiLeaderboard,
+  getKpisByCategory,
+  getAssignedKpis,
+  getSpecificKpiLeaderboard
 } = require('../../controllers/businessOwner/kpi.controller');
 
 router.post(
@@ -63,6 +72,36 @@ router.post(
   authenticate('business_owner'),
   validate(kpiAssignValidation),
   asyncHandler(assignKpi)
+);
+
+router.put(
+  '/assign/:kpiId',
+  authenticate('business_owner'),
+  validate(kpiAssignmentUpdateValidation),
+  asyncHandler(updateKpiAssignment)
+);
+
+router.get('/leaderboard', authenticate('business_owner'), asyncHandler(getKpiLeaderboard));
+
+router.get(
+  '/category/:categoryId/kpis',
+  authenticate('business_owner'),
+  validate(getKpisByCategoryValidation),
+  asyncHandler(getKpisByCategory)
+);
+
+router.get(
+  '/assigned',
+  authenticate('business_owner', 'team_member'),
+  validate(getAssignedKpisValidation),
+  asyncHandler(getAssignedKpis)
+);
+
+router.get(
+  '/:kpiId/leaderboard',
+  authenticate('business_owner'),
+  validate(getKpiLeaderboardValidation),
+  asyncHandler(getSpecificKpiLeaderboard)
 );
 
 router.delete('/:kpiId', authenticate('business_owner'), asyncHandler(deleteKpi));
