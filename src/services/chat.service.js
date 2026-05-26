@@ -387,8 +387,8 @@ exports.getTeamDetailsService = async (userId, chatId, skip = 0, limit = 20) => 
   const otherMember = members.find((member) => member.userId.toString() !== userId.toString());
   const user = otherMember
     ? await User.findById(otherMember.userId)
-      .select('name email role userProfile dateOfJoining')
-      .lean()
+        .select('name email role userProfile dateOfJoining')
+        .lean()
     : null;
 
   const rawMessages = await ChatMessage.find({ roomId: chatId })

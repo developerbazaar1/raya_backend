@@ -54,6 +54,7 @@ router.use(
   '/api/v1/business-owner-team/mental-health',
   require('./businessOwnerTeam/mentalHealthCheck.route')
 );
+router.use('/api/v1/business-owner-team/kpi', require('./businessOwnerTeam/kpi.route'));
 
 // All Admin route
 router.use('/api/v1/admin/auth', require('./admin/adminauth.route'));
