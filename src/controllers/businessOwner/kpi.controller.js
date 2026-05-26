@@ -11,7 +11,9 @@ const {
   kpiAssignmentUpdateService,
   kpiLeaderboardService,
   getKpisByCategoryService,
-  getSpecificKpiLeaderboardService
+  getSpecificKpiLeaderboardService,
+  kpiHistoryPostService,
+  kpiHistoryGetService
 } = require('../../services/kpi.service');
 
 exports.createKpiCategory = async (req, res) => {
@@ -189,6 +191,34 @@ exports.getSpecificKpiLeaderboard = async (req, res) => {
   res.status(200).json({
     status: 'success',
     message: 'KPI leaderboard fetched successfully.',
+    data
+  });
+};
+
+/**
+ * Controller to manually log/update a KPI History record.
+ */
+exports.postKpiHistory = async (req, res) => {
+  const data = await kpiHistoryPostService(req.user.userId, req.body);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI History entry saved successfully.',
+    data
+  });
+};
+
+/**
+ * Controller to fetch grouped and chronological KPI History data for the reports graphs.
+ */
+exports.getKpiHistory = async (req, res) => {
+  const data = await kpiHistoryGetService(req.user.userId, req.query);
+  const message = data.length === 0
+    ? `No KPIs assigned for the selected ${req.query.periodType} cycle.`
+    : 'KPI data retrieved successfully.';
+
+  res.status(200).json({
+    status: 'success',
+    message,
     data
   });
 };
