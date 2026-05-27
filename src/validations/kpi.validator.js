@@ -207,5 +207,13 @@ exports.kpiHistoryGetValidation = [
     .withMessage('endDate cannot be empty'),
   query('search')
     .optional()
-    .trim()
+    .trim(),
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be an integer greater than or equal to 1'),
+  query('limit')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Limit must be an integer greater than or equal to 1')
 ];

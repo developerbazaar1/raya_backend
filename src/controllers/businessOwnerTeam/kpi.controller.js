@@ -47,19 +47,19 @@ exports.getAssignedKpis = async (req, res) => {
  */
 exports.getKpiHistory = async (req, res) => {
   const businessOwnerId = req.authUser.owner;
-  const data = await employeeKpiHistoryGetService(
+  const result = await employeeKpiHistoryGetService(
     req.user.userId,
     businessOwnerId,
     req.query
   );
 
-  const message = data.length === 0
+  const message = result.data.length === 0
     ? `No historical data found for the selected ${req.query.periodType} cycle.`
     : 'Assigned KPI history retrieved successfully.';
 
   res.status(200).json({
     status: 'success',
     message,
-    data
+    ...result
   });
 };

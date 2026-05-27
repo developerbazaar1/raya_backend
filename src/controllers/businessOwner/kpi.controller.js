@@ -211,14 +211,14 @@ exports.postKpiHistory = async (req, res) => {
  * Controller to fetch grouped and chronological KPI History data for the reports graphs.
  */
 exports.getKpiHistory = async (req, res) => {
-  const data = await kpiHistoryGetService(req.user.userId, req.query);
-  const message = data.length === 0
+  const result = await kpiHistoryGetService(req.user.userId, req.query);
+  const message = result.data.length === 0
     ? `No KPIs assigned for the selected ${req.query.periodType} cycle.`
     : 'KPI data retrieved successfully.';
 
   res.status(200).json({
     status: 'success',
     message,
-    data
+    ...result
   });
 };
