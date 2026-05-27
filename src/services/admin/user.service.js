@@ -327,12 +327,12 @@ exports.rolesListByBusinessOwnerIdService = async (businessOwnerId, query) => {
       : null
   };
 };
-// Define parseFields function to fix 'no-undef' error
+
 const parseFields = (fields) => {
   if (!fields) return [];
   return fields.split(',').map((field) => field.trim());
 };
-// Define buildRoleResponse function to fix 'no-undef' error
+
 const buildRoleResponse = (role, memberCount, selectedFields) => {
   const response = { id: role._id, name: role.roleName, memberCount };
   if (selectedFields.length) {

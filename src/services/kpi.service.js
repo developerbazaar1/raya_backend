@@ -9,9 +9,7 @@ const EmployeeInfo = require('../models/businessOwnerTeam/employeesInfo.model');
 const EmployeeRole = require('../models/businessOwner/employeeRoles.model');
 const KpiResetFrequency = require('../models/shared/kpiResetFrequency.model');
 
-/**
- * Resolves specific calendar components for a Date object under a target timezone.
- */
+// Resolves calendar components in target timezone.
 function getTzParts(timeZone, date = new Date()) {
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone,
@@ -33,9 +31,7 @@ function getTzParts(timeZone, date = new Date()) {
   return map;
 }
 
-/**
- * Computes exact UTC Date object corresponding to a calendar date/time in the target timezone.
- */
+// Maps calendar dates to localized UTC boundaries.
 function localToUtc(year, month, day, hour, minute, second, millisecond, timeZone) {
   const t_approx = Date.UTC(year, month - 1, day, hour, minute, second);
   const parts = getTzParts(timeZone, new Date(t_approx));
@@ -50,9 +46,7 @@ function localToUtc(year, month, day, hour, minute, second, millisecond, timeZon
   return new Date(t_exact_approx - (offset2 - offset) + millisecond);
 }
 
-/**
- * Resolves ISO week number and year from calendar parts.
- */
+// Resolves ISO week and year from calendar parts.
 function getISOWeekAndYear(year, month, day) {
   const d = new Date(Date.UTC(year, month - 1, day));
   const dayNum = d.getUTCDay() || 7;
@@ -62,9 +56,7 @@ function getISOWeekAndYear(year, month, day) {
   return { week: weekNo, year: d.getUTCFullYear() };
 }
 
-/**
- * Calculates localized period start and end boundary dates converted to UTC objects.
- */
+// Calculates localized start and end dates in UTC for a target timezone.
 function getPeriodBoundsAndIdentifier(periodType, periodIdentifier, timeZone) {
   let periodStartDate, periodEndDate;
 
@@ -146,9 +138,7 @@ function getPeriodBoundsAndIdentifier(periodType, periodIdentifier, timeZone) {
   return { periodStartDate, periodEndDate, periodIdentifier };
 }
 
-/**
- * Resolves start/end boundaries and string identifier for the current time instant in the target timezone.
- */
+// Resolves bounds for the current period in target timezone.
 function getCurrentPeriodBoundsAndIdentifier(periodType, timeZone) {
   const now = new Date();
   const parts = getTzParts(timeZone, now);
@@ -175,6 +165,34 @@ function getCurrentPeriodBoundsAndIdentifier(periodType, timeZone) {
   }
 
   return getPeriodBoundsAndIdentifier(periodType, periodIdentifier, timeZone);
+}
+
+// Resolves the string period identifier for a specific timestamp under a target timezone.
+function getPeriodIdentifierForDate(periodType, date, timeZone) {
+  const parts = getTzParts(timeZone, date);
+
+  let periodIdentifier;
+  if (periodType === 'monthly') {
+    const yearStr = String(parts.year);
+    const monthStr = String(parts.month).padStart(2, '0');
+    periodIdentifier = `${yearStr}-${monthStr}`;
+  } else if (periodType === 'weekly') {
+    const iso = getISOWeekAndYear(parts.year, parts.month, parts.day);
+    const yearStr = String(iso.year);
+    const weekStr = String(iso.week).padStart(2, '0');
+    periodIdentifier = `${yearStr}-W${weekStr}`;
+  } else if (periodType === 'yearly') {
+    periodIdentifier = String(parts.year);
+  } else if (periodType === 'daily') {
+    const yearStr = String(parts.year);
+    const monthStr = String(parts.month).padStart(2, '0');
+    const dayStr = String(parts.day).padStart(2, '0');
+    periodIdentifier = `${yearStr}-${monthStr}-${dayStr}`;
+  } else {
+    throw new AppError('Unsupported periodType.', 400);
+  }
+
+  return periodIdentifier;
 }
 
 /**
@@ -768,16 +786,53 @@ exports.kpiAssignmentUpdateService = async (kpiId, businessOwnerId, payload) => 
     assignment.resetFrequency = freqDoc.name.toLowerCase();
   }
 
-  await assignment.save();
-
-  const assignmentObj = assignment.toObject();
-
+  // Recalculate status dynamically based on new target achievement
   let percent = 0;
-  if (assignmentObj.goalValue > 0) {
-    percent = Math.round((assignmentObj.progress / assignmentObj.goalValue) * 100);
-    percent = Math.min(percent, 100);
+  if (assignment.goalValue > 0) {
+    percent = Math.min(Math.round((assignment.progress / assignment.goalValue) * 100), 100);
   }
 
+  let status = 'on_track';
+  if (percent < 50) {
+    status = 'at_risk';
+  } else if (percent < 80) {
+    status = 'need_attention';
+  }
+
+  assignment.status = status;
+  await assignment.save();
+
+  // Synchronize history ledger timezone-safely
+  try {
+    const ownerInfo = await BusinessOwnerInfo.findOne({ userId: businessOwnerId });
+    const timeZone = ownerInfo?.timeZone || 'America/New_York';
+    const bounds = getCurrentPeriodBoundsAndIdentifier(assignment.resetFrequency || 'weekly', timeZone);
+
+    await KpiHistory.findOneAndUpdate(
+      {
+        kpiId: assignment.kpiId,
+        assignedUserId: assignment.assignedUserId,
+        periodIdentifier: bounds.periodIdentifier
+      },
+      {
+        businessOwnerId: assignment.businessOwnerId,
+        categoryId: assignment.categoryId,
+        roleId: assignment.roleId || null,
+        goalValue: assignment.goalValue,
+        actualValue: assignment.progress,
+        progressPercent: percent,
+        periodType: assignment.resetFrequency || 'weekly',
+        periodStartDate: bounds.periodStartDate,
+        periodEndDate: bounds.periodEndDate,
+        status: status
+      },
+      { upsert: true, new: true }
+    );
+  } catch (err) {
+    console.error('Error syncing updated KPI Assignment to KPI History:', err);
+  }
+
+  const assignmentObj = assignment.toObject();
   assignmentObj.progressPercent = percent;
 
   return assignmentObj;
@@ -1552,3 +1607,200 @@ exports.employeeKpiHistoryGetService = async (assignedUserId, businessOwnerId, q
     return kpi;
   });
 };
+
+/**
+ * Timezone-safe KPI Rollover Engine
+ * --------------------------------
+ * Performs a cursor-based aggregation scan over active KPI assignments to identify 
+ * and process boundary rollovers (daily, weekly, monthly, yearly) inside database layers.
+ * Offloads N+1 timezone fetches and vectorizes writes via MongoDB bulk operations.
+ * 
+ * Database Dependencies:
+ * - Reads: KpiAssignment, EmployeeInfo, BusinessOwnerInfo (via pipeline $lookup)
+ * - Writes: KpiHistory (Bulk Upsert), KpiAssignment (Bulk Update/Delete)
+ * 
+ * Parameters: None
+ * Returns: Promise<Object> { resetCount: Number, deleteCount: Number }
+ */
+exports.processKpiRollovers = async () => {
+  let resetCount = 0;
+  let deleteCount = 0;
+
+  const pipeline = [
+    {
+      $lookup: {
+        from: 'employeeinfos',
+        localField: 'assignedUserId',
+        foreignField: 'userId',
+        as: 'employeeInfo'
+      }
+    },
+    {
+      $unwind: {
+        path: '$employeeInfo',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $lookup: {
+        from: 'businessownerinfos',
+        localField: 'businessOwnerId',
+        foreignField: 'userId',
+        as: 'businessOwnerInfo'
+      }
+    },
+    {
+      $unwind: {
+        path: '$businessOwnerInfo',
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        businessOwnerId: 1,
+        categoryId: 1,
+        kpiId: 1,
+        goalValue: 1,
+        resetFrequency: 1,
+        isRepeat: 1,
+        progress: 1,
+        roleId: 1,
+        status: 1,
+        assignedUserId: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        employeeTz: '$employeeInfo.timeZone',
+        ownerTz: '$businessOwnerInfo.timeZone'
+      }
+    }
+  ];
+
+  const batchSize = 1000;
+  const cursor = KpiAssignment.aggregate(pipeline).cursor({ batchSize });
+
+  let historyOps = [];
+  let updateOps = [];
+  let deleteOps = [];
+
+  const flushBatches = async () => {
+    if (historyOps.length > 0) {
+      await KpiHistory.bulkWrite(historyOps, { ordered: false });
+      historyOps = [];
+    }
+    if (updateOps.length > 0) {
+      await KpiAssignment.bulkWrite(updateOps, { ordered: false });
+      updateOps = [];
+    }
+    if (deleteOps.length > 0) {
+      await KpiAssignment.bulkWrite(deleteOps, { ordered: false });
+      deleteOps = [];
+    }
+  };
+
+  for (let doc = await cursor.next(); doc != null; doc = await cursor.next()) {
+    try {
+      const {
+        _id,
+        businessOwnerId,
+        categoryId,
+        kpiId,
+        goalValue,
+        resetFrequency,
+        isRepeat,
+        progress,
+        roleId,
+        status,
+        assignedUserId,
+        updatedAt,
+        createdAt,
+        employeeTz,
+        ownerTz
+      } = doc;
+
+      if (!assignedUserId || !businessOwnerId) continue;
+
+      let timeZone = (employeeTz || ownerTz || 'America/New_York').trim();
+      try {
+        new Intl.DateTimeFormat('en-US', { timeZone });
+      } catch (e) {
+        timeZone = 'America/New_York';
+      }
+
+      const frequency = resetFrequency || 'weekly';
+      const currentPeriodId = getPeriodIdentifierForDate(frequency, new Date(), timeZone);
+      const assignmentPeriodId = getPeriodIdentifierForDate(frequency, updatedAt || createdAt, timeZone);
+
+      if (assignmentPeriodId !== currentPeriodId) {
+        const archiveBounds = getPeriodBoundsAndIdentifier(frequency, assignmentPeriodId, timeZone);
+        const progressPercent = goalValue > 0 
+          ? Math.min(Math.round((progress / goalValue) * 100), 100) 
+          : 0;
+
+        historyOps.push({
+          updateOne: {
+            filter: {
+              kpiId,
+              assignedUserId,
+              periodIdentifier: assignmentPeriodId
+            },
+            update: {
+              $set: {
+                businessOwnerId,
+                categoryId,
+                roleId: roleId || null,
+                goalValue,
+                actualValue: progress,
+                progressPercent,
+                periodType: frequency,
+                periodStartDate: archiveBounds.periodStartDate,
+                periodEndDate: archiveBounds.periodEndDate,
+                status
+              }
+            },
+            upsert: true
+          }
+        });
+
+        if (isRepeat === true || isRepeat === 'true') {
+          updateOps.push({
+            updateOne: {
+              filter: { _id },
+              update: {
+                $set: {
+                  progress: 0,
+                  status: 'on_track'
+                }
+              }
+            }
+          });
+          resetCount++;
+        } else {
+          deleteOps.push({
+            deleteOne: {
+              filter: { _id }
+            }
+          });
+          deleteCount++;
+        }
+
+        if (historyOps.length >= batchSize || updateOps.length >= batchSize || deleteOps.length >= batchSize) {
+          await flushBatches();
+        }
+      }
+    } catch (err) {
+      console.error(`Error processing aggregate rollover record:`, err);
+    }
+  }
+
+  await flushBatches();
+
+  return { resetCount, deleteCount };
+};
+
+exports.getTzParts = getTzParts;
+exports.localToUtc = localToUtc;
+exports.getISOWeekAndYear = getISOWeekAndYear;
+exports.getPeriodBoundsAndIdentifier = getPeriodBoundsAndIdentifier;
+exports.getCurrentPeriodBoundsAndIdentifier = getCurrentPeriodBoundsAndIdentifier;
+exports.getPeriodIdentifierForDate = getPeriodIdentifierForDate;
