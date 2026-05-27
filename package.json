@@ -12,7 +12,7 @@
     "lint": "eslint . --ext .js",
     "lint:fix": "eslint . --ext .js --fix",
     "seed:kpi-history": "node scripts/seedKpiHistory.js",
-    "prepare": "is-ci || husky install"
+    "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky; fi"
   },
   "repository": {
     "type": "git",
