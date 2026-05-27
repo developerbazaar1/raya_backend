@@ -1229,12 +1229,29 @@ exports.getSpecificKpiLeaderboardService = async (
     };
   });
 
-  leaderboard.sort((a, b) => b.progressPercent - a.progressPercent);
+  leaderboard.sort((a, b) => {
+    const ratioA = a.goalValue > 0 ? (a.progressValue / a.goalValue) : 0;
+    const ratioB = b.goalValue > 0 ? (b.progressValue / b.goalValue) : 0;
+    return ratioB - ratioA;
+  });
 
-  const rankedLeaderboard = leaderboard.map((item, idx) => ({
-    rank: idx + 1,
-    ...item
-  }));
+  let currentRank = 1;
+  const rankedLeaderboard = leaderboard.map((item, idx) => {
+    if (idx > 0) {
+      const prev = leaderboard[idx - 1];
+      const prevRatio = prev.goalValue > 0 ? (prev.progressValue / prev.goalValue) : 0;
+      const currRatio = item.goalValue > 0 ? (item.progressValue / item.goalValue) : 0;
+
+      if (currRatio !== prevRatio) {
+        currentRank = currentRank + 1;
+      }
+    }
+
+    return {
+      rank: currentRank,
+      ...item
+    };
+  });
 
   if (loggedInUserId) {
     const currentUserIdStr = loggedInUserId.toString();
@@ -1342,7 +1359,7 @@ exports.kpiHistoryPostService = async (businessOwnerId, payload) => {
  * Supports timezone-safe period formats, optional date boundaries, and regex KPI search filtering.
  */
 exports.kpiHistoryGetService = async (businessOwnerId, query = {}) => {
-  const { periodType, search } = query;
+  const { periodType, search, page, limit } = query;
 
   if (!periodType) {
     throw new AppError('periodType is a required query parameter.', 400);
@@ -1393,7 +1410,6 @@ exports.kpiHistoryGetService = async (businessOwnerId, query = {}) => {
       }
     },
     { $unwind: '$userDetails' },
-    // Group active assignments by KPI to isolate distinct chart objects
     {
       $group: {
         _id: '$kpiId',
@@ -1434,11 +1450,17 @@ exports.kpiHistoryGetService = async (businessOwnerId, query = {}) => {
 
   const result = await KpiAssignment.aggregate(pipeline);
 
+  const total = result.length;
+  const parsedPage = parseInt(page, 10) || 1;
+  const parsedLimit = parseInt(limit, 10) || 10;
+  const skip = (parsedPage - 1) * parsedLimit;
+  const paginatedResult = result.slice(skip, skip + parsedLimit);
+
   const ownerInfo = await BusinessOwnerInfo.findOne({ userId: businessOwnerId });
   const timeZone = ownerInfo?.timeZone || 'America/New_York';
   const bounds = getCurrentPeriodBoundsAndIdentifier(periodType, timeZone);
 
-  return result.map((kpi) => {
+  const data = paginatedResult.map((kpi) => {
     let periodName = bounds.periodIdentifier;
 
     if (periodType === 'monthly') {
@@ -1478,10 +1500,18 @@ exports.kpiHistoryGetService = async (businessOwnerId, query = {}) => {
       ]
     };
   });
+
+  return {
+    data,
+    page: parsedPage,
+    limit: parsedLimit,
+    total,
+    totalPages: Math.ceil(total / parsedLimit)
+  };
 };
 
 exports.employeeKpiHistoryGetService = async (assignedUserId, businessOwnerId, query = {}) => {
-  const { periodType, startDate, endDate, search } = query;
+  const { periodType, startDate, endDate, search, page, limit } = query;
 
   if (!periodType) {
     throw new AppError('periodType is a required query parameter.', 400);
@@ -1575,7 +1605,13 @@ exports.employeeKpiHistoryGetService = async (assignedUserId, businessOwnerId, q
 
   const result = await KpiHistory.aggregate(pipeline);
 
-  return result.map((kpi) => {
+  const total = result.length;
+  const parsedPage = parseInt(page, 10) || 1;
+  const parsedLimit = parseInt(limit, 10) || 10;
+  const skip = (parsedPage - 1) * parsedLimit;
+  const paginatedResult = result.slice(skip, skip + parsedLimit);
+
+  const data = paginatedResult.map((kpi) => {
     kpi.history.sort((a, b) => a.periodIdentifier.localeCompare(b.periodIdentifier));
     kpi.history = kpi.history.map((hist) => {
       let periodName = hist.periodIdentifier;
@@ -1606,6 +1642,14 @@ exports.employeeKpiHistoryGetService = async (assignedUserId, businessOwnerId, q
     });
     return kpi;
   });
+
+  return {
+    data,
+    page: parsedPage,
+    limit: parsedLimit,
+    total,
+    totalPages: Math.ceil(total / parsedLimit)
+  };
 };
 
 /**
