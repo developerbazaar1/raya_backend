@@ -11,6 +11,7 @@ module.exports = {
   REDIS_PORT: parseInt(process.env.REDIS_PORT, 10) || 6379,
   REDIS_PASSWORD: process.env.REDIS_PASSWORD || undefined,
   REDIS_TLS: process.env.REDIS_TLS === 'true',
+  REDIS_DB: parseInt(process.env.REDIS_DB, 10) || 0,
   MONGO_URI: process.env.MONGO_URI,
   JWT_SECRET: process.env.JWT_SECRET,
   BASE_URL: process.env.BASE_URL,
