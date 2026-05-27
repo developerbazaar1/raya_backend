@@ -826,7 +826,7 @@ exports.kpiAssignmentUpdateService = async (kpiId, businessOwnerId, payload) => 
         periodEndDate: bounds.periodEndDate,
         status: status
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
   } catch (err) {
     console.error('Error syncing updated KPI Assignment to KPI History:', err);
@@ -1328,7 +1328,7 @@ exports.kpiHistoryPostService = async (businessOwnerId, payload) => {
       periodEndDate,
       status
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   );
 
   const now = new Date();
