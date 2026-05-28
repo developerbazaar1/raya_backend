@@ -35,7 +35,7 @@ exports.kpiCategoryCreateService = async (body, userId) => {
 
 exports.kpiCategoryGetService = async (userId, query = {}) => {
   const { page, limit, search } = query;
-  
+
   const filter = { businessOwnerId: new mongoose.Types.ObjectId(userId) };
 
   if (search) {
@@ -164,7 +164,10 @@ exports.kpiCategoryDeleteService = async (categoryId, userId) => {
   // Referential Integrity check: ensure no KPIs are orphaned
   const linkedKpisCount = await Kpi.countDocuments({ categoryId: categoryId });
   if (linkedKpisCount > 0) {
-    throw new AppError(`Cannot delete category. It currently has ${linkedKpisCount} associated KPI(s). Please delete or reassign them first.`, 400);
+    throw new AppError(
+      `Cannot delete category. It currently has ${linkedKpisCount} associated KPI(s). Please delete or reassign them first.`,
+      400
+    );
   }
 
   await KpiCategory.findByIdAndDelete(categoryId);
@@ -173,7 +176,7 @@ exports.kpiCategoryDeleteService = async (categoryId, userId) => {
 
 /**
  * Service to create a new KPI under a specific category.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - body.categoryId: Must be a valid ObjectId and belong to the authenticated user.
  * - body.measurementType: Must be a valid ObjectId from MeasurementType collection.
@@ -219,7 +222,7 @@ exports.kpiCreateService = async (body, userId) => {
 
 /**
  * Service to fetch all KPIs grouped by their category for a business owner.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - userId: Identifies the business owner to fetch data for.
  * - KpiCategory (Model): The root collection to aggregate from.
@@ -286,7 +289,7 @@ exports.kpiGetService = async (userId) => {
 
   const categoriesWithKpis = await KpiCategory.aggregate(pipeline);
 
-  const formattedData = categoriesWithKpis.map(cat => ({
+  const formattedData = categoriesWithKpis.map((cat) => ({
     id: cat._id,
     kpiCategoryName: cat.categoryName,
     KPIs: cat.kpis || []
@@ -297,7 +300,7 @@ exports.kpiGetService = async (userId) => {
 
 /**
  * Service to update an existing KPI name.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - kpiId: The unique identifier of the KPI to update.
  * - body.kpiName: The new name for the KPI.
@@ -341,7 +344,7 @@ exports.kpiUpdateService = async (kpiId, body, userId) => {
 
 /**
  * Service to delete an existing KPI.
- * 
+ *
  * CRUCIAL PARAMS/DEPENDENCIES:
  * - kpiId: The unique identifier of the KPI to delete.
  * - userId: The ID of the currently authenticated business owner.
@@ -363,7 +366,10 @@ exports.kpiDeleteService = async (kpiId, userId) => {
   // Referential Integrity check: ensure no KPI Assignments are orphaned
   const linkedAssignmentsCount = await KpiAssignment.countDocuments({ kpiId: kpiId });
   if (linkedAssignmentsCount > 0) {
-    throw new AppError(`Cannot delete KPI. It is currently assigned to ${linkedAssignmentsCount} record(s). Please remove these assignments first.`, 400);
+    throw new AppError(
+      `Cannot delete KPI. It is currently assigned to ${linkedAssignmentsCount} record(s). Please remove these assignments first.`,
+      400
+    );
   }
 
   await Kpi.findByIdAndDelete(kpiId);

@@ -32,5 +32,5 @@ module.exports = {
   DO_SPACES_ROOT_FOLDER: process.env.DO_SPACES_ROOT_FOLDER || 'swann',
 
   // CORS ORIGIN
-  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN,
+  CLIENT_ORIGIN: process.env.CLIENT_ORIGIN
 };

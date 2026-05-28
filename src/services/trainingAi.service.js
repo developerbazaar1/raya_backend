@@ -66,7 +66,10 @@ const normalizeTrainingGeneration = (payload, quizCount) => {
     quiz: quiz.map((question) => ({
       question: String(question.question || '').trim(),
       options: Array.isArray(question.options)
-        ? question.options.map((option) => String(option).trim()).filter(Boolean).slice(0, 4)
+        ? question.options
+            .map((option) => String(option).trim())
+            .filter(Boolean)
+            .slice(0, 4)
         : [],
       correctAnswer: String(question.correctAnswer || '').trim(),
       explanation: String(question.explanation || '').trim()
@@ -74,7 +77,13 @@ const normalizeTrainingGeneration = (payload, quizCount) => {
   };
 };
 
-const generateTrainingContent = async ({ description, quizCount, sourceText, title, versionNumber }) => {
+const generateTrainingContent = async ({
+  description,
+  quizCount,
+  sourceText,
+  title,
+  versionNumber
+}) => {
   if (!NVIDIA_API_KEY) {
     throw new AppError('NVIDIA_API_KEY is required for training generation.', 500);
   }

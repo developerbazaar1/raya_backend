@@ -38,7 +38,6 @@ router.get(
   asyncHandler(getTrainingDetails)
 );
 
-
 // Generate New Script Version for training
 // Maximum 3 total versions per training.
 router.post(

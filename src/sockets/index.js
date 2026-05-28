@@ -2,7 +2,7 @@ const { Server } = require('socket.io');
 const logger = require('../utils/logger');
 const { socketAuthMiddleware } = require('./socketAuth.middleware');
 const { registerChatSocketHandlers } = require('./chat.socket');
-const {CLIENT_ORIGIN} = require('../config/env');
+const { CLIENT_ORIGIN } = require('../config/env');
 let io;
 
 const getCorsOrigin = () => {

@@ -10,7 +10,7 @@ const chatAttachmentSchema = new mongoose.Schema(
     messageId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'ChatMessage',
-      required: true,
+      required: true
     },
 
     attachment: {
@@ -22,7 +22,7 @@ const chatAttachmentSchema = new mongoose.Schema(
         mimeType: '',
         sizeBytes: 0
       }
-    },
+    }
   },
   { timestamps: true }
 );

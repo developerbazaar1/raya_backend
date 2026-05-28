@@ -47,7 +47,9 @@ const createQuizForVersion = async ({ generated, training, version }) => {
     return;
   }
 
-  console.log(`[training:quiz] creating chapter trainingId=${training._id} versionId=${version._id}`);
+  console.log(
+    `[training:quiz] creating chapter trainingId=${training._id} versionId=${version._id}`
+  );
 
   const chapter = await Chapter.create({
     trainingVersionId: version._id,

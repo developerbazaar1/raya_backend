@@ -25,7 +25,9 @@ const attachRedisLogging = (client) => {
   });
 
   client.on('error', (error) => {
-    console.error(`[redis] connection error code=${error.code || 'UNKNOWN'} message=${error.message}`);
+    console.error(
+      `[redis] connection error code=${error.code || 'UNKNOWN'} message=${error.message}`
+    );
   });
 
   client.on('close', () => {
@@ -37,24 +39,28 @@ const attachRedisLogging = (client) => {
 
 const getRedisConnection = () => {
   if (REDIS_URL) {
-    return attachRedisLogging(new IORedis(REDIS_URL, {
+    return attachRedisLogging(
+      new IORedis(REDIS_URL, {
+        maxRetriesPerRequest: null,
+        connectTimeout: 20000,
+        family: Number(REDIS_FAMILY),
+        tls: REDIS_URL.startsWith('rediss://') ? { servername: REDIS_HOST } : undefined
+      })
+    );
+  }
+
+  return attachRedisLogging(
+    new IORedis({
+      host: REDIS_HOST,
+      port: Number(REDIS_PORT),
+      username: REDIS_USERNAME,
+      password: REDIS_DB_PASSWORD,
       maxRetriesPerRequest: null,
       connectTimeout: 20000,
       family: Number(REDIS_FAMILY),
-      tls: REDIS_URL.startsWith('rediss://') ? { servername: REDIS_HOST } : undefined
-    }));
-  }
-
-  return attachRedisLogging(new IORedis({
-    host: REDIS_HOST,
-    port: Number(REDIS_PORT),
-    username: REDIS_USERNAME,
-    password: REDIS_DB_PASSWORD,
-    maxRetriesPerRequest: null,
-    connectTimeout: 20000,
-    family: Number(REDIS_FAMILY),
-    tls: tlsOptions()
-  }));
+      tls: tlsOptions()
+    })
+  );
 };
 
 module.exports = {

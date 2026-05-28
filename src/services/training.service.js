@@ -14,7 +14,13 @@ const {
 
 const MAX_SCRIPT_GENERATIONS = 3;
 
-const createGenerationJob = async ({ businessOwnerId, generateQuiz, quizCount, trainingId, versionId }) => {
+const createGenerationJob = async ({
+  businessOwnerId,
+  generateQuiz,
+  quizCount,
+  trainingId,
+  versionId
+}) => {
   console.log(
     `[training:queue] creating generation job trainingId=${trainingId} versionId=${versionId} generateQuiz=${generateQuiz} quizCount=${quizCount}`
   );
@@ -69,7 +75,8 @@ const createTrainingService = async ({ body, file, userId }) => {
   }
 
   if (file) {
-    const isPdf = file.mimetype?.includes('pdf') || file.originalname.toLowerCase().endsWith('.pdf');
+    const isPdf =
+      file.mimetype?.includes('pdf') || file.originalname.toLowerCase().endsWith('.pdf');
     if (!isPdf && !sourceText) {
       throw new AppError('Only PDF files are supported unless sourceText is provided.', 400);
     }
@@ -103,7 +110,11 @@ const createTrainingService = async ({ body, file, userId }) => {
       savedFile.mimeType?.includes('pdf') || savedFile.fileName.toLowerCase().endsWith('.pdf');
     if (isPdf) {
       const extractedText = await extractPdfTextFromBuffer(file.buffer);
-      const savedText = await uploadTrainingTextToSpaces(training._id, extractedText, 'extracted.txt');
+      const savedText = await uploadTrainingTextToSpaces(
+        training._id,
+        extractedText,
+        'extracted.txt'
+      );
       training.sourceTextPath = savedText.key;
       console.log(
         `[training:create] extracted pdf text saved trainingId=${training._id} key=${savedText.key}`
@@ -114,7 +125,9 @@ const createTrainingService = async ({ body, file, userId }) => {
   if (sourceText) {
     const savedText = await uploadTrainingTextToSpaces(training._id, sourceText);
     training.sourceTextPath = savedText.key;
-    console.log(`[training:create] source text saved trainingId=${training._id} key=${savedText.key}`);
+    console.log(
+      `[training:create] source text saved trainingId=${training._id} key=${savedText.key}`
+    );
   }
 
   await training.save();
@@ -223,7 +236,9 @@ const getTrainingDetailsService = async ({ trainingId, userId }) => {
 
   return {
     ...training,
-    sourceFileExtension: training.sourceFileName ? path.extname(training.sourceFileName) : undefined,
+    sourceFileExtension: training.sourceFileName
+      ? path.extname(training.sourceFileName)
+      : undefined,
     versions,
     generationJobs: jobs
   };
@@ -248,7 +263,9 @@ const getTrainingQuizService = async ({ trainingId, userId, versionId }) => {
     .lean();
 
   const quizIds = quizzes.map((quiz) => quiz._id);
-  const questions = await Question.find({ quizId: { $in: quizIds } }).sort({ createdAt: 1 }).lean();
+  const questions = await Question.find({ quizId: { $in: quizIds } })
+    .sort({ createdAt: 1 })
+    .lean();
 
   const questionsByQuizId = questions.reduce((acc, question) => {
     const quizId = String(question.quizId);
