@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const path = require('path');
-const { s3Client, spacesBucket, PutObjectCommand } = require('../config/s3Config');
-const { FILE_SIZE, FILE_TYPES, DO_SPACES_BUCKET, DO_SPACES_REGION } = require('../config/constant');
+const { s3Client, spacesBucket, spacesBucketUrl, PutObjectCommand } = require('../config/s3Config');
+const { FILE_SIZE, FILE_TYPES } = require('../config/constant');
 const AppError = require('../utils/appError');
 
 const normalizeExtension = (fileName = '', mimeType = '') => {
@@ -30,7 +30,7 @@ const validateUploadFile = (file) => {
 };
 
 const buildFileMetadata = (file, key) => ({
-  url: `https://${DO_SPACES_BUCKET}.${DO_SPACES_REGION}.digitaloceanspaces.com/${key}`,
+  url: `${spacesBucketUrl}/${key}`,
   key,
   fileName: file.originalname,
   mimeType: file.mimetype,

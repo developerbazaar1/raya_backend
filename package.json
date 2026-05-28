@@ -7,6 +7,7 @@
     "test": "jest",
     "start": "node index.js",
     "dev": "nodemon index.js",
+    "worker:training": "node src/workers/trainingGeneration.worker.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -36,6 +37,7 @@
     "@aws-sdk/client-s3": "^3.1038.0",
     "@aws-sdk/s3-request-presigner": "^3.1042.0",
     "axios": "^1.15.2",
+    "bullmq": "^5.76.10",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -47,6 +49,7 @@
     "mongoose": "^9.5.0",
     "multer": "^2.1.1",
     "node-cron": "^4.2.1",
+    "pdf-parse": "^2.4.5",
     "socket.io": "^4.8.3",
     "winston": "^3.19.0"
   },

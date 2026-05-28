@@ -5,17 +5,29 @@ const {
   GetObjectCommand
 } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
-const { DO_SPACES_BUCKET, DO_SPACES_REGION } = require('./constant');
-const { DO_SPACES_KEY, DO_SPACES_SECRET } = require('./env');
+const {
+  DO_SPACES_BUCKET,
+  DO_SPACES_ROOT_FOLDER,
+  DO_SPACES_BUCKET_URL,
+  DO_SPACES_BUCKET_URL_CDN,
+  DO_SPACES_KEY,
+  DO_SPACES_REGION,
+  DO_SPACES_SECRET
+} = require('./env');
 
 const spacesBucket = DO_SPACES_BUCKET;
 const spacesRegion = DO_SPACES_REGION;
+const spacesBucketUrl =
+  DO_SPACES_BUCKET_URL_CDN ||
+  DO_SPACES_BUCKET_URL ||
+  `https://${spacesBucket}.${spacesRegion}.digitaloceanspaces.com`;
+const spacesEndpointUrl =
+  DO_SPACES_BUCKET_URL || `https://${spacesBucket}.${spacesRegion}.digitaloceanspaces.com`;
+const spacesRootFolder = (DO_SPACES_ROOT_FOLDER || '').replace(/^\/+|\/+$/g, '');
 
 const s3Client = new S3Client({
   region: spacesRegion,
-  endpoint: 'https://sriapp.sgp1.digitaloceanspaces.com',
-  // Path-style avoids SSL hostname mismatches when endpoint already includes bucket
-  forcePathStyle: true,
+  endpoint: `https://${spacesRegion}.digitaloceanspaces.com`,
   credentials: {
     accessKeyId: DO_SPACES_KEY,
     secretAccessKey: DO_SPACES_SECRET
@@ -25,6 +37,9 @@ const s3Client = new S3Client({
 module.exports = {
   s3Client,
   spacesBucket,
+  spacesBucketUrl,
+  spacesEndpointUrl,
+  spacesRootFolder,
   getSignedUrl,
   PutObjectCommand,
   DeleteObjectCommand,

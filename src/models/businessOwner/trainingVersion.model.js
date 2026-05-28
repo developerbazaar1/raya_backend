@@ -9,7 +9,7 @@ const trainingVersionSchema = new mongoose.Schema(
   {
     trainingId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: '',
+      ref: 'Training',
       required: true,
       index: true
     },
@@ -27,6 +27,18 @@ const trainingVersionSchema = new mongoose.Schema(
       default: 70
     },
 
+    videoScript: String,
+    transcription: String,
+
+    learningObjectives: [String],
+
+    generationJobId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'TrainingGenerationJob'
+    },
+
+    generationError: String,
+
     status: {
       type: String,
       enum: TRAINING_VERSION_STATUS,
@@ -36,14 +48,12 @@ const trainingVersionSchema = new mongoose.Schema(
 
     generatedBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'user'
+      ref: 'User'
     }
   },
   { timestamps: true }
 );
 
 trainingVersionSchema.index({ trainingId: 1, versionNumber: 1 }, { unique: true });
-
-trainingVersionSchema.index({ trainingId: 1, versionNumber: 1 });
 
 module.exports = mongoose.model('TrainingVersion', trainingVersionSchema);

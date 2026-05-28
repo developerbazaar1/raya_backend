@@ -20,6 +20,11 @@ const server = app.listen(PORT, () => {
 
 initSocket(server);
 
+if (process.env.TRAINING_WORKER_AUTO_START !== 'false') {
+  require('./src/workers/trainingGeneration.worker');
+  logger.info('Training generation worker started with API process');
+}
+
 // UnhandledRejection Error
 process.on('unhandledRejection', (err) => {
   logger.error('Unhandled rejection', err);

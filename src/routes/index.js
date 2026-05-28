@@ -23,6 +23,7 @@ router.use('/api/v1/business-owner/schedule', require('./businessOwner/schedule.
 router.use('/api/v1/business-owner/dashboard', require('./businessOwner/dashboard.route'));
 router.use('/api/v1/business-owner/kpi', require('./businessOwner/kpi.route'));
 router.use('/api/v1/business-owner/measurement-type', require('./businessOwner/measurementType.route'));
+router.use('/api/v1/business-owner/trainings', require('./businessOwner/training.route'));
 // router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
 
 //All Business Owner Team routes

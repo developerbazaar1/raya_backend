@@ -17,7 +17,9 @@ const questionSchema = new mongoose.Schema(
         text: String,
         isCorrect: Boolean
       }
-    ]
+    ],
+
+    explanation: String
   },
   { timestamps: true }
 );

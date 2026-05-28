@@ -4,6 +4,12 @@
 const mongoose = require('mongoose');
 const quizSchema = new mongoose.Schema(
   {
+    trainingId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Training',
+      index: true
+    },
+
     trainingVersionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'TrainingVersion',

@@ -8,6 +8,7 @@ const {
   uploadEmployeeProfileStep1Files,
   uploadBusinessOwnerSettingsFiles,
   uploadTaskFiles,
+  uploadTrainingSourceFiles,
   uploadMemberProfile,
   uploadChatRoomFiles
 } = require('./upload.middleware');
@@ -24,6 +25,7 @@ module.exports = {
   uploadEmployeeProfileStep1Files,
   uploadBusinessOwnerSettingsFiles,
   uploadTaskFiles,
+  uploadTrainingSourceFiles,
   uploadMemberProfile,
   uploadChatRoomFiles,
   validate,

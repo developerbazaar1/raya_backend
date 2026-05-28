@@ -35,6 +35,7 @@ const uploadBusinessOwnerSettingsFiles = upload.fields([
 
 const uploadTaskFiles = upload.fields([{ name: 'attachments', maxCount: 10 }]);
 const uploadChatRoomFiles = upload.fields([{ name: 'chatRoomImage', maxCount: 1 }]);
+const uploadTrainingSourceFiles = upload.fields([{ name: 'sourceFile', maxCount: 1 }]);
 
 const uploadMemberProfile = upload.fields([{ name: 'userProfile', maxCount: 1 }]);
 
@@ -43,6 +44,7 @@ module.exports = {
   uploadEmployeeProfileStep1Files,
   uploadBusinessOwnerSettingsFiles,
   uploadTaskFiles,
+  uploadTrainingSourceFiles,
   uploadMemberProfile,
   uploadChatRoomFiles
 };

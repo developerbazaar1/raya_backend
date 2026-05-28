@@ -19,6 +19,14 @@ const trainingSchema = new mongoose.Schema(
     description: String,
 
     sopFileUrl: String,
+    sourceType: {
+      type: String,
+      enum: ['text', 'file']
+    },
+    sourceTextPath: String,
+    sourceFilePath: String,
+    sourceFileName: String,
+    sourceMimeType: String,
 
     // 👇 currently selected version
     activeVersionId: {
@@ -31,6 +39,18 @@ const trainingSchema = new mongoose.Schema(
       default: 0,
       max: 3
     },
+
+    quizGenerated: {
+      type: Boolean,
+      default: false
+    },
+
+    quizCount: {
+      type: Number,
+      default: 10
+    },
+
+    generationError: String,
 
     status: {
       type: String,
