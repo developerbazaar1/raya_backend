@@ -5,7 +5,14 @@ const {
   kpiCategoryCreateValidation,
   kpiCategoryUpdateValidation,
   kpiCreateValidation,
-  kpiUpdateValidation
+  kpiUpdateValidation,
+  kpiAssignValidation,
+  kpiAssignmentUpdateValidation,
+  getKpisByCategoryValidation,
+  getAssignedKpisValidation,
+  getKpiLeaderboardValidation,
+  kpiHistoryPostValidation,
+  kpiHistoryGetValidation
 } = require('../../validations/kpi.validator');
 const {
   createKpiCategory,
@@ -15,7 +22,15 @@ const {
   createKpi,
   getKpis,
   updateKpi,
-  deleteKpi
+  deleteKpi,
+  assignKpi,
+  updateKpiAssignment,
+  getKpiLeaderboard,
+  getKpisByCategory,
+  getAssignedKpis,
+  getSpecificKpiLeaderboard,
+  postKpiHistory,
+  getKpiHistory
 } = require('../../controllers/businessOwner/kpi.controller');
 
 router.post(
@@ -54,6 +69,58 @@ router.put(
   authenticate('business_owner'),
   validate(kpiUpdateValidation),
   asyncHandler(updateKpi)
+);
+
+router.post(
+  '/assign',
+  authenticate('business_owner'),
+  validate(kpiAssignValidation),
+  asyncHandler(assignKpi)
+);
+
+router.put(
+  '/assign/:kpiId',
+  authenticate('business_owner'),
+  validate(kpiAssignmentUpdateValidation),
+  asyncHandler(updateKpiAssignment)
+);
+
+router.get('/leaderboard', authenticate('business_owner'), asyncHandler(getKpiLeaderboard));
+
+router.get(
+  '/category/:categoryId/kpis',
+  authenticate('business_owner'),
+  validate(getKpisByCategoryValidation),
+  asyncHandler(getKpisByCategory)
+);
+
+router.get(
+  '/assigned',
+  authenticate('business_owner', 'team_member'),
+  validate(getAssignedKpisValidation),
+  asyncHandler(getAssignedKpis)
+);
+
+router.get(
+  '/:kpiId/leaderboard',
+  authenticate('business_owner'),
+  validate(getKpiLeaderboardValidation),
+  asyncHandler(getSpecificKpiLeaderboard)
+);
+
+// KPI History Routing
+router.post(
+  '/history',
+  authenticate('business_owner'),
+  validate(kpiHistoryPostValidation),
+  asyncHandler(postKpiHistory)
+);
+
+router.get(
+  '/history',
+  authenticate('business_owner'),
+  validate(kpiHistoryGetValidation),
+  asyncHandler(getKpiHistory)
 );
 
 router.delete('/:kpiId', authenticate('business_owner'), asyncHandler(deleteKpi));

@@ -14,7 +14,6 @@ exports.createBusinessType = async (req, res) => {
     data: businesstype
   });
 };
-
 exports.updateBusinessType = async (req, res) => {
   const businesstype = await updateBusinessType({ id: req.params.businessId, ...req.body });
   res.status(200).json({
@@ -23,7 +22,6 @@ exports.updateBusinessType = async (req, res) => {
     data: businesstype
   });
 };
-
 exports.getAllBusinessTypes = async (req, res) => {
   const businesstypes = await getAllBusinessTypes();
   res.status(200).json({

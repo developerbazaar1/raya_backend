@@ -15,7 +15,6 @@ exports.login = async (req, res) => {
     data
   });
 };
-
 exports.verifyOtp = async (req, res) => {
   const data = await verifyOtpService(req.body);
   res.status(200).json({
@@ -24,7 +23,6 @@ exports.verifyOtp = async (req, res) => {
     data
   });
 };
-
 exports.resendOtp = async (req, res) => {
   const data = await resendOtpService(req.body);
   res.status(200).json({
@@ -33,7 +31,6 @@ exports.resendOtp = async (req, res) => {
     data
   });
 };
-
 exports.forgotPassword = async (req, res) => {
   const data = await forgotPasswordService(req.body);
   res.status(200).json({

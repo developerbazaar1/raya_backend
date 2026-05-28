@@ -438,6 +438,7 @@ const createMemberService = async (businessOwnerId, payload) => {
  * @param {*} query
  * @returns
  */
+
 const getMembersByRolesService = async (businessOwnerId, query) => {
   const { search = '', page, limit } = query;
   const ownerObjectId = toObjectId(businessOwnerId);
@@ -639,7 +640,7 @@ const deleteMemberService = async (businessOwnerId, memberId) => {
 };
 
 const getMemberService = async (businessOwnerId, query) => {
-  const { search = '', page, limit } = query;
+  const { search = '', employeeRoleId, page, limit } = query;
 
   const pageNo = Number.parseInt(page, 10);
   const limitNo = Number.parseInt(limit, 10);
@@ -650,7 +651,8 @@ const getMemberService = async (businessOwnerId, query) => {
     {
       $match: {
         businessOwnerId,
-        isDeleted: false
+        isDeleted: false,
+        ...(employeeRoleId && { employeeRoleId: new mongoose.Types.ObjectId(employeeRoleId) })
       }
     },
     {

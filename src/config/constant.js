@@ -17,12 +17,12 @@ module.exports = {
   GUEST_USERS: ['dbrahul03@.gmail.com', 'guest@example.com'],
   FILE_TYPES: ['jpeg', 'jpg', 'png', 'jfif', 'avif', 'pdf'],
   FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  DO_SPACES_REGION: 'sgp1',
-  DO_SPACES_BUCKET: 'seer-app',
+  DO_SPACES_REGION: 'sfo3',
+  DO_SPACES_BUCKET: 'swann',
   DEFAULT_PROFILE_IMAGE:
     'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT-kxsrlL89sKekYAVXwyzqv-SNUcCVDihjnA&s',
 
-  REPETITION_TYPES: ['daily', 'weekly', 'monthly', 'one-time'],
+  REPETITION_TYPES: ['daily', 'weekly', 'monthly', 'one-time', 'yearly'],
   VENDOR_ROLES: [
     'Plumber',
     'Interior Designer',
@@ -42,5 +42,6 @@ module.exports = {
     'Tiles'
   ],
   GENDER: ['Male', 'Female', 'Other'],
-  MOOD_LABELS: ['Critical', 'Struggling', 'Neutral', 'Good', 'Excellent']
+  MOOD_LABELS: ['Critical', 'Struggling', 'Neutral', 'Good', 'Excellent'],
+  BUSINESS_OWNER_APPROVAL_STATUS: ['pending_approval', 'approved', 'rejected']
 };

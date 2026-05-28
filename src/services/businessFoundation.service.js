@@ -3,7 +3,7 @@ const AppError = require('../utils/appError');
 
 exports.createBusinessFoundationService = async (data, userId) => {
   const { mission, vision, values } = data;
-  const existingFoundation = await BusinessFoundationModel.findOne({ businessOwnerId: userId });
+  const existingFoundation = await BusinessFoundationModel.findOne({ userId: userId });
   if (existingFoundation) {
     throw new AppError('Foundation information already exists', 400);
   }
@@ -11,13 +11,13 @@ exports.createBusinessFoundationService = async (data, userId) => {
     mission,
     vision,
     values,
-    businessOwnerId: userId
+    userId: userId
   });
   return newFoundation;
 };
 
 exports.getBusinessFoundationService = async (userId) => {
-  const existingFoundation = await BusinessFoundationModel.findOne({ businessOwnerId: userId });
+  const existingFoundation = await BusinessFoundationModel.findOne({ userId: userId });
   if (!existingFoundation) {
     throw new AppError('Foundation information not found', 404);
   }
@@ -35,7 +35,7 @@ exports.updateBusinessFoundationService = async (foundationId, data, userId) => 
   if (!existingFoundation) {
     throw new AppError('Foundation information not found', 404);
   }
-  if (existingFoundation.businessOwnerId.toString() !== userId.toString()) {
+  if (existingFoundation.userId.toString() !== userId.toString()) {
     throw new AppError('You are not authorized to update this foundation', 403);
   }
   const { mission, vision, values } = data;

@@ -15,7 +15,7 @@ exports.createTimeOffRequest = async (req, res) => {
 };
 
 exports.getTimeOffRequest = async (req, res) => {
-  const data = await getTimeOffRequest(req.user.userId);
+  const data = await getTimeOffRequest(req.user.userId, req.query);
   res.status(200).json({
     status: 'success',
     message: 'Time off request fetched successfully.',

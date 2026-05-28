@@ -4,11 +4,13 @@ const express = require('express');
 require('./config/db');
 const { errorHandler, hppProtection, requestLogger, rateLimiter } = require('./middlewares');
 const initTodoCron = require('./cron/todoCron');
+const initKpiRolloverQueue = require('./queues/kpiQueue');
 
 const app = express();
 
 // Initialize Cron Jobs
 initTodoCron();
+initKpiRolloverQueue();
 
 app.use(cors());
 app.use(rateLimiter);

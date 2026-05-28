@@ -1,22 +1,41 @@
 const IORedis = require('ioredis');
 const {
+  REDIS_DB,
   REDIS_DB_PASSWORD,
   REDIS_FAMILY,
   REDIS_HOST,
+  REDIS_PASSWORD,
   REDIS_PORT,
   REDIS_TLS,
   REDIS_URL,
   REDIS_USERNAME
 } = require('./env');
 
-const shouldUseTls = () => REDIS_TLS === 'true' || REDIS_HOST.includes('ondigitalocean.com');
+const redisPassword = REDIS_DB_PASSWORD || REDIS_PASSWORD;
+const redisFamily = Number(REDIS_FAMILY || 4);
+const redisPort = Number(REDIS_PORT || 6379);
+const redisDb = Number(REDIS_DB || 0);
+
+const shouldUseTls = () => REDIS_TLS === true || REDIS_TLS === 'true' || REDIS_HOST.includes('ondigitalocean.com');
 
 const tlsOptions = () => (shouldUseTls() ? { servername: REDIS_HOST } : undefined);
+
+const redisConnectionOptions = {
+  host: REDIS_HOST,
+  port: redisPort,
+  username: REDIS_USERNAME,
+  password: redisPassword,
+  db: redisDb,
+  maxRetriesPerRequest: null,
+  connectTimeout: 20000,
+  family: redisFamily,
+  tls: tlsOptions()
+};
 
 const attachRedisLogging = (client) => {
   client.on('connect', () => {
     console.log(
-      `[redis] connecting host=${REDIS_URL ? 'REDIS_URL' : REDIS_HOST} port=${REDIS_URL ? 'from-url' : REDIS_PORT} tls=${shouldUseTls()} family=${REDIS_FAMILY}`
+      `[redis] connecting host=${REDIS_URL ? 'REDIS_URL' : REDIS_HOST} port=${REDIS_URL ? 'from-url' : redisPort} tls=${shouldUseTls()} family=${redisFamily}`
     );
   });
 
@@ -43,26 +62,14 @@ const getRedisConnection = () => {
       new IORedis(REDIS_URL, {
         maxRetriesPerRequest: null,
         connectTimeout: 20000,
-        family: Number(REDIS_FAMILY),
-        tls: REDIS_URL.startsWith('rediss://') ? { servername: REDIS_HOST } : undefined
+        family: redisFamily,
+        tls: REDIS_URL.startsWith('rediss://') ? tlsOptions() : undefined
       })
     );
   }
 
-  return attachRedisLogging(
-    new IORedis({
-      host: REDIS_HOST,
-      port: Number(REDIS_PORT),
-      username: REDIS_USERNAME,
-      password: REDIS_DB_PASSWORD,
-      maxRetriesPerRequest: null,
-      connectTimeout: 20000,
-      family: Number(REDIS_FAMILY),
-      tls: tlsOptions()
-    })
-  );
+  return attachRedisLogging(new IORedis(redisConnectionOptions));
 };
 
-module.exports = {
-  getRedisConnection
-};
+module.exports = redisConnectionOptions;
+module.exports.getRedisConnection = getRedisConnection;

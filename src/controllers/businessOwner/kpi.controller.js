@@ -6,7 +6,14 @@ const {
   kpiCreateService,
   kpiGetService,
   kpiUpdateService,
-  kpiDeleteService
+  kpiDeleteService,
+  kpiAssignService,
+  kpiAssignmentUpdateService,
+  kpiLeaderboardService,
+  getKpisByCategoryService,
+  getSpecificKpiLeaderboardService,
+  kpiHistoryPostService,
+  kpiHistoryGetService
 } = require('../../services/kpi.service');
 
 exports.createKpiCategory = async (req, res) => {
@@ -107,5 +114,111 @@ exports.deleteKpi = async (req, res) => {
     status: 'success',
     message: 'KPI deleted successfully.',
     data
+  });
+};
+
+/**
+ * Controller to handle bulk/cohort KPI assignment.
+ *
+ * Required Request Payload (req.body):
+ * - categoryId: String (Valid ObjectId) - KPI Category reference.
+ * - kpiId: String (Valid ObjectId) - Specific KPI reference.
+ * - goalValue: Number (Positive value) - KPI target score.
+ * - resetFrequency: String (Valid ObjectId) - Frequency reference ID.
+ * - roleId: String (Valid ObjectId OR 'all') - Target employee role ID.
+ * - assignedUserIds: Array of Strings (Valid ObjectIds OR ['all']) - Target employee user IDs.
+ * - isRepeat: Boolean (Optional, defaults to false) - Repeat cycle flag.
+ */
+exports.assignKpi = async (req, res) => {
+  const data = await kpiAssignService(req.user.userId, req.body);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI successfully assigned to target employees.',
+    data
+  });
+};
+
+exports.updateKpiAssignment = async (req, res) => {
+  const data = await kpiAssignmentUpdateService(req.params.kpiId, req.user.userId, req.body);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI assignment updated successfully.',
+    data
+  });
+};
+
+exports.getKpiLeaderboard = async (req, res) => {
+  const data = await kpiLeaderboardService(req.user.userId);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI Leaderboard fetched successfully.',
+    data
+  });
+};
+
+exports.getKpisByCategory = async (req, res) => {
+  const result = await getKpisByCategoryService(req.params.categoryId, req.user.userId, req.query);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPIs fetched successfully.',
+    ...result
+  });
+};
+
+/**
+ * Controller to fetch all assigned KPIs for an employee across all categories.
+ *
+ * Query Parameters (req.query):
+ * - assignedUserId: String (Valid MongoDB ObjectId) - Target employee User ID.
+ */
+exports.getAssignedKpis = async (req, res) => {
+  const result = await getKpisByCategoryService(null, req.user.userId, req.query);
+  res.status(200).json({
+    status: 'success',
+    message: 'Assigned KPIs fetched successfully.',
+    ...result
+  });
+};
+
+/**
+ * Controller to fetch the leaderboard (employee rankings) for a specific KPI.
+ *
+ * Path Parameters (req.params):
+ * - kpiId: String (Valid MongoDB ObjectId) - Target KPI ID.
+ */
+exports.getSpecificKpiLeaderboard = async (req, res) => {
+  const data = await getSpecificKpiLeaderboardService(req.params.kpiId, req.user.userId);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI leaderboard fetched successfully.',
+    data
+  });
+};
+
+/**
+ * Controller to manually log/update a KPI History record.
+ */
+exports.postKpiHistory = async (req, res) => {
+  const data = await kpiHistoryPostService(req.user.userId, req.body);
+  res.status(200).json({
+    status: 'success',
+    message: 'KPI History entry saved successfully.',
+    data
+  });
+};
+
+/**
+ * Controller to fetch grouped and chronological KPI History data for the reports graphs.
+ */
+exports.getKpiHistory = async (req, res) => {
+  const result = await kpiHistoryGetService(req.user.userId, req.query);
+  const message = result.data.length === 0
+    ? `No KPIs assigned for the selected ${req.query.periodType} cycle.`
+    : 'KPI data retrieved successfully.';
+
+  res.status(200).json({
+    status: 'success',
+    message,
+    ...result
   });
 };

@@ -7,12 +7,14 @@
     "test": "jest",
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "worker:training": "node src/workers/trainingGeneration.worker.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky install"
+    "lint": "eslint . --ext .js",
+    "lint:fix": "eslint . --ext .js --fix",
+    "seed:kpi-history": "node scripts/seedKpiHistory.js",
+    "prepare": "if [ \"$NODE_ENV\" != \"production\" ]; then husky; fi"
   },
   "repository": {
     "type": "git",
@@ -26,7 +28,6 @@
   "homepage": "https://github.com/developerbazaar1/raya_backend#readme",
   "lint-staged": {
     "*.js": [
-      "eslint --fix",
       "prettier --write"
     ],
     "*.json": [
@@ -37,14 +38,14 @@
     "@aws-sdk/client-s3": "^3.1038.0",
     "@aws-sdk/s3-request-presigner": "^3.1042.0",
     "axios": "^1.15.2",
-    "bullmq": "^5.76.10",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-rate-limit": "^8.4.1",
     "express-validator": "^7.3.2",
+    "file-type": "^22.0.1",
     "hpp": "^0.2.3",
-    "ioredis": "^5.10.1",
+    "ioredis": "^5.11.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.5.0",
     "multer": "^2.1.1",
@@ -55,7 +56,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.2.1",
+    "eslint": "^10.0.1",
     "eslint-config-prettier": "^10.1.8",
     "husky": "^9.1.7",
     "jest": "^30.3.0",

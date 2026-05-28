@@ -1,64 +1,98 @@
+const mongoose = require('mongoose');
+
 const TimeOffRequest = require('../../models/businessOwnerTeam/timeOffRequests.model');
 const EmployeeLeaveBalance = require('../../models/businessOwnerTeam/employeeLeaveBalances.model');
 const BusinessOwnerInfo = require('../../models/businessOwner/businessOwnerInfo.model');
 const User = require('../../models/shared/users.model');
+
 const AppError = require('../../utils/appError');
 
+/**
+ * Validate Mongo ObjectId
+ */
+const validateObjectId = (id, fieldName = 'Id') => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new AppError(`Invalid ${fieldName}`, 400);
+  }
+
+  return new mongoose.Types.ObjectId(id);
+};
+
+/**
+ * Calculate Total Days
+ */
 const calculateTotalDays = (startDate, endDate) => {
   const start = new Date(startDate);
   const end = new Date(endDate);
+
   const diffTime = Math.abs(end - start);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return diffDays;
+
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 };
 
+/**
+ * Create Time Off Request
+ */
 exports.createTimeOffRequest = async (body, userId) => {
   const { reason, startDate, endDate, fullDay, halfDay } = body;
 
-  const user = await User.findById(userId);
+  const userObjectId = validateObjectId(userId, 'User ID');
+
+  const user = await User.findById(userObjectId).select('owner');
+
   if (!user) {
     throw new AppError('User not found', 404);
   }
-  const totalalloted = await BusinessOwnerInfo.findOne({ userId: user.owner }).select(
-    'totalTimeOff'
-  );
-  const allottedDays = totalalloted ? totalalloted.totalTimeOff : 15;
 
-  const timeOffRequest = new TimeOffRequest({
+  const businessOwner = await BusinessOwnerInfo.findOne({
+    userId: user.owner
+  }).select('totalTimeOff');
+
+  const allottedDays = businessOwner?.totalTimeOff || 15;
+
+  const totalDays = calculateTotalDays(startDate, endDate);
+
+  const timeOffRequest = await TimeOffRequest.create({
     reason,
     startDate,
     endDate,
     fullDay,
     halfDay,
-    employeeId: userId,
+
+    employeeId: userObjectId,
     businessOwnerId: user.owner,
+
     status: 'pending',
-    totalDays: calculateTotalDays(startDate, endDate)
+    totalDays
   });
 
-  await timeOffRequest.save();
+  /**
+   * Leave Balance
+   */
+  let leaveBalance = await EmployeeLeaveBalance.findOne({
+    employeeId: userObjectId
+  });
 
-  // Update or create EmployeeLeaveBalance
-  let leaveBalance = await EmployeeLeaveBalance.findOne({ employeeId: userId });
-
-  // Calculate total approved days
   const approvedRequests = await TimeOffRequest.find({
-    employeeId: userId,
+    employeeId: userObjectId,
     status: 'approved'
-  });
-  const usedDays = approvedRequests.reduce((sum, req) => sum + (req.totalDays || 0), 0);
+  }).select('totalDays');
+
+  const usedDays = approvedRequests.reduce((sum, request) => sum + (request.totalDays || 0), 0);
+
+  const remainingDays = allottedDays - usedDays;
 
   if (!leaveBalance) {
     leaveBalance = new EmployeeLeaveBalance({
-      employeeId: userId,
+      employeeId: userObjectId,
       totalAllocated: allottedDays,
-      usedDays: usedDays,
-      remainingDays: allottedDays - usedDays
+      usedDays,
+      remainingDays
     });
   } else {
     leaveBalance.totalAllocated = allottedDays;
     leaveBalance.usedDays = usedDays;
-    leaveBalance.remainingDays = allottedDays - usedDays;
+    leaveBalance.remainingDays = remainingDays;
   }
 
   await leaveBalance.save();
@@ -66,38 +100,49 @@ exports.createTimeOffRequest = async (body, userId) => {
   return timeOffRequest;
 };
 
+/**
+ * Get Time Off Requests
+ */
 exports.getTimeOffRequest = async (userId) => {
-  const timeOffRequests = await TimeOffRequest.find({ employeeId: userId })
+  const userObjectId = validateObjectId(userId, 'User ID');
+
+  const timeOffRequests = await TimeOffRequest.find({
+    employeeId: userObjectId
+  })
     .select('reason startDate endDate totalDays status suggestedDate ownerComment businessOwnerId')
     .populate('businessOwnerId', 'name')
     .sort({ createdAt: -1 });
 
-  // Fetch leave balance summary
-  const leaveBalance = await EmployeeLeaveBalance.findOne({ employeeId: userId });
+  const leaveBalance = await EmployeeLeaveBalance.findOne({
+    employeeId: userObjectId
+  });
 
-  // Calculate total availed (Only Approved)
   const leaveAvailed = timeOffRequests
-    .filter((req) => req.status === 'approved')
-    .reduce((sum, req) => sum + (req.totalDays || 0), 0);
+    .filter((request) => request.status === 'approved')
+    .reduce((sum, request) => sum + (request.totalDays || 0), 0);
 
-  const summary = {
-    totalAllotted: leaveBalance ? leaveBalance.totalAllocated : 0,
-    leaveAvailed: leaveAvailed,
-    remainingDays: leaveBalance ? leaveBalance.totalAllocated - leaveAvailed : 0
-  };
+  const totalAllotted = leaveBalance?.totalAllocated || 0;
 
   return {
-    summary,
+    summary: {
+      totalAllotted,
+      leaveAvailed,
+      remainingDays: totalAllotted - leaveAvailed
+    },
+
     requests: timeOffRequests
   };
 };
 
+/**
+ * Update Change Requested Time Off
+ */
 exports.updateNewChangeOffRequest = async (body, timeOffRequestId) => {
   const { startDate, endDate } = body;
 
-  console.log('body', body);
-  console.log('id', timeOffRequestId);
-  const timeOffRequest = await TimeOffRequest.findById(timeOffRequestId);
+  const requestObjectId = validateObjectId(timeOffRequestId, 'Time Off Request ID');
+
+  const timeOffRequest = await TimeOffRequest.findById(requestObjectId);
 
   if (!timeOffRequest) {
     throw new AppError('Time off request not found', 404);
@@ -107,17 +152,22 @@ exports.updateNewChangeOffRequest = async (body, timeOffRequestId) => {
     throw new AppError('Only requests with "change_requested" status can be updated', 400);
   }
 
-  timeOffRequest.status = 'change_requested';
   timeOffRequest.startDate = startDate;
   timeOffRequest.endDate = endDate;
   timeOffRequest.totalDays = calculateTotalDays(startDate, endDate);
 
   await timeOffRequest.save();
+
   return timeOffRequest;
 };
 
+/**
+ * Delete Time Off Request
+ */
 exports.deleteTimeOffRequest = async (timeOffRequestId) => {
-  const timeOffRequest = await TimeOffRequest.findByIdAndDelete(timeOffRequestId);
+  const requestObjectId = validateObjectId(timeOffRequestId, 'Time Off Request ID');
+
+  const timeOffRequest = await TimeOffRequest.findById(requestObjectId);
 
   if (!timeOffRequest) {
     throw new AppError('Time off request not found', 404);
@@ -127,5 +177,9 @@ exports.deleteTimeOffRequest = async (timeOffRequestId) => {
     throw new AppError('Only "pending" status requests can be deleted', 400);
   }
 
-  return timeOffRequest;
+  await TimeOffRequest.findByIdAndDelete(requestObjectId);
+
+  return {
+    message: 'Time off request deleted successfully'
+  };
 };

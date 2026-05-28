@@ -2,7 +2,6 @@ const Employee = require('../../models/businessOwnerTeam/employeesInfo.model');
 const EmployeeRole = require('../../models/businessOwner/employeeRoles.model');
 const User = require('../../models/shared/users.model');
 const { uploadFileToSpaces } = require('../../helper/fileUpload.helper');
-
 const AppError = require('../../utils/appError');
 const { DEFAULT_PROFILE_IMAGE } = require('../../config/constant');
 
