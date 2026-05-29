@@ -5,6 +5,6 @@ const {
   getMeasurementTypes
 } = require('../../controllers/businessOwner/measurementType.controller');
 
-router.get('/', authenticate('business_owner'), asyncHandler(getMeasurementTypes));
+router.get('/', authenticate('business_owner', 'admin'), asyncHandler(getMeasurementTypes));
 
 module.exports = router;

@@ -25,7 +25,7 @@ const {
   updateMember
 } = require('../../controllers/businessOwner/team.controller');
 
-router.use(authenticate('business_owner'));
+router.use(authenticate('business_owner', 'admin'));
 
 router.post('/role', validate(createRoleValidation), asyncHandler(createRole));
 router.patch('/role', validate(addMembersToRoleValidation), asyncHandler(addMembersToRole));
