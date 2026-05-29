@@ -36,6 +36,7 @@ router.use(
 );
 // router.use('/api/v1/business-owner/to-do', require('./businessOwner/todo.route'));
 router.use('/api/v1/business-owner/kpi-categories', require('./businessOwner/kpiCategory.route'));
+router.use('/api/v1/business-owner/onboarding', require('./businessOwner/onboarding.route'));
 
 /*
 These are all the routes which is belongs to Business Owner Team only i.e [Employee]
