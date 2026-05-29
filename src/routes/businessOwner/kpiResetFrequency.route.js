@@ -5,6 +5,6 @@ const {
   getKpiResetFrequencies
 } = require('../../controllers/businessOwner/kpiResetFrequency.controller');
 
-router.get('/', authenticate('business_owner'), asyncHandler(getKpiResetFrequencies));
+router.get('/', authenticate('business_owner', 'admin'), asyncHandler(getKpiResetFrequencies));
 
 module.exports = router;

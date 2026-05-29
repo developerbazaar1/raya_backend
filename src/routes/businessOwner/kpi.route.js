@@ -35,75 +35,75 @@ const {
 
 router.post(
   '/category',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(kpiCategoryCreateValidation),
   asyncHandler(createKpiCategory)
 );
 
-router.get('/category', authenticate('business_owner'), asyncHandler(getKpiCategory));
+router.get('/category', authenticate('business_owner', 'admin'), asyncHandler(getKpiCategory));
 
 router.put(
   '/category/:categoryId',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(kpiCategoryUpdateValidation),
   asyncHandler(updateKpiCategory)
 );
 
 router.delete(
   '/category/:categoryId',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   asyncHandler(deleteKpiCategory)
 );
 
 router.post(
   '/',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(kpiCreateValidation),
   asyncHandler(createKpi)
 );
 
-router.get('/', authenticate('business_owner'), asyncHandler(getKpis));
+router.get('/', authenticate('business_owner', 'admin'), asyncHandler(getKpis));
 
 router.put(
   '/:kpiId',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(kpiUpdateValidation),
   asyncHandler(updateKpi)
 );
 
 router.post(
   '/assign',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(kpiAssignValidation),
   asyncHandler(assignKpi)
 );
 
 router.put(
   '/assign/:kpiId',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(kpiAssignmentUpdateValidation),
   asyncHandler(updateKpiAssignment)
 );
 
-router.get('/leaderboard', authenticate('business_owner'), asyncHandler(getKpiLeaderboard));
+router.get('/leaderboard', authenticate('business_owner', 'admin'), asyncHandler(getKpiLeaderboard));
 
 router.get(
   '/category/:categoryId/kpis',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(getKpisByCategoryValidation),
   asyncHandler(getKpisByCategory)
 );
 
 router.get(
   '/assigned',
-  authenticate('business_owner', 'team_member'),
+  authenticate('business_owner', 'employee', 'admin'),
   validate(getAssignedKpisValidation),
   asyncHandler(getAssignedKpis)
 );
 
 router.get(
   '/:kpiId/leaderboard',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(getKpiLeaderboardValidation),
   asyncHandler(getSpecificKpiLeaderboard)
 );
@@ -111,18 +111,18 @@ router.get(
 // KPI History Routing
 router.post(
   '/history',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(kpiHistoryPostValidation),
   asyncHandler(postKpiHistory)
 );
 
 router.get(
   '/history',
-  authenticate('business_owner'),
+  authenticate('business_owner', 'admin'),
   validate(kpiHistoryGetValidation),
   asyncHandler(getKpiHistory)
 );
 
-router.delete('/:kpiId', authenticate('business_owner'), asyncHandler(deleteKpi));
+router.delete('/:kpiId', authenticate('business_owner', 'admin'), asyncHandler(deleteKpi));
 
 module.exports = router;

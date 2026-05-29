@@ -14,21 +14,21 @@ const {
 
 router.get(
   '/assigned',
-  authenticate('employee'),
+  authenticate('employee', 'admin'),
   validate(getEmployeeAssignedKpisValidation),
   asyncHandler(getAssignedKpis)
 );
 
 router.get(
   '/:kpiId/leaderboard',
-  authenticate('employee'),
+  authenticate('employee', 'admin'),
   validate(getKpiLeaderboardValidation),
   asyncHandler(getSpecificKpiLeaderboard)
 );
 
 router.get(
   '/history',
-  authenticate('employee'),
+  authenticate('employee', 'admin'),
   validate(kpiHistoryGetValidation),
   asyncHandler(getKpiHistory)
 );
