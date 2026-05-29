@@ -7,13 +7,9 @@ const logger = require('../utils/logger');
  * Runs every day at midnight (00:00)
  */
 const initTodoCron = () => {
-  // Schedule: Minute(0) Hour(0) Day(*) Month(*) DayOfWeek(*)
   cron.schedule(
     '0 0 * * *',
     async () => {
-      // cron.schedule(
-      //   '0 0 * * *',
-      //   async () => {
       logger.info('--- Starting Nightly Todo Cron Job ---');
 
       try {
@@ -25,7 +21,7 @@ const initTodoCron = () => {
     },
     {
       scheduled: true,
-      timezone: 'Asia/Kolkata' // You can change this to your server's timezone
+      timezone: 'Asia/Kolkata'
     }
   );
 };
